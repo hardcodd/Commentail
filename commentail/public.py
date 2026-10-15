@@ -20,13 +20,30 @@ from wagtail.models import Page, Site
 from .admission import accept_request, can_view, issue_form, smtp_configured
 from .avatars import author_name, avatar_url, default_avatar
 from .detection import DetectionError, has_comments
+from .drafts import clear_drafts, is_document, load_draft, save_draft
 from .limits import client_ip, consume
 from .models import Access, Comment, Discussion, MailJob, Mode
-from .objects import discussion_url
+from .objects import ObjectAccessError, comment_url, discussion_url, target_url
 from .outbox import resend_confirmation
 from .policies import editorial_settings
 from .security import create_captcha, remembered_guest
 from .services import DomainError, edit_block_reason, revise
+
+
+def _draft_redirect(
+    request: HttpRequest, discussion: Discussion, error: str = ""
+) -> HttpResponse | None:
+    if not is_document(request):
+        return None
+    destination = save_draft(request, discussion, error)
+    if destination is None:
+        from django.http import Http404
+
+        raise Http404
+    response = redirect(destination)
+    response.status_code = 303
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @requires_csrf_token
@@ -54,6 +71,8 @@ def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponse:
             "entered_email": request.POST.get("email", ""),
         }
     )
+    if (response := _draft_redirect(request, discussion, str(context["error"]))) is not None:
+        return response
     response = TemplateResponse(
         request, "commentail/discussion.html", context, status=403
     )
@@ -200,8 +219,7 @@ def _present(
         "reply_to_name": author_name(comment.reply_to, request)
         if comment.reply_to_id
         else "",
-        "permalink": discussion_url(comment.discussion)
-        + f"?target={comment.pk}#commentail-{comment.pk}",
+        "permalink": comment_url(comment.discussion, comment.pk),
         "reply_url": _url(request, reply_to=comment.pk, target=comment.pk),
         "edit_url": reverse("commentail:edit", args=[comment.pk]) if editable else "",
     }
@@ -210,12 +228,24 @@ def _present(
 def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, object]:
     request.META["COMMENTAIL_PRIVATE"] = True
     options = editorial_settings(discussion)
+    restored, draft_error = load_draft(request, discussion)
+    form_values = request.POST if request.method == "POST" else restored
+    try:
+        source_url = target_url(discussion)
+    except ObjectAccessError:
+        source_url = ""
     base: dict[str, object] = {
+        "source_url": source_url,
         "language_code": translation.get_language(),
         "discussion_id": discussion.pk,
         "page_id": discussion.page_id,
         "options": options,
         "hidden": options.mode == Mode.HIDDEN,
+        "entered_text": form_values.get("text", ""),
+        "entered_name": form_values.get("name", ""),
+        "entered_email": form_values.get("email", ""),
+        "entered_subscribe": form_values.get("subscribe") == "on",
+        "error": draft_error,
     }
     if options.mode == Mode.HIDDEN:
         return base
@@ -377,7 +407,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
         else None
     )
     email_confirmed = grant is not None and (
-        request.POST.get("email", grant.email).strip().casefold()
+        form_values.get("email", grant.email).strip().casefold()
         == grant.email.casefold()
     )
     task = None
@@ -388,7 +418,12 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             can_post = False
             base["error"] = str(exc)
     reply_to = None
-    if identifier := request.POST.get("reply_to", request.GET.get("reply_to", "")):
+    reply_identifier = (
+        request.GET.get("reply_to", form_values.get("reply_to", ""))
+        if request.method == "GET"
+        else form_values.get("reply_to", request.GET.get("reply_to", ""))
+    )
+    if identifier := reply_identifier:
         reply_to = (
             visible.filter(pk=identifier).first() if identifier.isdecimal() else None
         )
@@ -406,7 +441,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             "remembered_email": grant.email if grant else "",
             "guest_email_confirmed": email_confirmed,
             "reply_to": _present(reply_to, request, False) if reply_to else None,
-            "cancel_reply_url": _url(request, reply_to=None, target=None),
+            "cancel_reply_url": _url(request, reply_to="", target=None),
             "submit_url": discussion_url(discussion, submit=True),
         }
     )
@@ -417,6 +452,18 @@ def discussion_view(
     request: HttpRequest, page_id: int | None = None, discussion_id: int | None = None
 ) -> HttpResponse:
     discussion = get_discussion(request, page_id, discussion_id)
+    # Browser document navigation belongs on the host. Fetch's default */*
+    # still receives the server-rendered fragment used by progressive controls.
+    if is_document(request):
+        destination = comment_url(discussion, navigation=request.GET)
+        if destination.split("?", 1)[0].split("#", 1)[0] == discussion_url(discussion):
+            from django.http import Http404
+
+            raise Http404
+        response = redirect(destination)
+        response["Cache-Control"] = "private, no-store"
+        response["Vary"] = "Accept, Sec-Fetch-Dest"
+        return response
     response = TemplateResponse(
         request, "commentail/discussion.html", block_context(request, discussion)
     )
@@ -430,6 +477,8 @@ def submit_view(
 ) -> HttpResponse:
     discussion = get_discussion(request, page_id, discussion_id)
     if request.POST.get("refresh"):
+        if (response := _draft_redirect(request, discussion)) is not None:
+            return response
         context = block_context(request, discussion)
         context.update(
             {
@@ -456,6 +505,8 @@ def submit_view(
             subscribe=request.POST.get("subscribe") == "on",
         )
     except DomainError as exc:
+        if (response := _draft_redirect(request, discussion, str(exc))) is not None:
+            return response
         context = block_context(request, discussion)
         context.update(
             {
@@ -471,9 +522,8 @@ def submit_view(
     if not request.user.is_authenticated:
         owned = request.session.get("commentail_own", [])
         request.session["commentail_own"] = [*owned[-99:], comment.pk]
-    return redirect(
-        discussion_url(discussion) + f"?target={comment.pk}#commentail-{comment.pk}"
-    )
+    clear_drafts(request, discussion)
+    return redirect(comment_url(discussion, comment.pk))
 
 
 def edit_view(request: HttpRequest, identifier: int) -> HttpResponse:
@@ -500,10 +550,7 @@ def edit_view(request: HttpRequest, identifier: int) -> HttpResponse:
     if request.method == "POST":
         try:
             revise(comment.pk, request.POST.get("text", ""), user=request.user)
-            return redirect(
-                discussion_url(discussion)
-                + f"?target={comment.pk}#commentail-{comment.pk}"
-            )
+            return redirect(comment_url(discussion, comment.pk))
         except DomainError as exc:
             error = str(exc)
     response = TemplateResponse(
@@ -514,8 +561,7 @@ def edit_view(request: HttpRequest, identifier: int) -> HttpResponse:
             "error": error,
             "language_code": translation.get_language(),
             "can_edit": not blocked,
-            "return_url": discussion_url(discussion)
-            + f"?target={comment.pk}#commentail-{comment.pk}",
+            "return_url": comment_url(discussion, comment.pk),
         },
         status=400 if request.method == "POST" and error else 200,
     )
@@ -549,4 +595,4 @@ def resend_view(request: HttpRequest, identifier: int) -> HttpResponse:
     except DomainError as exc:
         transaction.set_rollback(True)
         return HttpResponse(str(exc), status=400)
-    return redirect(discussion_url(comment.discussion))
+    return redirect(comment_url(comment.discussion, comment.pk))

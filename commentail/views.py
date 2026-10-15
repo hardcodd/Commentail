@@ -11,7 +11,7 @@ from wagtail.models import Site
 
 from .admission import can_view
 from .logging import redact
-from .objects import discussion_url
+from .objects import comment_url
 from .security import (
     confirm_from_token,
     remember_guest,
@@ -108,8 +108,7 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
             if purpose == "view"
             else "",
             "can_edit": not blocked,
-            "return_url": discussion_url(comment.discussion)
-            + f"?target={comment.pk}#commentail-{comment.pk}",
+            "return_url": comment_url(comment.discussion, comment.pk),
             "status_label": comment.get_status_display(),
             "reason": comment.reason if purpose == "view" else "",
         },

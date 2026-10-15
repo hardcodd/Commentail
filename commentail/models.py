@@ -340,3 +340,4 @@ class FormTicket(models.Model):
     discussion = models.ForeignKey(Discussion, on_delete=models.CASCADE)
     session_digest = models.CharField(max_length=64)
     expires_at = models.DateTimeField(db_index=True)
+    draft = models.JSONField(default=dict, blank=True)

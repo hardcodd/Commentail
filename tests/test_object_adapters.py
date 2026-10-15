@@ -29,6 +29,16 @@ class BrokenAdapter(ProductAdapter):
         raise RuntimeError("PRIVATE FAILURE")
 
 
+class QueryUrlAdapter(ProductAdapter):
+    def get_url(self, obj, site):
+        return f"/products/{obj.pk}/?variant=blue&target=old#details"
+
+
+class BrokenUrlAdapter(ProductAdapter):
+    def get_url(self, obj, site):
+        raise RuntimeError("PRIVATE URL FAILURE")
+
+
 REGISTRY = {
     model._meta.label: "tests.test_object_adapters.ProductAdapter"
     for model in (Product, StringTarget, UUIDTarget)
@@ -90,6 +100,28 @@ class ObjectAdapterTests(TestCase):
         self.assertEqual(self.client.post(submit_url, payload).status_code, 404)
         self.assertEqual(discussion.comments.count(), 1)
 
+    def test_host_navigation_preserves_adapter_query_and_survives_url_failure(self):
+        discussion = self.discussion()
+        url = reverse("commentail:object_discussion", args=[discussion.pk])
+        submit_url = reverse("commentail:object_submit", args=[discussion.pk])
+        for adapter in ("QueryUrlAdapter", "BrokenUrlAdapter"):
+            config = {"default": {"OBJECT_ADAPTERS": {
+                Product._meta.label: f"tests.test_object_adapters.{adapter}"
+            }}}
+            with self.subTest(adapter=adapter), override_settings(COMMENTAIL=config):
+                self.client.force_login(get_user_model().objects.create_user(adapter))
+                response = self.client.get(url)
+                response = self.client.post(submit_url, {
+                    "key": response.context["form_key"], "text": adapter
+                })
+                comment = discussion.comments.get(text=adapter)
+                expected = (
+                    f"/products/{self.product.pk}/?variant=blue&target={comment.pk}#commentail-{comment.pk}"
+                    if adapter == "QueryUrlAdapter"
+                    else f"{url}?target={comment.pk}#commentail-{comment.pk}"
+                )
+                self.assertEqual(response["Location"], expected)
+                self.assertNotContains(self.client.get(url), "PRIVATE URL FAILURE")
     def test_unregistered_and_adapter_failure_never_disclose_content(self):
         discussion = self.discussion()
         submit(discussion.pk, text="PRIVATE CONTENT", user=self.user)
@@ -182,8 +214,9 @@ class ObjectAdapterTests(TestCase):
             reverse("commentail:edit", args=[comment.pk]), {"text": "Changed"}
         )
         self.assertEqual(response.status_code, 302)
-        self.assertIn(
-            reverse("commentail:object_discussion", args=[discussion.pk]), response.url
+        self.assertEqual(
+            f"/products/{self.product.pk}/?target={comment.pk}#commentail-{comment.pk}",
+            response.url,
         )
         self.assertTrue(_can_receive(comment))
         job = MailJob.objects.create(

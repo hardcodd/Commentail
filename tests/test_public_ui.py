@@ -124,6 +124,149 @@ class PublicInterfaceTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.discussion.comments.count(), 1)
 
+    def test_submission_and_permalink_return_to_the_host_page(self):
+        self.client.force_login(self.user)
+        key = self.client.get(self.url).context["form_key"]
+        response = self.client.post(
+            reverse("commentail:submit", args=[self.site.root_page.pk]),
+            {"key": key, "text": "Keep the reader in the article"},
+        )
+        comment = self.discussion.comments.get()
+        expected = f"/?target={comment.pk}#commentail-{comment.pk}"
+        self.assertEqual(response["Location"], expected)
+        moderate(comment.pk, "approve", actor=self.admin)
+        rendered = self.client.get(self.url)
+        self.assertContains(rendered, f'href="{expected}"')
+        self.assertContains(rendered, 'class="commentail-source-link" href="/"')
+        edit = self.client.post(
+            reverse("commentail:edit", args=[comment.pk]), {"text": "Revised"}
+        )
+        self.assertEqual(edit["Location"], expected)
+
+    def test_browser_navigation_to_service_url_redirects_to_article(self):
+        response = self.client.get(
+            self.url, {"target": "11", "thread": "2"}, HTTP_ACCEPT="text/html"
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/?thread=2&target=11#commentail-11")
+
+    def test_browser_validation_returns_to_article_with_private_persistent_draft(self):
+        from django.test import Client
+
+        self.client.force_login(self.user)
+        parent = submit(self.discussion.pk, text="Parent", user=self.admin)
+        moderate(parent.pk, "approve", actor=self.admin)
+        key = self.client.get(self.url).context["form_key"]
+        response = self.client.post(
+            reverse("commentail:submit", args=[self.site.root_page.pk]),
+            {"key": key, "text": " ", "reply_to": parent.pk, "subscribe": "on"},
+            HTTP_ACCEPT="text/html",
+        )
+        self.assertEqual(response.status_code, 303)
+        self.assertTrue(response["Location"].startswith("/?commentail_draft="))
+        for _ in range(2):
+            host = self.client.get(response["Location"])
+            self.assertContains(host, "Comment is empty or too long")
+            self.assertContains(host, f'name="reply_to" value="{parent.pk}"')
+            self.assertContains(host, 'name="subscribe" checked')
+        from bs4 import BeautifulSoup
+
+        markup = BeautifulSoup(host.content, "html.parser")
+        cancel = next(link for link in markup.select(".commentail-form a") if link.text == "Cancel")
+        cancelled = self.client.get(cancel["href"])
+        self.assertNotContains(cancelled, 'name="reply_to"')
+        self.assertContains(cancelled, 'name="subscribe" checked')
+        stranger = Client().get(response["Location"])
+        self.assertNotContains(stranger, "Comment is empty or too long")
+        self.assertNotContains(stranger, 'name="reply_to"')
+
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+        EMAIL_HOST="127.0.0.1",
+    )
+    def test_browser_captcha_refresh_returns_to_article_preserving_form(self):
+        response = self.client.post(
+            reverse("commentail:submit", args=[self.site.root_page.pk]),
+            {"refresh": "1", "text": "Guest draft stays here", "name": "Reader",
+             "email": "reader@example.invalid", "subscribe": "on"},
+            HTTP_ACCEPT="text/html",
+        )
+        self.assertEqual(response.status_code, 303)
+        self.assertNotIn("reader@example.invalid", response["Location"])
+        host = self.client.get(response["Location"])
+        self.assertContains(host, "Guest draft stays here")
+        self.assertContains(host, 'value="reader@example.invalid"')
+        self.assertContains(host, 'name="challenge"')
+        from django.test import Client
+
+        self.assertNotContains(Client().get(response["Location"]), "Guest draft stays here")
+
+    def test_recovery_expires_and_successful_acceptance_clears_private_drafts(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from commentail.models import FormTicket
+
+        self.client.force_login(self.user)
+        SiteCommentSettings.objects.create(site=self.site, max_length=3)
+
+        def invalid_submission():
+            key = self.client.get(self.url).context["form_key"]
+            return self.client.post(
+                reverse("commentail:submit", args=[self.site.root_page.pk]),
+                {"key": key, "text": "Long private draft"}, HTTP_ACCEPT="text/html",
+            )
+
+        expired = invalid_submission()
+        FormTicket.objects.exclude(draft={}).update(
+            expires_at=timezone.now() - timedelta(seconds=1)
+        )
+        self.assertNotContains(self.client.get(expired["Location"]), "Long private draft")
+        current = invalid_submission()
+        host = self.client.get(current["Location"])
+        self.assertContains(host, "Long private draft")
+        self.assertNotIn("Long private draft", str(dict(self.client.session)))
+        # Use the actual freshly rendered form, never the private recovery ticket.
+        from bs4 import BeautifulSoup
+
+        form = BeautifulSoup(host.content, "html.parser").select_one("form.commentail-form")
+        response = self.client.post(form["action"], {
+            "key": form.select_one('input[name="key"]')["value"], "text": "OK"
+        }, HTTP_ACCEPT="text/html")
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(FormTicket.objects.exclude(draft={}).exists())
+        self.assertNotContains(self.client.get(current["Location"]), "Long private draft")
+
+    @override_settings(CSRF_FAILURE_VIEW="commentail.public.csrf_failure")
+    def test_browser_csrf_error_returns_to_host_without_accepting_the_draft(self):
+        from django.test import Client
+
+        browser = Client(enforce_csrf_checks=True)
+        browser.force_login(self.user)
+        key = browser.get(self.url).context["form_key"]
+        response = browser.post(
+            reverse("commentail:submit", args=[self.site.root_page.pk]),
+            {"key": key, "text": "Keep this after CSRF rejection"},
+            HTTP_ACCEPT="text/html",
+        )
+        self.assertEqual(response.status_code, 303)
+        self.assertFalse(self.discussion.comments.exists())
+        host = browser.get(response["Location"])
+        self.assertContains(host, "Keep this after CSRF rejection")
+        self.assertContains(host, "The form could not be verified.")
+
+    def test_validation_screen_has_a_way_back_to_the_host(self):
+        self.client.force_login(self.user)
+        key = self.client.get(self.url).context["form_key"]
+        response = self.client.post(
+            reverse("commentail:submit", args=[self.site.root_page.pk]),
+            {"key": key, "text": " "},
+        )
+        self.assertContains(
+            response, 'class="commentail-source-link" href="/"', status_code=400
+        )
+
     def test_progressive_fragment_has_identity_and_localized_failure_message(self):
         comment = submit(self.discussion.pk, text="Navigation target", user=self.user)
         moderate(comment.pk, "approve", actor=self.admin)

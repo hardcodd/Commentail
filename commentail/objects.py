@@ -6,8 +6,9 @@ fail closed; no exception text or target content is logged or returned.
 """
 
 import logging
+from collections.abc import Mapping
 from typing import Protocol, cast
-from urllib.parse import urlsplit
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from django.apps import apps
 from django.conf import settings
@@ -206,6 +207,34 @@ def discussion_url(discussion: Discussion, *, submit: bool = False) -> str:
         "commentail:object_submit" if submit else "commentail:object_discussion",
         args=[discussion.pk],
     )
+
+
+def comment_url(
+    discussion: Discussion,
+    identifier: int | None = None,
+    *,
+    navigation: Mapping[str, str] | None = None,
+) -> str:
+    """Locate comments in their host, retaining trusted adapter query parameters.
+
+    URL-handler failures retain the service endpoint for fragment/error recovery.
+    Only known reading state is copied from a request; capability tokens and
+    arbitrary redirect parameters never become part of the destination.
+    """
+    try:
+        destination = target_url(discussion)
+    except ObjectAccessError:
+        destination = discussion_url(discussion)
+    parts = urlsplit(destination)
+    values = dict(parse_qsl(parts.query, keep_blank_values=True))
+    for key in ("thread", "window", "reply_to", "target"):
+        if navigation and key in navigation:
+            values[key] = navigation[key]
+    if identifier is not None:
+        values["target"] = str(identifier)
+    target = values.get("target", "")
+    fragment = f"commentail-{target}" if target.isdecimal() else "commentail"
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(values), fragment))
 
 
 def clear_object_discussions(

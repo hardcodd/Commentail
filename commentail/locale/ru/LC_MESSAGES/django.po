@@ -752,6 +752,9 @@ msgstr "Писем нет"
 msgid "Back to comments"
 msgstr "Вернуться к комментариям"
 
+msgid "Back to page"
+msgstr "Вернуться к странице"
+
 msgid "Comments are unavailable."
 msgstr "Комментарии недоступны."
 

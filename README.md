@@ -34,8 +34,9 @@ CSRF validation. Preserve this policy in overridden action templates; a global
 The Django template request context processor is required.
 Optionally set `CSRF_FAILURE_VIEW = "commentail.public.csrf_failure"` to preserve
 a rejected submission draft and show a fresh form for explicit resubmission.
-The rejection remains HTTP 403; other host endpoints keep Django's default
-failure view. Logging in rotates CSRF tokens, so forms opened before login can
+Fetch receives HTTP 403 with the preserved draft. Browser document submissions
+return to the host with a private draft and an explicit resubmission notice; no
+comment is accepted. Other host endpoints keep Django's default failure view. Logging in rotates CSRF tokens, so forms opened before login can
 need refreshing. Separate localhost projects should use distinct session/CSRF
 cookie names because cookies are shared across ports.
 
@@ -126,6 +127,17 @@ Overridden widget templates should preserve `data-discussion`,
 Lists use cumulative batches of 20 and signed snapshot windows. New publications
 appear after refresh; target links expand the addressed thread and include the
 specific reply even beyond the first reply batch.
+
+Comment permalinks and successful submission/edit returns point to the host
+Page or registered object's URL, keeping the addressed comment in its discussion.
+Opening a discussion service URL as a browser document redirects to that host
+and retains reading state. Fetch requests can still receive the fragment renderer;
+browser validation errors and CAPTCHA refresh return to that host as well,
+with a session-bound, expiring database draft. Only a ticket ID enters the URL,
+not text, names or email. Drafts survive reload until acceptance or expiry; the
+worker removes expired form tickets. Up to five recovery tickets are retained
+per browser. Non-document fragment requests retain inline errors. A failing object
+URL handler cannot redirect browser navigation and produces a neutral 404.
 
 ## Administration
 
