@@ -27,6 +27,7 @@ class TechnicalSettings(TypedDict):
     CAPTCHA_IP_LIMIT_PER_MINUTE: int
     CAPTCHA_IP_LIMIT_PER_HOUR: int
     TRUSTED_PROXIES: list[str]
+    GUEST_REQUEST_CHECKS: list[str]
     MAIL_RETENTION_SECONDS: int
     MAIL_LEASE_SECONDS: int
     MAIL_RETRY_SECONDS: list[int]
@@ -57,6 +58,7 @@ DEFAULTS: TechnicalSettings = {
     "CAPTCHA_IP_LIMIT_PER_MINUTE": 10,
     "CAPTCHA_IP_LIMIT_PER_HOUR": 100,
     "TRUSTED_PROXIES": [],
+    "GUEST_REQUEST_CHECKS": ["missing_user_agent", "cross_site"],
     "MAIL_RETENTION_SECONDS": 604800,
     "MAIL_LEASE_SECONDS": 300,
     "MAIL_RETRY_SECONDS": [60, 300, 900],
@@ -134,6 +136,19 @@ def configuration_errors() -> list[str]:
                             errors.append(f"{key} must be an import path to a callable")
                     except (ImportError, AttributeError):
                         errors.append(f"{key} cannot be imported")
+            elif key == "GUEST_REQUEST_CHECKS":
+                if (
+                    not isinstance(value, list)
+                    or not all(
+                        isinstance(item, str)
+                        and item in {"missing_user_agent", "cross_site"}
+                        for item in value
+                    )
+                    or len(value) != len(set(value))
+                ):
+                    errors.append(
+                        "GUEST_REQUEST_CHECKS must contain unique known signal names: missing_user_agent, cross_site"
+                    )
             elif key == "MAIL_RETRY_SECONDS":
                 if not isinstance(value, list) or not all(
                     type(item) is int and item > 0 for item in value

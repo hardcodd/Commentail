@@ -1,0 +1,5 @@
+{% load i18n %}{% autoescape off %}{% trans "Comment rejected" %}
+
+{{ target_url }}
+{% if reason %}
+{{ reason }}{% endif %}{% endautoescape %}

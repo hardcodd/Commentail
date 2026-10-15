@@ -165,9 +165,16 @@ def accept_request(
             failure = "Incorrect or expired CAPTCHA"
         else:
             consume(site, "comment", actor, client_ip(request, site))
+            checks = technical_settings(site)["GUEST_REQUEST_CHECKS"]
             suspicious = user is None and (
-                not request.META.get("HTTP_USER_AGENT")
-                or request.META.get("HTTP_SEC_FETCH_SITE") == "cross-site"
+                (
+                    "missing_user_agent" in checks
+                    and not request.META.get("HTTP_USER_AGENT", "").strip()
+                )
+                or (
+                    "cross_site" in checks
+                    and request.META.get("HTTP_SEC_FETCH_SITE") == "cross-site"
+                )
             )
             result = submit_once(
                 discussion.pk,

@@ -766,3 +766,27 @@ msgstr "Ошибка обработчика доступа к объекту д�
 
 msgid "Object URL handler failed"
 msgstr "Ошибка обработчика адреса объекта"
+
+msgid "Confirmation email is queued."
+msgstr "Письмо подтверждения ожидает отправки."
+
+msgid "Confirmation email is being sent."
+msgstr "Письмо подтверждения отправляется."
+
+msgid "There was a problem sending the confirmation email. We will retry automatically."
+msgstr "При отправке письма подтверждения возникла ошибка. Мы повторим отправку автоматически."
+
+msgid "There was a problem sending the confirmation email. You can request it again."
+msgstr "При отправке письма подтверждения возникла ошибка. Вы можете запросить его повторно."
+
+msgid "Confirmation email was sent. Check your inbox and spam folder."
+msgstr "Письмо подтверждения отправлено. Проверьте входящие и папку «Спам»."
+
+msgid "Confirmation email is unavailable."
+msgstr "Отправка письма подтверждения недоступна."
+
+msgid "The email confirmation deadline has passed."
+msgstr "Срок подтверждения email истёк."
+
+msgid "Confirm before:"
+msgstr "Подтвердите до:"

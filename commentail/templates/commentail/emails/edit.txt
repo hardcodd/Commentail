@@ -1,0 +1,5 @@
+{% load i18n %}{% autoescape off %}{% trans "Your comment is published" %}
+
+{{ target_url }}
+
+{{ action_url }}{% endautoescape %}

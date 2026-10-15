@@ -9,16 +9,19 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from smtplib import SMTPException, SMTPRecipientsRefused, SMTPResponseException
+from typing import TypedDict
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser
-from django.core.mail import EmailMessage, get_connection
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.db import transaction
 from django.db.models import F, Model, Q
+from django.template import TemplateDoesNotExist, TemplateSyntaxError
+from django.template.loader import get_template, render_to_string
+from django.urls import NoReverseMatch
 from django.utils import timezone, translation
 from django.utils.module_loading import import_string
-from django.utils.translation import gettext as _
 
 from .config import technical_settings
 from .models import ActionToken, Comment, CommentRevision, MailJob, ReplySubscription
@@ -254,6 +257,25 @@ def _valid(job: MailJob) -> bool:
     return True
 
 
+class MailTemplateError(ValueError):
+    """A non-retryable subject/template contract failure."""
+
+
+class MailTemplateContext(TypedDict):
+    """Stable mail context; deliberately excludes internal models and body text."""
+
+    kind: str
+    author_name: str
+    site_name: str
+    site_url: str
+    target_url: str
+    action_url: str
+    view_url: str
+    reason: str
+    is_revision: bool
+    expires_at: datetime
+
+
 def deliver(job: MailJob) -> None:
     """Render notification metadata only; comment/revision bodies never enter mail."""
     site = job.comment.discussion.site
@@ -283,40 +305,40 @@ def deliver(job: MailJob) -> None:
             site.root_url
             + f"/commentail/actions/{job.token.purpose}/?token={token_secret(job.token)}"
         )
+    view_url = ""
+    if job.kind == "confirm":
+        view_token = ActionToken.objects.filter(
+            comment=job.comment, purpose="view", expires_at__gt=timezone.now()
+        ).first()
+        if view_token:
+            view_url = (
+                site.root_url
+                + f"/commentail/actions/view/?token={token_secret(view_token)}"
+            )
+    reason = ""
+    if job.kind == "rejected":
+        reason = job.revision.reason if job.revision_id else job.comment.reason
+    # No models/request/context processors: overrides cannot traverse to user text.
+    context: MailTemplateContext = {
+        "kind": job.kind,
+        "author_name": job.comment.display_name,
+        "site_name": site.site_name or site.hostname,
+        "site_url": site.root_url,
+        "target_url": target_url,
+        "action_url": action_url,
+        "view_url": view_url,
+        "reason": reason,
+        "is_revision": job.revision_id is not None,
+        "expires_at": job.expires_at,
+    }
     with translation.override(job.language):
-        subjects = {
-            "confirm": _("Confirm your email"),
-            "edit": _("Your comment is published"),
-            "published": _("Comment published"),
-            "rejected": _("Comment rejected"),
-            "reply": _("New reply to your comment"),
-        }
-        lines = [subjects[job.kind], target_url]
-        if job.kind == "reply":
-            lines = [
-                _("Reply from %(name)s") % {"name": job.comment.display_name},
-                target_url,
-                _("Unsubscribe:"),
-                action_url,
-            ]
-        elif job.kind in {"confirm", "edit"}:
-            lines.append(action_url)
-            if job.kind == "confirm":
-                view_token = ActionToken.objects.filter(
-                    comment=job.comment, purpose="view", expires_at__gt=timezone.now()
-                ).first()
-                if view_token:
-                    lines.append(
-                        site.root_url
-                        + f"/commentail/actions/view/?token={token_secret(view_token)}"
-                    )
-        elif job.kind == "rejected":
-            reason = job.revision.reason if job.revision_id else job.comment.reason
-            if reason:
-                lines.append(reason)
-        message = EmailMessage(
-            subjects[job.kind],
-            "\n\n".join(lines),
+        prefix = f"commentail/emails/{job.kind}"
+        subject = render_to_string(prefix + "_subject.txt", context).strip()
+        if not subject or "\n" in subject or "\r" in subject:
+            raise MailTemplateError("Invalid email subject")
+        message = EmailMultiAlternatives(
+            subject,
+            render_to_string(prefix + ".txt", context),
             settings.DEFAULT_FROM_EMAIL,
             [_email(job.recipient)],
             connection=get_connection(
@@ -326,6 +348,15 @@ def deliver(job: MailJob) -> None:
             ),
             headers={"Message-ID": f"<commentail-{job.pk}@{site.hostname}>"},
         )
+        html_name = prefix + ".html"
+        try:
+            html_template = get_template(html_name)
+        except TemplateDoesNotExist as exc:
+            if not exc.args or exc.args[0] != html_name:
+                raise
+        else:
+            # Missing includes in an existing override are errors, not opt-outs.
+            message.attach_alternative(html_template.render(context), "text/html")
         if message.send() != 1:
             raise OSError("Backend did not report successful delivery")
 
@@ -418,6 +449,14 @@ def process_mail(limit: int = 100) -> int:
             continue
         try:
             deliver(job)
+        except (
+            TemplateDoesNotExist,
+            TemplateSyntaxError,
+            NoReverseMatch,
+            MailTemplateError,
+            DomainError,
+        ) as exc:
+            owner.update(status="failed", error=type(exc).__name__, lease_until=None)
         except (SMTPException, OSError, ValueError) as exc:
             error = type(exc).__name__  # Never store a transport dump or secret URL.
             if _permanent(exc) or job.attempts > len(intervals):

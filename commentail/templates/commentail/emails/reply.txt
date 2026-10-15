@@ -1,0 +1,6 @@
+{% load i18n %}{% autoescape off %}{% blocktrans with name=author_name %}Reply from {{ name }}{% endblocktrans %}
+
+{{ target_url }}
+
+{% trans "Unsubscribe:" %}
+{{ action_url }}{% endautoescape %}

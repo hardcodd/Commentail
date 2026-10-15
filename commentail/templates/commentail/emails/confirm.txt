@@ -1,0 +1,7 @@
+{% load i18n %}{% autoescape off %}{% trans "Confirm your email" %}
+
+{{ target_url }}
+
+{{ action_url }}
+{% if view_url %}
+{{ view_url }}{% endif %}{% endautoescape %}

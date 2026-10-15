@@ -4,7 +4,7 @@ import re
 
 from django.core import signing
 from django.db import transaction
-from django.db.models import Exists, F, OuterRef, Q
+from django.db.models import Exists, F, OuterRef, Prefetch, Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -21,7 +21,7 @@ from .admission import accept_request, can_view, issue_form, smtp_configured
 from .avatars import author_name, avatar_url, default_avatar
 from .detection import DetectionError, has_comments
 from .limits import client_ip, consume
-from .models import Access, Comment, Discussion, Mode
+from .models import Access, Comment, Discussion, MailJob, Mode
 from .objects import discussion_url
 from .outbox import resend_confirmation
 from .policies import editorial_settings
@@ -195,9 +195,7 @@ def _present(
         "status": comment.status,
         "status_label": comment.get_status_display(),
         "reason": comment.reason if comment.status == "rejected" else "",
-        "resend_url": reverse("commentail:resend", args=[comment.pk])
-        if comment.status == "awaiting_email"
-        else "",
+        "resend_url": "",
         "reply_to_id": comment.reply_to_id,
         "reply_to_name": author_name(comment.reply_to, request)
         if comment.reply_to_id
@@ -297,11 +295,54 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
         )
         .distinct()
         .prefetch_related("revisions")
+        .prefetch_related(
+            Prefetch(
+                "mail_events",
+                queryset=MailJob.objects.filter(kind="confirm").select_related("token"),
+                to_attr="confirmation_jobs",
+            )
+        )
         .order_by("-created_at")[:20]
     )
     private_rows: list[dict[str, object]] = []
     for item in own:
         data = _present(item, request, False)
+        if item.status == "awaiting_email":
+            jobs = item.confirmation_jobs
+            job = jobs[0] if jobs else None
+            now = timezone.now()
+            expired = job is not None and (
+                job.expires_at <= now
+                or (job.token_id is not None and job.token.expires_at <= now)
+            )
+            if expired:
+                message = _("The email confirmation deadline has passed.")
+            elif job is None or job.status == "cancelled":
+                message = _("Confirmation email is unavailable.")
+            elif job.status == "sent":
+                message = _(
+                    "Confirmation email was sent. Check your inbox and spam folder."
+                )
+            elif job.status == "sending":
+                message = _("Confirmation email is being sent.")
+            elif job.status == "failed":
+                message = _(
+                    "There was a problem sending the confirmation email. You can request it again."
+                )
+            elif job.error:
+                message = _(
+                    "There was a problem sending the confirmation email. We will retry automatically."
+                )
+            else:
+                message = _("Confirmation email is queued.")
+            data["delivery_message"] = message
+            data["confirmation_expires_at"] = job.expires_at if job else None
+            if (
+                job is not None
+                and not expired
+                and job.status in {"pending", "failed", "sent"}
+            ):
+                data["resend_url"] = reverse("commentail:resend", args=[item.pk])
         pending = next(
             (
                 revision

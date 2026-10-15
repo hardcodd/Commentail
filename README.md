@@ -286,6 +286,21 @@ session-bound submission keys and site-wide author/IP limits. An email address
 alone never proves ownership. Pending content is visible only to its author,
 in the submitting browser or by a protected view link.
 
+### Supplemental guest request signals
+
+`GUEST_REQUEST_CHECKS` is a list in `COMMENTAIL["default"]` or a hostname override.
+The default is `["missing_user_agent", "cross_site"]`:
+
+- `missing_user_agent`: absent or whitespace-only `User-Agent`.
+- `cross_site`: `Sec-Fetch-Site` explicitly equal to `cross-site`.
+
+Any enabled match sends guest comments to moderation after email verification;
+a matching rejection rule still takes precedence. Missing Fetch Metadata alone
+is not suspicious. An empty list disables these signals. Unknown names, invalid
+types and duplicates fail configuration checks. These client headers are
+forgeable; signals complement CAPTCHA, email proof and quotas. They never disable
+CSRF/origin checks or object access, and do not affect signed-in authors.
+
 ## Mail and cleanup
 
 Schedule `python manage.py process_commentail` once per minute. It processes the
@@ -301,6 +316,50 @@ Leases prevent concurrent claims, but uncertain results can cause duplicate mail
 a stable Message-ID does not guarantee exactly-once delivery. Hidden discussions
 defer mail. Lost access, disabled subscriptions and expired links cancel it.
 Reply emails contain author names and links, never comment text.
+
+The submitting guest browser shows a private confirmation-mail status: queued,
+sending, sent, automatic retry, failed or unavailable, plus the original deadline.
+Sent means the configured mail backend accepted the message, not inbox delivery.
+SMTP diagnostics, email addresses and tokens are never included in that status.
+Resend is offered only before expiry while no worker is sending the message.
+Status updates appear on reload; normal resend forms also work without JavaScript.
+
+### Overriding email templates
+
+Place overrides in your project's template directory, ahead of Commentail in
+Django's template loader order. For each kind (`confirm`, `edit`, `published`,
+`rejected`, `reply`), the stable paths are:
+
+- `commentail/emails/<kind>_subject.txt`: required nonempty, single-line subject
+  (surrounding whitespace is stripped).
+- `commentail/emails/<kind>.txt`: required plain-text body.
+- `commentail/emails/<kind>.html`: optional HTML alternative; absent by default.
+
+Templates render under the job's saved language, without request context
+processors. The public context contains only `kind`, `author_name`, `site_name`,
+`site_url`, `target_url`, `action_url`, `view_url`, `reason`, `is_revision` and
+`expires_at` (an aware datetime). URLs are absolute. `action_url` is the protected
+confirmation/edit/unsubscribe link when applicable; `view_url` is set only for
+confirmation mail. `reason` is set only for rejection. `is_revision` distinguishes
+author-revision decisions, which share the publication/rejection templates.
+No internal comment/job/user objects, comment or revision text, or recipient
+email are supplied. Reply notifications must continue to contain only metadata
+and links, without reply text or excerpts, in every MIME alternative.
+
+Use `{% autoescape off %}` around plain-text templates so names and URL query
+strings remain literal. Keep HTML autoescaping enabled. For example:
+
+```django
+{% load i18n %}{% autoescape off %}{% trans "Confirm your email" %}
+
+{{ action_url }}
+{% endautoescape %}
+```
+
+Missing required templates, invalid template syntax and invalid subjects fail
+that job safely; details in the delivery admin are technical error types only.
+Other queued messages continue processing. Correct the override, then retry the
+failed message from the admin while its original link remains valid.
 
 GET links show action pages; changes require POST/CSRF. Secrets are hashed in
 storage. Queued links derive from a random nonce and host SECRET_KEY; rotation

@@ -21,4 +21,4 @@ postgres = ["psycopg[binary]>=3.3.6"]
 target-version = "py312"
 
 [tool.setuptools.package-data]
-commentail = ["templates/**/*.html", "static/**/*.css", "static/**/*.js", "locale/**/*.mo", "locale/**/*.po"]
+commentail = ["templates/**/*.html", "templates/**/*.txt", "static/**/*.css", "static/**/*.js", "locale/**/*.mo", "locale/**/*.po"]
