@@ -42,7 +42,11 @@ class ActionViewTests(TestCase):
 
     def test_post_confirms_and_remembers(self):
         response = self.client.post(self.url, {"token": self.secret})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(
+            response["Location"],
+            f"/?target={self.comment.pk}#commentail-{self.comment.pk}",
+        )
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "pending")
         cookie = response.cookies[f"commentail_guest_{self.site.pk}"]
@@ -97,7 +101,7 @@ class ActionViewTests(TestCase):
             HTTP_REFERER="https://testserver/",
         )
         self.assertEqual(page["Referrer-Policy"], "strict-origin")
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 303)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "pending")
 
@@ -117,6 +121,28 @@ class ActionViewTests(TestCase):
                 self.assertEqual(response.status_code, 403)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "awaiting_email")
+
+    def test_guest_revision_redirects_to_host_without_exposing_capability(self):
+        from commentail.services import confirm_email, moderate
+
+        confirm_email(self.comment.pk)
+        admin = get_user_model().objects.create_superuser("edit-admin", "", "synthetic")
+        moderate(self.comment.pk, "approve", actor=admin)
+        secret = issue_token(self.comment, "edit", timezone.now() + timedelta(minutes=15))
+        response = self.client.post(
+            "/commentail/actions/edit/",
+            {"token": secret, "text": "Revised guest text"},
+        )
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(
+            response["Location"],
+            f"/?target={self.comment.pk}#commentail-{self.comment.pk}",
+        )
+        self.assertNotIn(secret, response["Location"])
+        self.assertEqual(self.comment.revisions.get().status, "pending")
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.text, "Guest")
+        self.assertIn("no-store", response["Cache-Control"])
 
     def test_guest_edit_failure_preserves_draft_and_locked_form_is_removed(self):
         from commentail.services import confirm_email, moderate

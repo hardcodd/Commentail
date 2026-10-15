@@ -537,7 +537,7 @@ class PublicInterfaceTests(TestCase):
                     "csrfmiddlewaretoken": browser.cookies["csrftoken"].value,
                 },
             ).status_code,
-            200,
+            303,
         )
         comment.refresh_from_db()
         self.assertEqual(comment.status, "pending")
@@ -553,7 +553,7 @@ class PublicInterfaceTests(TestCase):
                 "csrfmiddlewaretoken": browser.cookies["csrftoken"].value,
             },
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 303)
         self.assertContains(self.client.get(self.url), "Guest original")
         self.assertNotContains(self.client.get(self.url), "Guest revised")
 

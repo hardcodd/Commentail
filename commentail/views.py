@@ -1,6 +1,7 @@
 """POST-only capability actions with normal CSRF and object-access checks."""
 
 from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
@@ -93,27 +94,32 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
                 )
         except DomainError as exc:
             error = str(exc)
-    response = TemplateResponse(
-        request,
-        "commentail/action.html",
-        {
-            "language_code": translation.get_language(),
-            "purpose": purpose,
-            "token": secret,
-            "message": message,
-            "error": error,
-            "text": request.POST.get("text", comment.text)
-            if purpose == "edit"
-            else comment.text
-            if purpose == "view"
-            else "",
-            "can_edit": not blocked,
-            "return_url": comment_url(comment.discussion, comment.pk),
-            "status_label": comment.get_status_display(),
-            "reason": comment.reason if purpose == "view" else "",
-        },
-        status=400 if request.method == "POST" and error else 200,
-    )
+    response: HttpResponse
+    if message and purpose in {"confirm", "edit"}:
+        response = redirect(comment_url(comment.discussion, comment.pk))
+        response.status_code = 303
+    else:
+        response = TemplateResponse(
+            request,
+            "commentail/action.html",
+            {
+                "language_code": translation.get_language(),
+                "purpose": purpose,
+                "token": secret,
+                "message": message,
+                "error": error,
+                "text": request.POST.get("text", comment.text)
+                if purpose == "edit"
+                else comment.text
+                if purpose == "view"
+                else "",
+                "can_edit": not blocked,
+                "return_url": comment_url(comment.discussion, comment.pk),
+                "status_label": comment.get_status_display(),
+                "reason": comment.reason if purpose == "view" else "",
+            },
+            status=400 if request.method == "POST" and error else 200,
+        )
     response["Referrer-Policy"] = "strict-origin"
     response["Cache-Control"] = "private, no-store"
     if grant_secret:

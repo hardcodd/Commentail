@@ -128,6 +128,11 @@ Lists use cumulative batches of 20 and signed snapshot windows. New publications
 appear after refresh; target links expand the addressed thread and include the
 specific reply even beyond the first reply batch.
 
+Successful email-confirmation and guest-revision POSTs redirect to the host
+comment with HTTP 303. Opening a mail action link still shows its explicit
+confirmation/edit form; GET never confirms or changes a comment. Invalid or
+locked edits keep their error and link back to the host.
+
 Comment permalinks and successful submission/edit returns point to the host
 Page or registered object's URL, keeping the addressed comment in its discussion.
 Opening a discussion service URL as a browser document redirects to that host

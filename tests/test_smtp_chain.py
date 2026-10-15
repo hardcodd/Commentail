@@ -120,7 +120,12 @@ class SMTPGuestChainTests(TestCase):
             browser.get(confirm_url)
             comment.refresh_from_db()
             self.assertEqual(comment.status, "awaiting_email")
-            self.assertEqual(post_action(confirm_url).status_code, 200)
+            confirmation_result = post_action(confirm_url)
+            self.assertEqual(confirmation_result.status_code, 303)
+            self.assertEqual(
+                confirmation_result["Location"],
+                f"/?target={comment.pk}#commentail-{comment.pk}",
+            )
             comment.refresh_from_db()
             self.assertEqual(comment.status, "pending")
             self.assertIsNone(browser.get(url).context["captcha"])
@@ -130,7 +135,7 @@ class SMTPGuestChainTests(TestCase):
             self.assertEqual(process_mail(), 1)
             edit_url = mail_link(messages[-1], "edit")
             self.assertEqual(
-                post_action(edit_url, text="Guest revised").status_code, 200
+                post_action(edit_url, text="Guest revised").status_code, 303
             )
             revision = comment.revisions.get()
             self.assertEqual(revision.status, "pending")
@@ -149,6 +154,9 @@ class SMTPGuestChainTests(TestCase):
             self.assertEqual(process_mail(), 0)
             moderate(reply.pk, "approve", actor=admin)
             self.assertEqual(process_mail(), 1)
+            locked = browser.get(edit_url)
+            self.assertNotContains(locked, 'name="text"')
+            self.assertContains(locked, 'href="/?target=' + str(comment.pk))
             notification = messages[-1]
             self.assertIn(
                 f"?target={reply.pk}#commentail-{reply.pk}", notification.get_content()
