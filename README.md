@@ -115,6 +115,10 @@ network failures keep the draft and submission key for an explicit retry, withou
 automatically replaying a POST. Edit and email-action pages use ordinary forms.
 Autoheight and broken-avatar fallback are included; horizontal textarea resizing
 is disabled. No mandatory frontend framework or external CDN is used.
+Keyboard navigation moves focus to newly loaded messages after expansion or
+pagination, to the reply field when choosing an addressee, and to error messages
+when a request fails. CAPTCHA refresh focuses the new answer field. The widget
+declares its translation language independently of the host document's language.
 Overridden widget templates should preserve `data-discussion`,
 `data-commentail-navigation`, the `.commentail-form` class and the localized
 `.commentail-network-error` element to retain these enhancements.

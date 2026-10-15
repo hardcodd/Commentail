@@ -397,3 +397,22 @@ class PublicInterfaceTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(self.client.get(self.url), "Guest original")
         self.assertNotContains(self.client.get(self.url), "Guest revised")
+
+    def test_widget_declares_its_language_independently_of_the_host_document(self):
+        from html.parser import HTMLParser
+
+        from django.utils.translation import override
+
+        class WidgetParser(HTMLParser):
+            language = None
+
+            def handle_starttag(self, tag, attrs):
+                attributes = dict(attrs)
+                if tag == "section" and "data-discussion" in attributes:
+                    self.language = attributes.get("lang")
+
+        for language in ("ru", "en"):
+            with self.subTest(language=language), override(language):
+                parser = WidgetParser()
+                parser.feed(self.client.get(self.url).content.decode())
+                self.assertEqual(parser.language, language)

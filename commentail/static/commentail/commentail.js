@@ -35,10 +35,18 @@
       else field.value = values[field.name];
     });
   };
+  const focusContent = (element) => {
+    if (!element) return;
+    // Programmatic focus must not add reading targets to the normal Tab order.
+    element.setAttribute("tabindex", "-1");
+    element.focus();
+  };
   const update = async (block, url, { body, focus, keepDraft = false } = {}) => {
     if (block.getAttribute("aria-busy") === "true") return;
     const destination = new URL(url, window.location.href);
     if (destination.origin !== window.location.origin) return;
+    const previousMessages = new Set([...block.querySelectorAll(".commentail-comment")].map((item) => item.id));
+    const previousPrivate = new Set([...block.querySelectorAll(".commentail-pending")].map((item) => item.id));
     block.setAttribute("aria-busy", "true");
     const alert = block.querySelector(".commentail-network-error");
     if (alert) alert.hidden = true;
@@ -62,16 +70,21 @@
       if (keepDraft) restoreDraft(next, draft(block));
       block.replaceWith(next);
       enhance(next);
-      const field = focus && next.querySelector(`.commentail-form [name="${focus}"]`);
-      if (field) field.focus();
       const error = next.querySelector('[role="alert"]:not([hidden])');
-      if (error) error.scrollIntoView({ block: "nearest" });
+      const field = focus && next.querySelector(`.commentail-form [name="${focus}"]`);
+      const added = [...next.querySelectorAll(".commentail-comment")].find((item) => !previousMessages.has(item.id));
+      const accepted = [...next.querySelectorAll(".commentail-pending")].find((item) => !previousPrivate.has(item.id));
+      if (error) focusContent(error);
+      else if (body && (accepted || added)) focusContent(accepted || added);
+      else if (field) field.focus();
+      else focusContent(added || next.querySelector(".commentail-header h2"));
     } catch (_error) {
       // Do not replay a POST: the server may already have accepted it. Its form
       // key stays intact so an explicit retry remains deduplicated server-side.
       if (alert) {
         alert.textContent = block.dataset.networkError;
         alert.hidden = false;
+        focusContent(alert);
       }
     } finally {
       clearTimeout(timeout);
@@ -98,7 +111,7 @@
       const body = new FormData(form);
       const button = event.submitter;
       if (button && button.name) body.append(button.name, button.value);
-      update(block, form.action, { body, focus: "text" });
+      update(block, form.action, { body, focus: button?.name === "refresh" ? "answer" : "text" });
     });
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });

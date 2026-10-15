@@ -10,7 +10,7 @@ function harness(fetchImpl, next = null) {
   const field = { name: "text", value: "Unsent draft", type: "textarea" };
   const key = { name: "key", value: "original-session-key" };
   const button = { disabled: false };
-  const alert = { hidden: true, textContent: "" };
+  const alert = { hidden: true, textContent: "", setAttribute() {}, focus() { this.focused = true; }, scrollIntoView() {} };
   const attributes = {};
   const block = {
     dataset: { discussion: "17", networkError: "Connection failed" },
@@ -115,3 +115,60 @@ for (const boxSizing of ["border-box", "content-box"]) {
     assert.equal(clientHeight(), field.scrollHeight, "shrinks after removing lines");
   });
 }
+
+function focusTarget() {
+  return { attributes: {}, setAttribute(name, value) { this.attributes[name] = value; },
+    focus() { this.focused = true; }, scrollIntoView() {} };
+}
+
+test("keyboard expansion moves focus to the first newly loaded message", async () => {
+  const existing = {id: "commentail-1"};
+  const added = {...focusTarget(), id: "commentail-2"};
+  const next = { dataset: {discussion: "17"},
+    querySelectorAll: (selector) => selector === ".commentail-comment" ? [existing, added] : [],
+    querySelector: () => null };
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.block.querySelectorAll = (selector) => selector === ".commentail-comment" ? [existing] : [];
+  h.listeners.click({button: 0, target: {closest: () => ({href: "https://local.invalid/?thread=1", dataset: {}, closest: () => h.block})}, preventDefault() {}});
+  await settle();
+  assert.equal(added.focused, true);
+  assert.equal(added.attributes.tabindex, "-1");
+});
+
+test("server error receives focus before the requested textarea", async () => {
+  const error = focusTarget(), field = focusTarget();
+  const next = {dataset: {discussion: "17"}, querySelectorAll: () => [],
+    querySelector: (selector) => selector.includes('role="alert"') ? error : field};
+  const h = harness(async () => ({status: 400, text: async () => "HTML"}), next);
+  h.send(); await settle();
+  assert.equal(error.focused, true);
+  assert.equal(field.focused, undefined);
+});
+
+test("CAPTCHA refresh focuses its answer while keeping the draft", async () => {
+  const answer = focusTarget();
+  const next = {dataset: {discussion: "17"}, querySelectorAll: () => [],
+    querySelector: (selector) => selector.includes('name="answer"') ? answer : null};
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.send({name: "refresh", value: "1"}); await settle();
+  assert.equal(answer.focused, true);
+});
+
+test("network error receives keyboard focus without losing the draft", async () => {
+  const h = harness(async () => {throw new Error("Disconnected");});
+  h.send(); await settle();
+  assert.equal(h.alert.focused, true);
+  assert.equal(h.field.value, "Unsent draft");
+});
+
+test("accepted submission focuses its private status instead of an empty form", async () => {
+  const accepted = {...focusTarget(), id: "commentail-private-99"};
+  const field = focusTarget();
+  const next = {dataset: {discussion: "17"},
+    querySelectorAll: (selector) => selector === ".commentail-pending" ? [accepted] : [],
+    querySelector: (selector) => selector.includes('name="text"') ? field : null};
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.send(); await settle();
+  assert.equal(accepted.focused, true);
+  assert.equal(field.focused, undefined);
+});
