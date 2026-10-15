@@ -1,0 +1,107 @@
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+
+from django.contrib.auth import get_user_model
+from django.db import close_old_connections, connection
+from django.test import TransactionTestCase
+from wagtail.models import Site
+
+from commentail.models import Comment, Discussion, ModerationEvent
+from commentail.services import DomainError, moderate, revise, submit, submit_once
+
+
+class SQLiteConcurrencyTests(TransactionTestCase):
+    def setUp(self):
+        if "memory" in connection.settings_dict["NAME"]:
+            self.skipTest("Use COMMENTAIL_TEST_SQLITE for a disposable file database")
+        from wagtail.models import Locale, Page
+
+        Locale.objects.get_or_create(language_code="en")
+        root = Page.get_first_root_node()
+        if root is None:
+            root = Page.add_root(title="Synthetic root", slug="root")
+        self.site = Site.objects.create(hostname="concurrency.invalid", root_page=root)
+        self.discussion = Discussion.objects.create(site=self.site, page=root)
+        self.author = get_user_model().objects.create_user("concurrent")
+        self.admin = get_user_model().objects.create_superuser(
+            "admin", "admin@example.invalid", "synthetic"
+        )
+
+    def race(self, left, right):
+        barrier = Barrier(2)
+
+        def run(callback):
+            close_old_connections()
+            try:
+                barrier.wait(timeout=5)
+                try:
+                    return callback()
+                except DomainError as exc:
+                    return exc
+            finally:
+                close_old_connections()
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            first = pool.submit(run, left)
+            second = pool.submit(run, right)
+            return first.result(timeout=25), second.result(timeout=25)
+
+    def published(self):
+        comment = submit(self.discussion.pk, text="Original", user=self.author)
+        return moderate(comment.pk, "approve", actor=self.admin)
+
+    def test_reply_and_revision_cannot_lose_lock(self):
+        comment = self.published()
+        outcomes = self.race(
+            lambda: revise(comment.pk, "New", user=self.author),
+            lambda: submit(
+                self.discussion.pk, text="Reply", user=self.author, reply_to=comment.pk
+            ),
+        )
+        comment.refresh_from_db()
+        self.assertTrue(comment.edit_locked)
+        self.assertEqual(comment.direct_replies.count(), 1)
+        self.assertLessEqual(comment.revisions.filter(status="pending").count(), 1)
+        self.assertTrue(any(isinstance(item, Comment) for item in outcomes))
+        with self.assertRaises(DomainError):
+            revise(comment.pk, "Later", user=self.author)
+
+    def test_duplicate_forms_create_one_comment(self):
+        outcomes = self.race(
+            lambda: submit_once(
+                self.discussion.pk, "same", text="Message", user=self.author
+            ),
+            lambda: submit_once(
+                self.discussion.pk, "same", text="Message", user=self.author
+            ),
+        )
+        self.assertTrue(all(isinstance(item, Comment) for item in outcomes))
+        self.assertEqual(outcomes[0].pk, outcomes[1].pk)
+        self.assertEqual(Comment.objects.count(), 1)
+
+    def test_competing_moderators_make_one_decision(self):
+        comment = submit(self.discussion.pk, text="Message", user=self.author)
+        outcomes = self.race(
+            lambda: moderate(comment.pk, "approve", actor=self.admin),
+            lambda: moderate(comment.pk, "reject", actor=self.admin),
+        )
+        comment.refresh_from_db()
+        self.assertIn(comment.status, ["published", "rejected"])
+        self.assertEqual(ModerationEvent.objects.count(), 1)
+        self.assertEqual(sum(isinstance(item, DomainError) for item in outcomes), 1)
+
+    def test_two_mail_workers_have_one_claim(self):
+        from commentail.models import MailJob
+        from commentail.outbox import claim_job
+
+        submit(
+            self.discussion.pk,
+            text="Guest",
+            guest_name="Guest",
+            guest_email="guest@example.invalid",
+        )
+        job = MailJob.objects.get(kind="confirm")
+        outcomes = self.race(lambda: claim_job(job.pk), lambda: claim_job(job.pk))
+        self.assertEqual(sum(item is not None for item in outcomes), 1)
+        job.refresh_from_db()
+        self.assertEqual(job.attempts, 1)

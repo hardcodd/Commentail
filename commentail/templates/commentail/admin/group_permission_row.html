@@ -1,0 +1,4 @@
+{% load i18n wagtailadmin_tags %}
+<td>{% formattedfield field=form.site sr_only_label=True %}{{ form.DELETE }}{{ form.non_field_errors }}</td>
+{% for field in form.visible_fields %}{% if field.name != 'site' %}<td><label for="{{ field.id_for_label }}" class="w-sr-only">{{ field.label }}</label>{{ field }}{{ field.errors }}</td>{% endif %}{% endfor %}
+<td><button class="button button-small no" type="button" data-action="w-formset#delete">{% trans "Remove site access" %}</button></td>

@@ -1,0 +1,2 @@
+recursive-include tests *.py *.html *.js
+recursive-include example *.py *.html *.md

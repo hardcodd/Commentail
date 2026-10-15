@@ -1,0 +1,768 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Commentail 0.1.0.dev0\n"
+"PO-Revision-Date: 2026-10-14 00:00+0000\n"
+"Last-Translator: Commentail contributors\n"
+"Language-Team: Russian\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "A revision is already pending"
+msgstr "Правка уже ожидает проверки"
+
+msgid "Account cannot comment"
+msgstr "Аккаунту запрещено комментировать"
+
+msgid "Activity"
+msgstr "Журнал действий"
+
+msgid "All comments"
+msgstr "Все комментарии"
+
+msgid "All pages"
+msgstr "Все страницы"
+
+msgid "All permitted sites"
+msgstr "Все доступные сайты"
+
+msgid "All statuses"
+msgstr "Все статусы"
+
+msgid "Apply rules"
+msgstr "По правилам"
+
+msgid "Approve"
+msgstr "Одобрить"
+
+msgid "Approve revision"
+msgstr "Одобрить правку"
+
+msgid "Approve selected"
+msgstr "Одобрить выбранные"
+
+msgid "Approved"
+msgstr "Одобрено"
+
+msgid "Author"
+msgstr "Автор"
+
+msgid "Author cannot comment"
+msgstr "Автору запрещено комментировать"
+
+msgid "Author limit exceeded"
+msgstr "Превышен лимит отправки для автора"
+
+msgid "Author revision"
+msgstr "Авторская правка"
+
+msgid "Awaiting email"
+msgstr "Подтвердите email"
+
+msgid "Awaiting moderation"
+msgstr "На модерации"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Captcha limit exceeded"
+msgstr "Превышен лимит задач"
+
+msgid "Clickable links"
+msgstr "Кликабельные ссылки"
+
+msgid "Comment"
+msgstr "Комментарий"
+
+msgid "Comment action"
+msgstr "Действие с комментарием"
+
+msgid "Comment cannot be edited"
+msgstr "Комментарий нельзя редактировать"
+
+msgid "Comment deleted"
+msgstr "Комментарий удалён"
+
+msgid "Comment does not exist"
+msgstr "Комментарий не существует"
+
+msgid "Comment hidden"
+msgstr "Комментарий скрыт"
+
+msgid "Comment is empty or too long"
+msgstr "Комментарий пустой или слишком длинный"
+
+msgid "Comment published"
+msgstr "Комментарий опубликован"
+
+msgid "Comment rejected"
+msgstr "Комментарий отклонён"
+
+msgid "Comment templates could not be resolved."
+msgstr "Не удалось определить шаблоны комментариев."
+
+msgid "Comments"
+msgstr "Комментарии"
+
+msgid "Comments settings"
+msgstr "Настройки комментариев"
+
+msgid "Confirm email"
+msgstr "Подтвердить email"
+
+msgid "Confirm your email"
+msgstr "Подтвердите email"
+
+msgid "Confirm your email before moderation and publication."
+msgstr "Перед проверкой и публикацией подтвердите email."
+
+msgid "Deleted"
+msgstr "Удалён"
+
+msgid "Deleted user"
+msgstr "Удалённый пользователь"
+
+msgid "Disable notifications"
+msgstr "Отключить уведомления"
+
+msgid "Discussion does not exist"
+msgstr "Обсуждение не существует"
+
+msgid "Discussion is closed"
+msgstr "Обсуждение закрыто"
+
+msgid "Discussion mode"
+msgstr "Режим обсуждения"
+
+msgid "Discussion settings"
+msgstr "Настройки обсуждения"
+
+msgid "Edit"
+msgstr "Редактировать"
+
+msgid "Edit comment"
+msgstr "Редактирование комментария"
+
+msgid "Edited"
+msgstr "Изменён"
+
+msgid "Editing window has expired"
+msgstr "Срок редактирования истёк"
+
+msgid "Email (private)"
+msgstr "Email (не публикуется)"
+
+msgid "Email confirmation has expired"
+msgstr "Срок подтверждения email истёк"
+
+msgid "Email confirmed. Your comment follows the site's moderation policy."
+msgstr "Email подтверждён. Комментарий будет обработан по правилам модерации сайта."
+
+msgid "Email me about direct replies"
+msgstr "Уведомлять о прямых ответах"
+
+msgid "Erase text permanently"
+msgstr "Удалить текст без восстановления"
+
+msgid "Filter"
+msgstr "Применить"
+
+msgid "From"
+msgstr "С даты"
+
+msgid "Group access"
+msgstr "Права групп"
+
+msgid "Group access by site"
+msgstr "Права групп по сайтам"
+
+msgid "Guest comments require configured SMTP"
+msgstr "Гостевые комментарии требуют настроенного SMTP"
+
+msgid "Guest email is required"
+msgstr "Укажите email"
+
+msgid "Guest name is required and must be at most 80 characters"
+msgstr "Укажите имя длиной до 80 символов"
+
+msgid "Guests"
+msgstr "Гости"
+
+msgid "Guests and registered users"
+msgstr "Гости и зарегистрированные пользователи"
+
+msgid "Hidden"
+msgstr "Скрыто"
+
+msgid "Hide"
+msgstr "Скрыть"
+
+msgid "IP limit exceeded"
+msgstr "Превышен лимит запросов с этого IP"
+
+msgid "Incorrect or expired CAPTCHA"
+msgstr "Ответ на задачу неверный или срок истёк"
+
+msgid "Invalid guest email"
+msgstr "Некорректный email"
+
+msgid "Invalid or expired form"
+msgstr "Форма недействительна или срок истёк"
+
+msgid "Invalid or expired link"
+msgstr "Ссылка недействительна или срок истёк"
+
+msgid "Invalid reply target"
+msgstr "Некорректный адресат ответа"
+
+msgid "Invalid selection"
+msgstr "Некорректный выбор"
+
+msgid "Length must be positive"
+msgstr "Длина должна быть положительной"
+
+msgid "Maximum %(limit)s characters."
+msgstr "Не более %(limit)s символов."
+
+msgid "Maximum comment length"
+msgstr "Максимальная длина комментария"
+
+msgid "Moderation policy"
+msgstr "Политика модерации"
+
+msgid "Moderation rules"
+msgstr "Правила модерации"
+
+msgid "Name"
+msgstr "Имя"
+
+msgid "New comments are unavailable."
+msgstr "Новые комментарии недоступны."
+
+msgid "New reply to your comment"
+msgstr "Новый ответ на ваш комментарий"
+
+msgid "Next"
+msgstr "Далее"
+
+msgid "No actions"
+msgstr "Действий пока нет"
+
+msgid "No comments"
+msgstr "Комментариев нет"
+
+msgid "No published comments yet."
+msgstr "Опубликованных комментариев пока нет."
+
+msgid "Nobody"
+msgstr "Никто"
+
+msgid "Notifications disabled."
+msgstr "Уведомления отключены."
+
+msgid "Notifications were already disabled."
+msgstr "Уведомления уже были отключены."
+
+msgid "Only the author may edit"
+msgstr "Редактировать может только автор"
+
+msgid "Open"
+msgstr "Открыто"
+
+msgid "Optional rejection reason"
+msgstr "Причина отклонения (необязательно)"
+
+msgid "Page"
+msgstr "Страница"
+
+msgid "Page access is required"
+msgstr "Нужен доступ к странице"
+
+msgid "Permission denied"
+msgstr "Недостаточно прав"
+
+msgid "Previous"
+msgstr "Назад"
+
+msgid "Project-wide moderation rules"
+msgstr "Общие правила модерации проекта"
+
+msgid "Proposed"
+msgstr "Предложенная версия"
+
+msgid "Publication emails"
+msgstr "Письма о публикации"
+
+msgid "Publish immediately"
+msgstr "Публиковать сразу"
+
+msgid "Published"
+msgstr "Опубликован"
+
+msgid "Read only"
+msgstr "Только чтение"
+
+msgid "Refresh task"
+msgstr "Обновить задачу"
+
+msgid "Registered users"
+msgstr "Зарегистрированные пользователи"
+
+msgid "Reject"
+msgstr "Отклонить"
+
+msgid "Reject revision"
+msgstr "Отклонить правку"
+
+msgid "Reject selected"
+msgstr "Отклонить выбранные"
+
+msgid "Rejected"
+msgstr "Отклонён"
+
+msgid "Rejection emails"
+msgstr "Письма об отклонении"
+
+msgid "Reply"
+msgstr "Ответить"
+
+msgid "Reply from %(name)s"
+msgstr "Ответ от %(name)s"
+
+msgid "Reply target is unavailable"
+msgstr "Адресат ответа недоступен"
+
+msgid "Reply to"
+msgstr "Ответ для"
+
+msgid "Restore"
+msgstr "Восстановить"
+
+msgid "Retry delivery"
+msgstr "Повторить отправку"
+
+msgid "Review"
+msgstr "На модерацию"
+
+msgid "Review all"
+msgstr "Проверять все сообщения"
+
+msgid "Review guests"
+msgstr "Проверять гостей"
+
+msgid "Revision submitted."
+msgstr "Правка отправлена."
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Search"
+msgstr "Поиск"
+
+msgid "Select"
+msgstr "Выбрать"
+
+msgid "Send comment"
+msgstr "Отправить комментарий"
+
+msgid "Show more"
+msgstr "Показать ещё"
+
+msgid "Show more replies"
+msgstr "Показать ещё ответы"
+
+msgid "Show replies"
+msgstr "Показать ответы"
+
+msgid "Site"
+msgstr "Сайт"
+
+msgid "Site / Page"
+msgstr "Сайт / страница"
+
+msgid "Site cannot be determined"
+msgstr "Не удалось определить сайт"
+
+msgid "Site settings"
+msgstr "Настройки сайта"
+
+msgid "Solve the task"
+msgstr "Решите задачу"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Submission was not accepted"
+msgstr "Комментарий не принят"
+
+msgid "Submit revision"
+msgstr "Отправить правку"
+
+msgid "These settings apply immediately to this site. Empty values inherit the site setting."
+msgstr "Настройки применяются сразу для этого сайта. Пустые значения наследуются от настроек сайта."
+
+msgid "This message cannot be resent"
+msgstr "Повторная отправка недоступна"
+
+msgid "To"
+msgstr "По дату"
+
+msgid "Too many tasks requested. Please try again later."
+msgstr "Запрошено слишком много задач. Попробуйте позже."
+
+msgid "Unknown action"
+msgstr "Неизвестное действие"
+
+msgid "Unknown moderation action"
+msgstr "Неизвестное действие модерации"
+
+msgid "Unsubscribe:"
+msgstr "Отписаться:"
+
+msgid "Use site setting"
+msgstr "Использовать настройку сайта"
+
+msgid "User"
+msgstr "Пользователь"
+
+msgid "Who can comment"
+msgstr "Кто может комментировать"
+
+msgid "Your comment"
+msgstr "Ваш комментарий"
+
+msgid "Your comment is published"
+msgstr "Ваш комментарий опубликован"
+
+msgid "A revision already awaits moderation"
+msgstr "Правка уже ожидает модерации"
+
+msgid "Action"
+msgstr "Действие"
+
+msgid "Cannot determine client address"
+msgstr "Не удалось определить адрес клиента"
+
+msgid "Confirmation expired"
+msgstr "Срок подтверждения истёк"
+
+msgid "Content"
+msgstr "Содержимое"
+
+msgid "Editing window expired"
+msgstr "Время редактирования истекло"
+
+msgid "Enabled"
+msgstr "Включено"
+
+msgid "Erase comment text"
+msgstr "Удалять текст комментариев"
+
+msgid "Group"
+msgstr "Группа"
+
+msgid "Guest editing requires an edit link"
+msgstr "Для редактирования нужна защищённая ссылка из письма"
+
+msgid "Guest mail access handler failed"
+msgstr "Ошибка проверки доступа для гостевого письма"
+
+msgid "Hide and restore comments"
+msgstr "Скрывать и восстанавливать комментарии"
+
+msgid "Invalid submission key"
+msgstr "Недействительная форма отправки"
+
+msgid "Mail job does not exist"
+msgstr "Письмо не найдено"
+
+msgid "Manage project-wide rules"
+msgstr "Управлять общими правилами проекта"
+
+msgid "Manage settings"
+msgstr "Управлять настройками"
+
+msgid "Moderate comments"
+msgstr "Модерировать комментарии"
+
+msgid "No"
+msgstr "Нет"
+
+msgid "Only a visible published comment in this discussion accepts replies"
+msgstr "Отвечать можно только на видимые опубликованные сообщения этого обсуждения"
+
+msgid "Only hidden comments can be restored"
+msgstr "Восстановить можно только скрытый комментарий"
+
+msgid "Only pending comments can be decided"
+msgstr "Решение возможно только для ожидающих модерации комментариев"
+
+msgid "Only published comments can be hidden"
+msgstr "Скрыть можно только опубликованный комментарий"
+
+msgid "Only the author can edit"
+msgstr "Редактировать может только автор"
+
+msgid "Revision cannot be decided"
+msgstr "Решение по этой правке недоступно"
+
+msgid "Revision does not exist"
+msgstr "Правка не найдена"
+
+msgid "Site does not exist"
+msgstr "Сайт не найден"
+
+msgid "Submission key was already used with different content"
+msgstr "Эта форма уже отправлена с другим содержимым"
+
+msgid "This link cannot edit that comment"
+msgstr "Эта ссылка не позволяет редактировать данный комментарий"
+
+msgid "Unknown rate limit"
+msgstr "Неизвестный тип ограничения"
+
+msgid "Unknown revision action"
+msgstr "Неизвестное действие с правкой"
+
+msgid "Unknown token purpose"
+msgstr "Неизвестное назначение ссылки"
+
+msgid "View comments"
+msgstr "Просматривать комментарии"
+
+msgid "Word or phrase"
+msgstr "Слово или фраза"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "Resend confirmation email"
+msgstr "Отправить письмо подтверждения повторно"
+
+msgid "Comment settings"
+msgstr "Настройки комментариев"
+
+msgid "Revision awaiting moderation"
+msgstr "Правка ожидает модерации"
+
+msgid "The form could not be verified. Your draft is preserved; review it and send again."
+msgstr "Не удалось проверить форму. Текст сохранён: проверьте его и отправьте ещё раз."
+
+msgid "Pending"
+msgstr "На модерации"
+
+msgid "Select all"
+msgstr "Выбрать все"
+
+msgid "Disabled"
+msgstr "Отключено"
+
+msgid "No rules yet"
+msgstr "Правил пока нет"
+
+msgid "Add rule"
+msgstr "Добавить правило"
+
+msgid "No group permissions yet"
+msgstr "Права групп ещё не настроены"
+
+msgid "Add group access"
+msgstr "Добавить права группы"
+
+msgid "Connection failed. Your draft is kept. Please try again."
+msgstr "Ошибка соединения. Текст сохранён. Попробуйте ещё раз."
+
+msgid "Comment permissions by site"
+msgstr "Права на комментарии по сайтам"
+
+msgid "Choose the sites and actions this group may access. Comment text can only be edited by its author."
+msgstr "Выберите сайты и доступные группе действия. Текст комментария может редактировать только его автор."
+
+msgid "Add site access"
+msgstr "Добавить сайт"
+
+msgid "Remove site access"
+msgstr "Убрать доступ к сайту"
+
+msgid "Each site may appear only once."
+msgstr "Каждый сайт можно указать только один раз."
+
+msgid "View"
+msgstr "Просмотр"
+
+msgid "Moderate"
+msgstr "Модерация"
+
+msgid "Settings"
+msgstr "Настройки"
+
+msgid "Rules"
+msgstr "Правила"
+
+msgid "Edit rule"
+msgstr "Редактировать правило"
+
+msgid "All actions"
+msgstr "Все действия"
+
+msgid "Reset filters"
+msgstr "Сбросить фильтры"
+
+msgid "No matching rules"
+msgstr "Правила не найдены"
+
+msgid "Pagination"
+msgstr "Навигация по страницам"
+
+msgid "The CSV file must use UTF-8 encoding."
+msgstr "CSV-файл должен быть в кодировке UTF-8."
+
+msgid "The CSV file is empty."
+msgstr "CSV-файл пуст."
+
+msgid "CSV headers must be phrase, action, enabled."
+msgstr "Заголовки CSV должны быть phrase, action, enabled."
+
+#, python-format
+msgid "The CSV file exceeds the limit of %(limit)s rules."
+msgstr "CSV-файл превышает лимит: %(limit)s правил."
+
+#, python-format
+msgid "Row %(line)s: expected three columns."
+msgstr "Строка %(line)s: нужны три колонки."
+
+#, python-format
+msgid "Row %(line)s: phrase must contain 1–255 characters without null bytes."
+msgstr "Строка %(line)s: фраза должна содержать 1–255 символов без нулевых байтов."
+
+#, python-format
+msgid "Row %(line)s: duplicate phrase in the file."
+msgstr "Строка %(line)s: фраза повторяется в файле."
+
+#, python-format
+msgid "Row %(line)s: action must be review or reject."
+msgstr "Строка %(line)s: действие должно быть review или reject."
+
+#, python-format
+msgid "Row %(line)s: enabled must be 1, 0, true or false."
+msgstr "Строка %(line)s: enabled должно быть 1, 0, true или false."
+
+msgid "Invalid CSV structure: check the delimiter and quoting."
+msgstr "Неверная структура CSV: проверьте разделитель и кавычки."
+
+msgid "The CSV file contains no rules."
+msgstr "CSV-файл не содержит правил."
+
+#, python-format
+msgid "Row %(line)s: multiple existing rules have this phrase; resolve them before importing."
+msgstr "Строка %(line)s: несколько существующих правил имеют эту фразу; устраните неоднозначность перед импортом."
+
+msgid "CSV file"
+msgstr "CSV-файл"
+
+#, python-format
+msgid "The CSV file exceeds the limit of %(limit)s bytes."
+msgstr "CSV-файл превышает лимит: %(limit)s байт."
+
+#, python-format
+msgid "CSV imported: %(added)s added, %(updated)s updated, %(unchanged)s unchanged."
+msgstr "CSV импортирован: добавлено %(added)s, обновлено %(updated)s, без изменений %(unchanged)s."
+
+msgid "Import CSV"
+msgstr "Импорт CSV"
+
+msgid "Export CSV"
+msgstr "Экспорт CSV"
+
+msgid "Use UTF-8 CSV with comma or semicolon separators and the headers phrase, action, enabled."
+msgstr "Используйте CSV в UTF-8, разделитель — запятая или точка с запятой. Заголовки: phrase, action, enabled."
+
+msgid "Actions: review or reject. Enabled: 1/0 or true/false."
+msgstr "Действия: review (на модерацию) или reject (отклонить). Включено: 1/0 или true/false."
+
+msgid "New phrases are added; exact existing phrases update their action and enabled state. Other rules remain unchanged. If any row is invalid, nothing is saved."
+msgstr "Новые фразы добавляются; при точном совпадении существующей фразы обновляются действие и состояние. Остальные правила сохраняются. При ошибке в любой строке ничего не сохраняется."
+
+msgid "Export includes all project rules. Formula-like phrases are prefixed with an apostrophe for spreadsheets; importing restores the original text."
+msgstr "Экспорт включает все правила проекта. Перед фразами, похожими на формулы, добавляется апостроф для электронных таблиц; импорт восстанавливает исходный текст."
+
+msgid "CAPTCHA is unavailable. Please try again later."
+msgstr "Капча временно недоступна. Попробуйте позже."
+
+msgid "Email delivery"
+msgstr "Доставка писем"
+
+msgid "Failed"
+msgstr "Ошибка доставки"
+
+msgid "Pending delivery"
+msgstr "Ожидает отправки"
+
+msgid "Sending"
+msgstr "Отправляется"
+
+msgid "Sent"
+msgstr "Отправлено"
+
+msgid "Cancelled"
+msgstr "Отменено"
+
+msgid "Email confirmation"
+msgstr "Подтверждение email"
+
+msgid "Guest edit link"
+msgstr "Ссылка редактирования для гостя"
+
+msgid "Reply notification"
+msgstr "Уведомление об ответе"
+
+msgid "Publication notification"
+msgstr "Уведомление о публикации"
+
+msgid "Rejection notification"
+msgstr "Уведомление об отклонении"
+
+#, python-format
+msgid "Delivery jobs: %(count)s."
+msgstr "Писем: %(count)s."
+
+msgid "Message"
+msgstr "Письмо"
+
+msgid "Recipient"
+msgstr "Получатель"
+
+msgid "Delivery details"
+msgstr "Данные доставки"
+
+msgid "Attempts"
+msgstr "Попытки"
+
+msgid "Next attempt"
+msgstr "Следующая попытка"
+
+msgid "Expires"
+msgstr "Срок действия"
+
+msgid "No delivery jobs"
+msgstr "Писем нет"
+
+msgid "Back to comments"
+msgstr "Вернуться к комментариям"
+
+msgid "Comments are unavailable."
+msgstr "Комментарии недоступны."
+
+msgid "Object discussions"
+msgstr "Обсуждения объектов"
+
+msgid "No object discussions yet."
+msgstr "Обсуждений объектов пока нет."
+
+msgid "Object mail access handler failed"
+msgstr "Ошибка обработчика доступа к объекту для доставки письма"
+
+msgid "Object URL handler failed"
+msgstr "Ошибка обработчика адреса объекта"

@@ -1,0 +1,25 @@
+{% extends "wagtailadmin/base.html" %}{% load i18n static commentail_tags %}
+{% block titletag %}{% trans "Project-wide moderation rules" %}{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
+{% block content %}
+{% trans "Project-wide moderation rules" as rules_title %}
+{% include "wagtailadmin/shared/header.html" with title=rules_title icon="cog" classname="commentail-admin-heading" %}
+<div class="nice-padding commentail-admin">
+<a class="commentail-admin-back" href="{% url 'commentail_admin:list' %}">← {% trans "Comments" %}</a>
+<div class="commentail-admin-meta"><h2>{% trans "Moderation rules" %} <span class="commentail-admin-status">{{ rules.paginator.count }}</span></h2><div class="commentail-admin-actions"><a class="button button-secondary" href="{% url 'commentail_admin:rules_import' %}">{% trans "Import CSV" %}</a><a class="button button-secondary" href="{% url 'commentail_admin:rules_export' %}">{% trans "Export CSV" %}</a><a class="button" href="{% url 'commentail_admin:rule_add' %}">{% trans "Add rule" %}</a></div></div>
+<form class="commentail-admin-filters" method="get">
+<label>{% trans "Search" %}<input type="search" name="q" value="{{ search }}"></label>
+<label>{% trans "Action" %}<select name="action"><option value="">{% trans "All actions" %}</option>{% for value,label in actions %}<option value="{{ value }}"{% if value == active_action %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+<label>{% trans "Status" %}<select name="enabled"><option value="">{% trans "All statuses" %}</option><option value="1"{% if active_enabled == '1' %} selected{% endif %}>{% trans "Enabled" %}</option><option value="0"{% if active_enabled == '0' %} selected{% endif %}>{% trans "Disabled" %}</option></select></label>
+<button class="button" type="submit">{% trans "Filter" %}</button>
+<a href="{% url 'commentail_admin:rules' %}">{% trans "Reset filters" %}</a>
+</form>
+<div class="commentail-admin-table"><table class="listing"><thead><tr><th>{% trans "Word or phrase" %}</th><th>{% trans "Action" %}</th><th>{% trans "Status" %}</th></tr></thead><tbody>
+{% for rule in rules %}<tr><td><a href="{% url 'commentail_admin:rule_edit' rule.pk %}">{{ rule.phrase }}</a></td><td>{{ rule.get_action_display }}</td><td>{% if rule.enabled %}{% trans "Enabled" %}{% else %}{% trans "Disabled" %}{% endif %}</td></tr>{% empty %}<tr><td colspan="3">{% trans "No matching rules" %}</td></tr>{% endfor %}
+</tbody></table></div>
+<nav class="commentail-admin-pagination" aria-label="{% trans 'Pagination' %}">
+{% if rules.has_previous %}<a class="button button-secondary" href="?{{ previous_query }}">{% trans "Previous" %}</a>{% endif %}
+<span>{{ rules.number }} / {{ rules.paginator.num_pages }}</span>
+{% if rules.has_next %}<a class="button button-secondary" href="?{{ next_query }}">{% trans "Next" %}</a>{% endif %}
+</nav>
+</div>{% endblock %}

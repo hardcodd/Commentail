@@ -1,0 +1,79 @@
+/* Defaults live at the point of use so ancestor custom properties can inherit. */
+.commentail, .commentail-action {
+  box-sizing: border-box; width: 100%; max-width: var(--commentail-max-width, 48rem); min-width: 0;
+  font-family: var(--commentail-font-family, inherit); font-size: var(--commentail-font-size, inherit);
+  line-height: var(--commentail-line-height, inherit); color: var(--commentail-color-text, inherit);
+  background: var(--commentail-color-surface, transparent); overflow-wrap: anywhere;
+}
+.commentail-page, .commentail-action { width: min(100%, 50rem); margin: 2rem auto; padding: 1rem; box-sizing: border-box; }
+.commentail *, .commentail *::before, .commentail *::after, .commentail-action * { box-sizing: border-box; }
+.commentail a { color: var(--commentail-color-accent, currentColor); text-underline-offset: .2em; }
+.commentail-header h2 { display: flex; align-items: center; gap: .6rem; margin: 0 0 1.25rem; font-size: 1.45em; }
+.commentail-count { font-size: .65em; padding: .15em .6em; border: 1px solid var(--commentail-color-border, currentColor); border-radius: 2em; }
+.commentail-form, .commentail-action form { display: grid; gap: calc(var(--commentail-spacing, 1rem) * .75); margin-bottom: calc(var(--commentail-spacing, 1rem) * 1.5); }
+.commentail-form label { display: grid; gap: .3rem; font-weight: 500; }
+.commentail-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.commentail .commentail-input, .commentail-action .commentail-input {
+  display: block; width: 100%; min-width: 0; padding: .7rem .85rem;
+  border: 1px solid var(--commentail-color-border, currentColor); border-radius: var(--commentail-border-radius, .75rem);
+  font: inherit; color: inherit; background: var(--commentail-color-input-surface, transparent);
+}
+.commentail textarea.commentail-input, .commentail-action textarea.commentail-input {
+  min-height: var(--commentail-input-min-height, 6rem); max-height: var(--commentail-input-max-height, 24rem);
+  resize: none; overflow: auto;
+}
+.commentail .commentail-check { display: flex; gap: .5rem; align-items: center; font-weight: 400; }
+.commentail-button, .commentail-action button {
+  display: inline-block; justify-self: start; max-width: 100%; padding: .65rem 1rem;
+  border: 1px solid var(--commentail-color-border, currentColor); border-radius: var(--commentail-border-radius, .75rem);
+  color: var(--commentail-color-button-text, var(--commentail-color-accent, inherit)); background: var(--commentail-color-button-surface, transparent); font: inherit; cursor: pointer;
+  text-align: center; text-decoration: none;
+}
+.commentail a.commentail-button { color: var(--commentail-color-button-text, var(--commentail-color-accent, inherit)); }
+.commentail .commentail-secondary { background: transparent; border-color: var(--commentail-color-border, currentColor); color: var(--commentail-color-accent, currentColor); }
+.commentail :focus-visible, .commentail-action :focus-visible { outline: 2px solid var(--commentail-color-accent, currentColor); outline-offset: 3px; }
+.commentail-comment { display: flex; gap: .75rem; padding: 1.25rem 0; border-top: 1px solid var(--commentail-color-border, currentColor); }
+.commentail-avatar { flex: 0 0 var(--commentail-avatar-size, 2.5rem); width: var(--commentail-avatar-size, 2.5rem); height: var(--commentail-avatar-size, 2.5rem); display: grid; place-items: center; border-radius: 50%; background: linear-gradient(130deg, hsl(var(--commentail-avatar-hue) 55% 42%), hsl(calc(var(--commentail-avatar-hue) + 50) 60% 32%)); color: white; font-size: .8em; font-weight: 650; }
+.commentail-content { min-width: 0; flex: 1; }
+.commentail-content header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem .75rem; }
+.commentail .commentail-date, .commentail-muted { color: var(--commentail-color-muted, inherit); font-size: .85em; }
+.commentail-text { white-space: pre-wrap; margin: .5rem 0; }
+.commentail-content footer { display: flex; flex-wrap: wrap; gap: 1rem; font-size: .85em; }
+.commentail-replies { padding-left: calc(var(--commentail-avatar-size, 2.5rem) + .75rem); }
+.commentail-expand { display: inline-block; margin: 0 0 1rem; }
+.commentail-pending { padding: 1rem; margin-bottom: 1rem; border: 1px dashed var(--commentail-color-border, currentColor); border-radius: var(--commentail-border-radius, .75rem); }
+.commentail-status { display: block; color: var(--commentail-color-muted, inherit); font-size: .85em; }
+.commentail-error { padding: .75rem; border: 1px solid var(--commentail-color-error, currentColor); border-radius: var(--commentail-border-radius, .75rem); }
+@media (max-width: 480px) { .commentail-fields { grid-template-columns: minmax(0, 1fr); } .commentail-replies { padding-left: 1rem; } .commentail-page { margin: 0 auto; padding: .75rem; } }
+
+.commentail-avatar { position: relative; overflow: hidden; }
+.commentail-avatar-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.commentail-avatar { background-image: var(--commentail-avatar-background, var(--commentail-generated-avatar)); }
+
+.commentail[aria-busy="true"] .commentail-button { opacity: .65; cursor: progress; }
+.commentail [hidden] { display: none !important; }
+
+/* Keep the host's color scheme, including when it differs from the OS theme. */
+.commentail .commentail-input::placeholder, .commentail-action .commentail-input::placeholder {
+  color: var(--commentail-color-muted, inherit); opacity: 1;
+}
+.commentail input[type="checkbox"], .commentail-action input[type="checkbox"] {
+  color: inherit; accent-color: var(--commentail-color-accent, currentColor);
+}
+@supports (color: color-mix(in srgb, currentColor, transparent)) {
+  .commentail-comment, .commentail-count, .commentail-pending {
+    border-color: var(--commentail-color-border, color-mix(in srgb, currentColor 25%, transparent));
+  }
+  .commentail .commentail-input, .commentail-action .commentail-input {
+    border-color: var(--commentail-color-border, color-mix(in srgb, currentColor 60%, transparent));
+    background: var(--commentail-color-input-surface, color-mix(in srgb, currentColor 3%, transparent));
+  }
+  .commentail-button, .commentail-action button {
+    border-color: var(--commentail-color-border, color-mix(in srgb, currentColor 60%, transparent));
+    background: var(--commentail-color-button-surface, color-mix(in srgb, currentColor 8%, transparent));
+  }
+  .commentail-button:hover, .commentail-action button:hover {
+    background: var(--commentail-color-button-hover, color-mix(in srgb, currentColor 15%, transparent));
+  }
+}

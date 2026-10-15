@@ -1,0 +1,15 @@
+{% extends "wagtailadmin/base.html" %}{% load i18n static commentail_tags %}
+{% block titletag %}{% trans "Import CSV" %}{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
+{% block content %}{% trans "Import CSV" as import_title %}{% include "wagtailadmin/shared/header.html" with title=import_title icon="upload" classname="commentail-admin-heading" %}
+<div class="nice-padding commentail-admin"><a class="commentail-admin-back" href="{% url 'commentail_admin:rules' %}">← {% trans "Moderation rules" %}</a>
+<section class="commentail-admin-card">
+<p>{% trans "Use UTF-8 CSV with comma or semicolon separators and the headers phrase, action, enabled." %}</p>
+<p>{% trans "Actions: review or reject. Enabled: 1/0 or true/false." %}</p>
+<pre>phrase,action,enabled
+spam,review,1
+unwanted phrase,reject,1</pre>
+<p>{% trans "New phrases are added; exact existing phrases update their action and enabled state. Other rules remain unchanged. If any row is invalid, nothing is saved." %}</p>
+<p>{% trans "Export includes all project rules. Formula-like phrases are prefixed with an apostrophe for spreadsheets; importing restores the original text." %}</p>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}{% include "wagtailadmin/shared/field.html" with field=field only %}{% endfor %}<button class="button" type="submit">{% trans "Import CSV" %}</button></form>
+</section></div>{% endblock %}

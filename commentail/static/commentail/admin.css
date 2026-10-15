@@ -1,0 +1,62 @@
+/* Scoped layouts inherit the active Wagtail theme. */
+.commentail-admin { padding-bottom: 3rem; --commentail-admin-border: var(--w-color-border-furniture, #d7dce1); }
+.commentail-admin nav { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1.5rem; }
+.commentail-admin-back { display: inline-block; margin-bottom: 1.5rem; }
+.commentail-admin-card { padding: 1.5rem; border: 1px solid var(--commentail-admin-border); border-radius: .75rem; margin-bottom: 1.5rem; min-width: 0; }
+.commentail-admin-card h2 { margin: 0 0 1.25rem; font-size: 1.25rem; }
+.commentail-admin-columns { display: grid; grid-template-columns: minmax(0, 42rem) minmax(16rem, 1fr); gap: 1.5rem; align-items: start; }
+.commentail-admin-columns > :only-child { grid-column: 1 / -1; max-width: 52rem; width: 100%; }
+.commentail-admin-tabs { border-bottom: 1px solid var(--commentail-admin-border); }
+.commentail-admin-tabs a { padding: .75rem 1rem; border-bottom: 3px solid transparent; }
+.commentail-admin-tabs a[aria-current] { border-color: currentColor; font-weight: 700; }
+.commentail-admin-tabs span { margin-inline-start: .4rem; font-variant-numeric: tabular-nums; }
+.commentail-admin-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); align-items: end; gap: 1rem; padding: 1.25rem; border: 1px solid var(--commentail-admin-border); border-radius: .75rem; margin: 1.5rem 0; }
+.commentail-admin-filters label, .commentail-admin-reason { display: grid; gap: .5rem; }
+.commentail-admin-filters input, .commentail-admin-filters select { box-sizing: border-box; width: 100%; min-width: 0; height: 2.75rem; font-size: 1rem; }
+.commentail-admin-reason { max-width: 42rem; margin-bottom: 1rem; }
+.commentail-admin-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
+.commentail-admin-actions .button { margin: 0; max-width: 100%; white-space: normal; height: auto; min-height: 2.5rem; padding: .6rem 1rem; line-height: 1.4; }
+.commentail-admin-meta { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.commentail-admin-status { display: inline-block; padding: .3rem .65rem; border: 1px solid var(--commentail-admin-border); border-radius: 1rem; font-size: .85rem; white-space: nowrap; }
+.commentail-admin-status[data-status=pending] { border-color: #a86b17; }
+.commentail-admin-status[data-status=published] { border-color: #29824a; }
+.commentail-admin-status[data-status=rejected] { border-color: #b44848; }
+.commentail-admin blockquote { white-space: pre-wrap; overflow-wrap: anywhere; padding: 1rem; margin: 1.5rem 0; border-inline-start: 3px solid var(--commentail-admin-border); }
+.commentail-admin-table { overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--commentail-admin-border); border-radius: .75rem; }
+.commentail-admin .listing { width: 100%; margin: 0; }
+.commentail-admin .listing td { overflow-wrap: anywhere; vertical-align: top; }
+.commentail-admin .listing small { display: block; margin-top: .5rem; }
+.commentail-admin-diff { table-layout: fixed; }
+.commentail-admin-diff td { white-space: pre-wrap; }
+.commentail-admin-items { list-style: none; padding: 0; }
+.commentail-admin-items li { display: grid; gap: .4rem; padding: .9rem 0; border-bottom: 1px solid var(--commentail-admin-border); }
+.commentail-admin del { background: #ffe5e5; color: #722222; }
+.commentail-admin ins { background: #e3f7e9; color: #16552b; text-decoration: none; }
+@media (max-width: 900px) { .commentail-admin-columns { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .commentail-admin-filters { grid-template-columns: minmax(0, 1fr); } .commentail-admin-card { padding: 1rem; } }
+
+@media (max-width: 600px) { .commentail-admin-heading .w-header__title { white-space: normal; font-size: 1.5rem; overflow-wrap: anywhere; } }
+
+.commentail-group-permissions { overflow-x: auto; margin: 1rem 0; }
+.commentail-group-permissions table { width: 100%; min-width: 760px; table-layout: fixed; }
+.commentail-group-permissions table.listing th { white-space: normal; overflow-wrap: normal; font-size: .85rem; line-height: 1.4; padding: .75rem .5rem; }
+.commentail-group-permissions table.listing th:first-child { width: 18%; }
+.commentail-group-permissions td { vertical-align: middle; }
+.commentail-group-permissions select { width: 100%; min-width: 0; }
+.commentail-group-permissions .button { white-space: normal; height: auto; padding: .5rem; line-height: 1.4; }
+
+.commentail-admin-pagination { align-items: center; }
+.commentail-admin-columns > :only-child { box-sizing: border-box; }
+
+@media (max-width: 600px) {
+  .commentail-admin-mail-table table,
+  .commentail-admin-mail-table tbody,
+  .commentail-admin-mail-table tr { display: block; width: 100%; }
+  .commentail-admin-mail-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .commentail-admin-mail-table tbody tr { padding: .75rem; border-bottom: 1px solid var(--commentail-admin-border); }
+  .commentail-admin-mail-table tbody tr:last-child { border-bottom: 0; }
+  .commentail-admin-mail-table table.listing td { display: block; width: auto; padding: .5rem 0; border: 0; }
+  .commentail-admin-mail-table td[data-label]::before { content: attr(data-label); display: block; font-weight: 700; margin-bottom: .25rem; }
+}
+
+.commentail-object-label { overflow-wrap: anywhere; }

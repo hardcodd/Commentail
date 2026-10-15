@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.ruff_cache/
+
+/example/.runtime/
+
+# Local environments, credentials and runtime artifacts.
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+*.db
+*.log
+.DS_Store
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/

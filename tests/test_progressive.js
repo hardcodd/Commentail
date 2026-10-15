@@ -1,0 +1,117 @@
+// Contract tests for failure/replay behavior without a browser dependency.
+const { test } = require("node:test");
+const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
+const vm = require("node:vm");
+const script = readFileSync("commentail/static/commentail/commentail.js", "utf8");
+
+function harness(fetchImpl, next = null) {
+  const listeners = {};
+  const field = { name: "text", value: "Unsent draft", type: "textarea" };
+  const key = { name: "key", value: "original-session-key" };
+  const button = { disabled: false };
+  const alert = { hidden: true, textContent: "" };
+  const attributes = {};
+  const block = {
+    dataset: { discussion: "17", networkError: "Connection failed" },
+    getAttribute: (name) => attributes[name],
+    setAttribute: (name, value) => { attributes[name] = value; },
+    removeAttribute: (name) => { delete attributes[name]; },
+    querySelector: () => alert,
+    querySelectorAll: (selector) => selector.includes("[name]") ? [field, key] : selector.startsWith("button") ? [button] : [],
+    replaceWith: (value) => { block.replacement = value; },
+  };
+  const form = { action: "https://local.invalid/comments/submit/", matches: () => true, closest: () => block };
+  class Data {
+    constructor() { this.values = { text: field.value, key: key.value }; }
+    append(name, value) { this.values[name] = value; }
+  }
+  const document = { readyState: "complete", querySelectorAll: () => [], addEventListener: (name, handler) => { listeners[name] = handler; } };
+  const window = { location: { href: "https://local.invalid/page/", origin: "https://local.invalid" }, fetch: fetchImpl, DOMParser: true, AbortController };
+  const context = { document, window, fetch: fetchImpl, URL, FormData: Data, AbortController, setTimeout, clearTimeout,
+    DOMParser: class { parseFromString() { return { querySelectorAll: () => next ? [next] : [] }; } } };
+  vm.runInNewContext(script, context);
+  const send = (submitter) => {
+    const event = { target: form, submitter, prevented: false, preventDefault() { this.prevented = true; } };
+    listeners.submit?.(event);
+    return event;
+  };
+  return { listeners, field, key, block, button, alert, send };
+}
+const settle = () => new Promise((resolve) => setImmediate(resolve));
+
+test("network failure keeps draft/key, restores controls and never replays POST", async () => {
+  let calls = 0;
+  const h = harness(async () => { calls++; throw new Error("Disconnected"); });
+  assert.equal(h.send().prevented, true);
+  await settle();
+  assert.equal(calls, 1);
+  assert.equal(h.field.value, "Unsent draft");
+  assert.equal(h.key.value, "original-session-key");
+  assert.equal(h.button.disabled, false);
+  assert.equal(h.alert.hidden, false);
+  assert.equal(h.alert.textContent, "Connection failed");
+  h.send(); await settle();
+  assert.equal(calls, 2); // Only the author's explicit retry.
+});
+
+test("parallel submit is suppressed and CAPTCHA refresh sends the clicked button", async () => {
+  let release, calls = 0, payload;
+  const h = harness((url, options) => { calls++; payload = options.body.values; return new Promise((resolve) => { release = resolve; }); });
+  h.send({ name: "refresh", value: "1" }); h.send();
+  assert.equal(calls, 1);
+  assert.equal(payload.refresh, "1");
+  assert.equal(h.button.disabled, true);
+  release({ status: 500 }); await settle();
+  assert.equal(h.button.disabled, false);
+});
+
+test("unavailable fetch leaves ordinary form submission alone", () => {
+  const h = harness(undefined);
+  assert.equal(h.send().prevented, false);
+});
+
+test("navigation preserves the latest draft and cannot target a foreign origin", async () => {
+  const newField = { name: "text", value: "" };
+  const next = { dataset: { discussion: "17" }, querySelectorAll: (selector) => selector.includes("[name]") ? [newField] : [], querySelector: () => null };
+  let calls = 0;
+  const h = harness(async () => { calls++; return { status: 200, text: async () => "trusted HTML" }; }, next);
+  const click = (href) => h.listeners.click({ button: 0, target: { closest: () => ({ href, dataset: {}, closest: () => h.block }) }, preventDefault() {} });
+  click("https://foreign.invalid/"); assert.equal(calls, 0);
+  click("https://local.invalid/?thread=2");
+  h.field.value = "Typed while loading";
+  await settle();
+  assert.equal(newField.value, "Typed while loading");
+  assert.equal(h.block.replacement, next);
+});
+
+// Layout dimensions model the browser box contract, independently of the helper.
+for (const boxSizing of ["border-box", "content-box"]) {
+  test(`autoheight fits content with custom borders and padding (${boxSizing})`, () => {
+    let contentHeight = 240;
+    const padding = 24, borders = 6;
+    const events = {};
+    const field = {
+      style: {},
+      get scrollHeight() { return contentHeight + padding; },
+      addEventListener(name, listener) { events[name] = listener; },
+    };
+    const document = {
+      readyState: "complete",
+      addEventListener() {},
+      querySelectorAll: (selector) => selector === "textarea.commentail-input" ? [field] : [],
+    };
+    const window = {
+      getComputedStyle: () => ({boxSizing, borderTopWidth: "2px", borderBottomWidth: "4px", paddingTop: "10px", paddingBottom: "14px"}),
+    };
+    vm.runInNewContext(script, {document, window});
+    const clientHeight = () => parseFloat(field.style.height) + (boxSizing === "border-box" ? -borders : padding);
+    assert.equal(clientHeight(), field.scrollHeight, "all content fits without inner scrolling");
+    contentHeight = 480;
+    events.input();
+    assert.equal(clientHeight(), field.scrollHeight, "grows after input");
+    contentHeight = 48;
+    events.input();
+    assert.equal(clientHeight(), field.scrollHeight, "shrinks after removing lines");
+  });
+}

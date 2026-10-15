@@ -1,0 +1,3 @@
+{% load i18n commentail_tags %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ page.title }}</title>{% commentail_css %}{% commentail_js %}<style>body { margin: 0; font: 1rem/1.6 system-ui, sans-serif; } main { max-width: 56rem; margin: auto; padding: 1.5rem; } a { color: #6750a4; }</style></head>
+<body><main><h1>{{ page.title }}</h1><p>{{ page.introduction }}</p><p><a href="/admin/">{% trans "Administration" %}</a></p>{% commentail page %}<p><a href="/admin/commentail/objects/">Object discussion settings</a></p></main></body></html>

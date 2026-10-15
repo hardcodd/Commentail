@@ -1,0 +1,13 @@
+{% load i18n wagtailadmin_tags %}
+{% trans "Comment permissions by site" as heading %}
+{% panel id="commentail-permissions" heading=heading icon="comment" attrs=formset.attrs %}
+<p>{% trans "Choose the sites and actions this group may access. Comment text can only be edited by its author." %}</p>
+{{ formset.management_form }}{{ formset.non_form_errors }}
+<div class="commentail-group-permissions"><table class="listing">
+<thead><tr>{% for field in formset.empty_form.visible_fields %}<th title="{{ field.label }}">{% if field.name == 'view' %}{% trans "View" %}{% elif field.name == 'moderate' %}{% trans "Moderate" %}{% elif field.name == 'hide' %}{% trans "Hide" %}{% elif field.name == 'delete' %}{% trans "Delete" %}{% elif field.name == 'settings' %}{% trans "Settings" %}{% elif field.name == 'rules' %}{% trans "Rules" %}{% else %}{{ field.label }}{% endif %}</th>{% endfor %}<th></th></tr></thead>
+<tbody data-w-formset-target="forms">
+{% for form in formset.forms %}<tr id="inline_child_{{ form.prefix }}"{% if form.DELETE.value %} hidden data-w-formset-target="deleted"{% else %} data-w-formset-target="child"{% endif %}>{% include "commentail/admin/group_permission_row.html" with form=form only %}</tr>{% endfor %}
+</tbody></table></div>
+<template data-w-formset-target="template"><tr id="inline_child_{{ formset.empty_form.prefix }}" data-w-formset-target="child">{% include "commentail/admin/group_permission_row.html" with form=formset.empty_form only %}</tr></template>
+<button class="button button-secondary" type="button" data-action="w-formset#add">{% trans "Add site access" %}</button>
+{% endpanel %}
