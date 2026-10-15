@@ -313,6 +313,33 @@ class PublicInterfaceTests(TestCase):
         EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
         EMAIL_HOST="127.0.0.1",
     )
+    def test_remembered_guest_hint_distinguishes_a_changed_email(self):
+        from commentail.security import remember_guest
+
+        self.client.cookies[f"commentail_guest_{self.site.pk}"] = remember_guest(
+            self.site, "guest@example.invalid"
+        )
+        hint = "This email is confirmed in this browser. A different email needs confirmation."
+        response = self.client.get(self.url)
+        self.assertIsNone(response.context["captcha"])
+        self.assertContains(response, hint)
+        self.assertNotContains(
+            response, "Confirm your email before moderation and publication."
+        )
+        response = self.client.post(
+            reverse("commentail:submit", args=[self.site.root_page.pk]),
+            {"refresh": "1", "email": "another@example.invalid"},
+        )
+        self.assertIsNotNone(response.context["captcha"])
+        self.assertNotContains(response, hint)
+        self.assertContains(
+            response, "Confirm your email before moderation and publication."
+        )
+
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+        EMAIL_HOST="127.0.0.1",
+    )
     def test_guest_http_confirmation_publication_and_revision_with_csrf(self):
         from django.test import Client
 

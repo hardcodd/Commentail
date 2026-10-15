@@ -376,16 +376,12 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
         if not request.user.is_authenticated
         else None
     )
+    email_confirmed = grant is not None and (
+        request.POST.get("email", grant.email).strip().casefold()
+        == grant.email.casefold()
+    )
     task = None
-    if (
-        can_post
-        and not request.user.is_authenticated
-        and (
-            grant is None
-            or request.POST.get("email", grant.email).casefold()
-            != grant.email.casefold()
-        )
-    ):
+    if can_post and not request.user.is_authenticated and not email_confirmed:
         try:
             task = create_captcha(request, discussion.site)
         except DomainError as exc:
@@ -408,6 +404,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             "form_key": form_key,
             "captcha": task,
             "remembered_email": grant.email if grant else "",
+            "guest_email_confirmed": email_confirmed,
             "reply_to": _present(reply_to, request, False) if reply_to else None,
             "cancel_reply_url": _url(request, reply_to=None, target=None),
             "submit_url": discussion_url(discussion, submit=True),

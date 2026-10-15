@@ -32,7 +32,8 @@ class ActionViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "awaiting_email")
-        self.assertEqual(response["Referrer-Policy"], "no-referrer")
+        self.assertEqual(response["Referrer-Policy"], "strict-origin")
+        self.assertContains(response, 'name="referrer" content="strict-origin"')
         self.assertIn("no-store", response["Cache-Control"])
 
     def test_post_requires_csrf(self):
@@ -63,7 +64,7 @@ class ActionViewTests(TestCase):
         response = self.client.get("/commentail/actions/edit/?token=" + self.secret)
         self.assertEqual(response.status_code, 404)
         self.assertNotContains(response, "guest@example.invalid", status_code=404)
-        self.assertEqual(response["Referrer-Policy"], "no-referrer")
+        self.assertEqual(response["Referrer-Policy"], "strict-origin")
         self.assertIn("no-store", response["Cache-Control"])
 
     def test_csrf_denial_also_protects_capability_headers(self):
@@ -71,7 +72,7 @@ class ActionViewTests(TestCase):
             self.url, {"token": self.secret}
         )
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response["Referrer-Policy"], "no-referrer")
+        self.assertEqual(response["Referrer-Policy"], "strict-origin")
         self.assertIn("no-store", response["Cache-Control"])
 
     def test_view_capability_shows_owner_text_without_confirmation(self):
@@ -80,6 +81,40 @@ class ActionViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Guest")
         self.assertNotContains(response, "guest@example.invalid")
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.status, "awaiting_email")
+
+    def test_https_origin_only_referrer_supports_csrf_without_token_disclosure(self):
+        browser = Client(enforce_csrf_checks=True)
+        page = browser.get(self.url, secure=True)
+        response = browser.post(
+            self.url,
+            {
+                "token": self.secret,
+                "csrfmiddlewaretoken": browser.cookies["csrftoken"].value,
+            },
+            secure=True,
+            HTTP_REFERER="https://testserver/",
+        )
+        self.assertEqual(page["Referrer-Policy"], "strict-origin")
+        self.assertEqual(response.status_code, 200)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.status, "pending")
+
+    def test_null_and_foreign_origins_remain_rejected_with_valid_csrf(self):
+        browser = Client(enforce_csrf_checks=True)
+        browser.get(self.url)
+        for origin in ("null", "https://attacker.invalid"):
+            with self.subTest(origin=origin):
+                response = browser.post(
+                    self.url,
+                    {
+                        "token": self.secret,
+                        "csrfmiddlewaretoken": browser.cookies["csrftoken"].value,
+                    },
+                    HTTP_ORIGIN=origin,
+                )
+                self.assertEqual(response.status_code, 403)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "awaiting_email")
 

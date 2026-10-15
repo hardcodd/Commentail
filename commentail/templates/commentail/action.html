@@ -1,5 +1,5 @@
 {% load i18n static commentail_tags %}<!doctype html>
-<html lang="{{ language_code|default:'en' }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="no-referrer"><title>{% trans "Comment action" %}</title><link rel="stylesheet" href="{% commentail_asset 'commentail.css' %}"><script defer src="{% commentail_asset 'commentail.js' %}"></script></head>
+<html lang="{{ language_code|default:'en' }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="strict-origin"><title>{% trans "Comment action" %}</title><link rel="stylesheet" href="{% commentail_asset 'commentail.css' %}"><script defer src="{% commentail_asset 'commentail.js' %}"></script></head>
 <body><main class="commentail-action">
 <h1>{% trans "Comment action" %}</h1>
 {% if purpose == "view" %}<p>{{ status_label }}</p><blockquote class="commentail-text">{{ text }}</blockquote>{% if reason %}<p>{{ reason }}</p>{% endif %}{% elif message %}<p role="status">{{ message }}</p>{% else %}

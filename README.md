@@ -27,6 +27,10 @@ Add `commentail` and `wagtail.contrib.settings` to `INSTALLED_APPS`. Keep the ho
 session, authentication, messages and CSRF middleware. Place
 `commentail.middleware.CapabilityHeadersMiddleware` before CSRF middleware;
 widget pages contain personal form state and receive `private, no-store`.
+Email-action responses also use `Referrer-Policy: strict-origin`: referrers never
+contain the secret path/query, while native forms retain the origin needed for
+CSRF validation. Preserve this policy in overridden action templates; a global
+`no-referrer` meta tag can break confirmation, editing and unsubscribe forms.
 The Django template request context processor is required.
 Optionally set `CSRF_FAILURE_VIEW = "commentail.public.csrf_failure"` to preserve
 a rejected submission draft and show a fresh form for explicit resubmission.

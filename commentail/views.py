@@ -115,7 +115,7 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
         },
         status=400 if request.method == "POST" and error else 200,
     )
-    response["Referrer-Policy"] = "no-referrer"
+    response["Referrer-Policy"] = "strict-origin"
     response["Cache-Control"] = "private, no-store"
     if grant_secret:
         grant = remembered_guest(grant_secret, site)

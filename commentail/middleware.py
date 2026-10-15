@@ -20,6 +20,8 @@ class CapabilityHeadersMiddleware:
             from .views import action
 
             if match.func is action:
-                response["Referrer-Policy"] = "no-referrer"
+                # Keep capability paths/secrets out of Referer without suppressing
+                # the origin required by native forms and HTTPS CSRF checks.
+                response["Referrer-Policy"] = "strict-origin"
                 response["Cache-Control"] = "private, no-store"
         return response
