@@ -111,6 +111,10 @@ class ObjectAdapterTests(TestCase):
             with self.subTest(adapter=adapter), override_settings(COMMENTAIL=config):
                 self.client.force_login(get_user_model().objects.create_user(adapter))
                 response = self.client.get(url)
+                self.assertTemplateUsed(response, "commentail/block.html")
+                self.assertNotContains(response, "<!doctype")
+                document = self.client.get(url, HTTP_ACCEPT="text/html")
+                self.assertEqual(document.status_code, 302 if adapter == "QueryUrlAdapter" else 404)
                 response = self.client.post(submit_url, {
                     "key": response.context["form_key"], "text": adapter
                 })

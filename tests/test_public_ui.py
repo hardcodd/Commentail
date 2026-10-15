@@ -19,6 +19,16 @@ class PublicInterfaceTests(TestCase):
         self.user = get_user_model().objects.create_user("writer")
         self.url = reverse("commentail:discussion", args=[self.site.root_page.pk])
 
+    def assert_fragment(self, response, *, status=200):
+        self.assertEqual(response.status_code, status)
+        self.assertTemplateUsed(response, "commentail/block.html")
+        content = response.content.decode().lower()
+        self.assertNotRegex(content, r"<!doctype|<(?:html|head|body|script|link)(?:\s|>)")
+        self.assertContains(response, f'data-discussion="{self.discussion.pk}"', status_code=status)
+
+    def test_service_returns_only_widget_fragment(self):
+        self.assert_fragment(self.client.get(self.url))
+
     @override_settings(
         CSRF_FAILURE_VIEW="commentail.public.csrf_failure",
         EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
@@ -51,6 +61,7 @@ class PublicInterfaceTests(TestCase):
         )
         self.assertEqual(response.status_code, 403)
         self.assertContains(response, "Preserved after login", status_code=403)
+        self.assert_fragment(response, status=403)
         self.assertEqual(self.discussion.comments.count(), 0)
         self.assertEqual(response["Cache-Control"], "private, no-store")
         response = browser.post(
@@ -106,12 +117,13 @@ class PublicInterfaceTests(TestCase):
 
     def test_no_js_submission_uses_session_bound_form_and_redirect(self):
         self.client.force_login(self.user)
-        response = self.client.get(self.url)
+        response = self.client.get("/", HTTP_ACCEPT="text/html")
         key = response.context["form_key"]
         response = self.client.post(
             reverse("commentail:submit", args=[self.site.root_page.pk]),
             {"key": key, "text": "A plain comment"},
             HTTP_USER_AGENT="Synthetic browser",
+            HTTP_ACCEPT="text/html",
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.discussion.comments.count(), 1)
@@ -120,9 +132,13 @@ class PublicInterfaceTests(TestCase):
             reverse("commentail:submit", args=[self.site.root_page.pk]),
             {"key": key, "text": "A plain comment"},
             HTTP_USER_AGENT="Synthetic browser",
+            HTTP_ACCEPT="text/html",
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.discussion.comments.count(), 1)
+        host = self.client.get(response["Location"], HTTP_ACCEPT="text/html")
+        self.assertContains(host, "A plain comment")
+        self.assertTemplateUsed(host, "wagtailcore/page.html")
 
     def test_submission_and_permalink_return_to_the_host_page(self):
         self.client.force_login(self.user)
@@ -137,7 +153,7 @@ class PublicInterfaceTests(TestCase):
         moderate(comment.pk, "approve", actor=self.admin)
         rendered = self.client.get(self.url)
         self.assertContains(rendered, f'href="{expected}"')
-        self.assertContains(rendered, 'class="commentail-source-link" href="/"')
+        self.assert_fragment(rendered)
         edit = self.client.post(
             reverse("commentail:edit", args=[comment.pk]), {"text": "Revised"}
         )
@@ -145,10 +161,11 @@ class PublicInterfaceTests(TestCase):
 
     def test_browser_navigation_to_service_url_redirects_to_article(self):
         response = self.client.get(
-            self.url, {"target": "11", "thread": "2"}, HTTP_ACCEPT="text/html"
+            self.url, {"target": "11", "thread": "2", "replies": "signed-window"},
+            HTTP_SEC_FETCH_DEST="document"
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], "/?thread=2&target=11#commentail-11")
+        self.assertEqual(response["Location"], "/?thread=2&replies=signed-window&target=11#commentail-11")
 
     def test_browser_validation_returns_to_article_with_private_persistent_draft(self):
         from django.test import Client
@@ -256,16 +273,14 @@ class PublicInterfaceTests(TestCase):
         self.assertContains(host, "Keep this after CSRF rejection")
         self.assertContains(host, "The form could not be verified.")
 
-    def test_validation_screen_has_a_way_back_to_the_host(self):
+    def test_validation_returns_only_widget_fragment(self):
         self.client.force_login(self.user)
         key = self.client.get(self.url).context["form_key"]
         response = self.client.post(
             reverse("commentail:submit", args=[self.site.root_page.pk]),
             {"key": key, "text": " "},
         )
-        self.assertContains(
-            response, 'class="commentail-source-link" href="/"', status_code=400
-        )
+        self.assert_fragment(response, status=400)
 
     def test_progressive_fragment_has_identity_and_localized_failure_message(self):
         comment = submit(self.discussion.pk, text="Navigation target", user=self.user)
@@ -391,6 +406,7 @@ class PublicInterfaceTests(TestCase):
                 },
             )
             self.assertContains(response, "Keep this draft")
+            self.assert_fragment(response)
             self.assertNotEqual(challenge.id, response.context["captcha"].id)
             self.assertEqual(self.discussion.comments.count(), 0)
 

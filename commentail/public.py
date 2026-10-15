@@ -23,7 +23,7 @@ from .detection import DetectionError, has_comments
 from .drafts import clear_drafts, is_document, load_draft, save_draft
 from .limits import client_ip, consume
 from .models import Access, Comment, Discussion, MailJob, Mode
-from .objects import ObjectAccessError, comment_url, discussion_url, target_url
+from .objects import comment_url, discussion_url
 from .outbox import resend_confirmation
 from .policies import editorial_settings
 from .security import create_captcha, remembered_guest
@@ -74,7 +74,7 @@ def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponse:
     if (response := _draft_redirect(request, discussion, str(context["error"]))) is not None:
         return response
     response = TemplateResponse(
-        request, "commentail/discussion.html", context, status=403
+        request, "commentail/block.html", context, status=403
     )
     response["Cache-Control"] = "private, no-store"
     return response
@@ -230,12 +230,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
     options = editorial_settings(discussion)
     restored, draft_error = load_draft(request, discussion)
     form_values = request.POST if request.method == "POST" else restored
-    try:
-        source_url = target_url(discussion)
-    except ObjectAccessError:
-        source_url = ""
     base: dict[str, object] = {
-        "source_url": source_url,
         "language_code": translation.get_language(),
         "discussion_id": discussion.pk,
         "page_id": discussion.page_id,
@@ -465,7 +460,7 @@ def discussion_view(
         response["Vary"] = "Accept, Sec-Fetch-Dest"
         return response
     response = TemplateResponse(
-        request, "commentail/discussion.html", block_context(request, discussion)
+        request, "commentail/block.html", block_context(request, discussion)
     )
     response["Cache-Control"] = "private, no-store"
     return response
@@ -487,7 +482,7 @@ def submit_view(
                 "entered_email": request.POST.get("email", ""),
             }
         )
-        return TemplateResponse(request, "commentail/discussion.html", context)
+        return TemplateResponse(request, "commentail/block.html", context)
     try:
         reply = request.POST.get("reply_to", "")
         if reply and not reply.isdecimal():
@@ -517,7 +512,7 @@ def submit_view(
             }
         )
         return TemplateResponse(
-            request, "commentail/discussion.html", context, status=400
+            request, "commentail/block.html", context, status=400
         )
     if not request.user.is_authenticated:
         owned = request.session.get("commentail_own", [])

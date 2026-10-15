@@ -131,8 +131,11 @@ specific reply even beyond the first reply batch.
 Comment permalinks and successful submission/edit returns point to the host
 Page or registered object's URL, keeping the addressed comment in its discussion.
 Opening a discussion service URL as a browser document redirects to that host
-and retains reading state. Fetch requests can still receive the fragment renderer;
-browser validation errors and CAPTCHA refresh return to that host as well,
+and retains reading state, including reply pagination. Service reads, CAPTCHA
+refresh and validation/CSRF errors for fetch return only the widget HTML fragment,
+without a standalone document or bundled asset tags. The standalone discussion
+page/template is removed. Browser validation errors and CAPTCHA refresh return
+to the host as well,
 with a session-bound, expiring database draft. Only a ticket ID enters the URL,
 not text, names or email. Drafts survive reload until acceptance or expiry; the
 worker removes expired form tickets. Up to five recovery tickets are retained

@@ -227,7 +227,7 @@ def comment_url(
         destination = discussion_url(discussion)
     parts = urlsplit(destination)
     values = dict(parse_qsl(parts.query, keep_blank_values=True))
-    for key in ("thread", "window", "reply_to", "target"):
+    for key in ("thread", "window", "replies", "reply_to", "target"):
         if navigation and key in navigation:
             values[key] = navigation[key]
     if identifier is not None:
