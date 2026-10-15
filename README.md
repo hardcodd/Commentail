@@ -380,7 +380,7 @@ logger and action error context.
 ```sh
 python -m django test tests --settings=tests.settings
 # Optional development check with Node.js (no npm dependencies):
-node --test tests/test_progressive.js
+node --test tests/test_*.js
 ```
 
 Default tests use synthetic in-memory SQLite. Set `COMMENTAIL_TEST_SQLITE` to a

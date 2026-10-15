@@ -1,5 +1,12 @@
-/* Selection is an enhancement; authorization remains server-side. */
+/* Focus and selection are enhancements; authorization remains server-side. */
 (() => {
+  const error = document.querySelector("[data-commentail-error-focus]");
+  const result = document.querySelector(".commentail-action-result");
+  if (error) error.focus();
+  else if (result) {
+    result.setAttribute("tabindex", "-1");
+    result.focus();
+  }
   const master = document.querySelector("[data-select-all]");
   if (!master) return;
   const rows = [...document.querySelectorAll('input[name="ids"]')];

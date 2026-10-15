@@ -1,9 +1,18 @@
 {% extends "wagtailadmin/base.html" %}{% load i18n static commentail_tags %}
 {% block titletag %}{% trans "Import CSV" %}{% endblock %}
 {% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
+{% block extra_js %}{{ block.super }}<script defer src="{% commentail_asset 'admin.js' %}"></script>{% endblock %}
 {% block content %}{% trans "Import CSV" as import_title %}{% include "wagtailadmin/shared/header.html" with title=import_title icon="upload" classname="commentail-admin-heading" %}
 <div class="nice-padding commentail-admin"><a class="commentail-admin-back" href="{% url 'commentail_admin:rules' %}">← {% trans "Moderation rules" %}</a>
 <section class="commentail-admin-card">
+{% if form.errors %}
+<div class="help-block help-critical" id="commentail-import-errors" role="alert" tabindex="-1" data-commentail-error-focus>
+<ul>
+{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+{% for field in form %}{% if field.errors %}<li id="{{ field.auto_id }}_error"><a href="#{{ field.id_for_label }}">{{ field.label }}: {% for error in field.errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</a></li>{% endif %}{% endfor %}
+</ul>
+</div>
+{% endif %}
 <p>{% trans "Use UTF-8 CSV with comma or semicolon separators and the headers phrase, action, enabled." %}</p>
 <p>{% trans "Actions: review or reject. Enabled: 1/0 or true/false." %}</p>
 <pre>phrase,action,enabled

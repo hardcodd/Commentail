@@ -98,6 +98,32 @@ class AdminInterfaceTests(TestCase):
         )
         self.assertEqual(response.status_code, 403)
 
+    def test_moderation_redirect_exposes_a_focusable_result_only_once(self):
+        response = self.client.post(
+            reverse("commentail_admin:action", args=[self.comment.pk]),
+            {"action": "approve"}, follow=True,
+        )
+        self.assertContains(response, "commentail-action-result")
+        self.assertContains(response, f"Comment #{self.comment.pk}: Published")
+        self.assertContains(response, "/static/commentail/admin.js")
+        response = self.client.get(reverse("commentail_admin:detail", args=[self.comment.pk]))
+        self.assertNotContains(response, "commentail-action-result")
+
+    def test_bulk_and_revision_moderation_expose_results(self):
+        response = self.client.post(
+            reverse("commentail_admin:bulk"),
+            {"action": "approve", "ids": [self.comment.pk]}, follow=True,
+        )
+        self.assertContains(response, "commentail-action-result")
+        self.assertContains(response, "Approved: 1")
+        revision = revise(self.comment.pk, "Revised text", user=self.admin)
+        response = self.client.post(
+            reverse("commentail_admin:revision", args=[self.comment.pk]),
+            {"action": "reject", "revision": revision.pk}, follow=True,
+        )
+        self.assertContains(response, "commentail-action-result")
+        self.assertContains(response, "Author revision: Rejected")
+
     def test_bulk_is_atomic_when_foreign_identifier_is_supplied(self):
         response = self.client.post(
             reverse("commentail_admin:bulk"),

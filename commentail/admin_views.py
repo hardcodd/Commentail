@@ -266,6 +266,12 @@ def action(request: HttpRequest, identifier: int) -> HttpResponse:
         return HttpResponse("Permission denied", status=403)
     except DomainError as exc:
         return HttpResponse(str(exc), status=400)
+    comment.refresh_from_db(fields=["status"])
+    messages.success(
+        request,
+        f"{_('Comment')} #{comment.pk}: {comment.get_status_display()}",
+        extra_tags="commentail-action-result",
+    )
     return redirect("commentail_admin:detail", identifier=identifier)
 
 
@@ -291,6 +297,12 @@ def bulk(request: HttpRequest) -> HttpResponse:
         return HttpResponse(
             str(exc), status=403 if isinstance(exc, PermissionDenied) else 400
         )
+    outcome = _("Approved") if request.POST["action"] == "approve" else _("Rejected")
+    messages.success(
+        request,
+        f"{outcome}: {len(set(identifiers))}",
+        extra_tags="commentail-action-result",
+    )
     return redirect("commentail_admin:list")
 
 
@@ -315,6 +327,12 @@ def revision_action(request: HttpRequest, identifier: int) -> HttpResponse:
         )
     except DomainError as exc:
         return HttpResponse(str(exc), status=400)
+    revision.refresh_from_db(fields=["status"])
+    messages.success(
+        request,
+        f"{_('Author revision')}: {revision.get_status_display()}",
+        extra_tags="commentail-action-result",
+    )
     return redirect("commentail_admin:detail", identifier=identifier)
 
 
