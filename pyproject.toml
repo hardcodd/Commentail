@@ -4,12 +4,25 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "commentail"
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "Comments for Wagtail CMS"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
-dependencies = ["Django>=5.2,<5.3", "Wagtail>=7.4,<7.5", "regex>=2026.9.29"]
+dependencies = ["Django>=5.2,<5.3", "Wagtail>=7.4.3,<7.5", "regex>=2026.9.29"]
+license-files = ["LICENSE"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Django :: 5.2",
+    "Framework :: Wagtail",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.urls]
+Source = "https://github.com/hardcodd/Commentail"
+Issues = "https://github.com/hardcodd/Commentail/issues"
 
 [tool.setuptools.packages.find]
 include = ["commentail*"]

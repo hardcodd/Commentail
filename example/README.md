@@ -1,6 +1,6 @@
 # Commentail example
 
-A local Wagtail 7.4 / Django 5.2 project showing Page and non-Page integration, inherited
+A local Wagtail 7.4 LTS (>=7.4.3) / Django 5.2 project showing Page and non-Page integration, inherited
 settings and the progressive comment widget. Python 3.12 or newer is required.
 
 From this directory, create and activate a virtual environment, then run:
@@ -26,8 +26,9 @@ created home and current settings. Runtime data stays in `.runtime/`.
 
 Guest comments require a configured SMTP server. Before starting the server, set
 `EMAIL_HOST`, `EMAIL_PORT`, optional `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`,
-`EMAIL_USE_TLS=1` and `DEFAULT_FROM_EMAIL` for your test mail system. No email is
-sent automatically by starting the example. Run the worker once per minute:
+`DEFAULT_FROM_EMAIL` and either `EMAIL_USE_TLS=1` (STARTTLS, usually port 587)
+or `EMAIL_USE_SSL=1` (implicit TLS, usually port 465) for your test mail system.
+Do not enable both. No email is sent automatically by starting the example. Run the worker once per minute:
 
 ```sh
 python manage.py process_commentail

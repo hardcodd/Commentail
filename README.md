@@ -1,7 +1,7 @@
 # Commentail
 
 Comments for Wagtail CMS, under active development. The first release targets
-Wagtail 7.4 LTS and Django 5.2 on Python 3.12. It has not been released on PyPI.
+Wagtail 7.4 LTS (7.4.3 or later) and Django 5.2 on Python 3.12–3.14. It has not been released on PyPI.
 
 The source now includes a Wagtail moderation section and server-rendered widget:
 guest email verification, registered authors, direct replies with one visual
@@ -9,13 +9,13 @@ nesting level, pending author revisions, safe links, site/page policies and grou
 capabilities. Moderators approve, reject, hide, restore or erase text; they cannot
 rewrite another author's comment.
 
-The development snapshot is not the complete first release. The full browser
-acceptance matrix and independent owner review remain unfinished. No production
-integration is included.
+The local 0.1.0 candidate is prepared for review. Previous browser releases,
+physical mobile devices and independent owner acceptance remain unverified.
+No production integration is included.
 
 ## Integration
 
-Use Python 3.12 and a virtual environment:
+Use Python 3.12–3.14 and a virtual environment:
 
 ```sh
 pip install .
@@ -65,7 +65,13 @@ action and take effect immediately, independently of Page revision/publication.
 
 Host templates at the same paths override package templates. Public partials
 are `commentail/block.html`, `comment.html`, `replies.html`, `form.html` and
-`captcha.html`. Standalone discussion, edit and email-action pages are also
+`captcha.html`; the inline editor is `commentail/edit-form.html`.
+Email-action pages extend `commentail/base.html`;
+override that base to use the host layout, or its `extra_head` block to add local
+styles. Their standalone layout uses system fonts and neutral light/dark colors.
+The `commentail-document` body scopes these defaults away from embedded widgets;
+`--commentail-document-background` and `--commentail-document-shadow` customize
+the document, alongside the usual widget properties. These pages are also
 overridable. Preserve CSRF, submission keys, target identifiers and server checks.
 
 The widget inherits the embedding container's text color, font, font size and
@@ -107,7 +113,7 @@ or conflicting global `!important` rules can require explicit overrides; the
 widget cannot safely infer a brand palette or repair the host's contrast.
 For a filled accent button, set both `color-button-surface` and
 `color-button-text` to a contrasting pair, and set `color-button-hover` as needed.
-Standalone discussion/edit/email-action documents need the same host theme via
+Standalone email-action documents need the same host theme via
 overridden page templates; they cannot inherit CSS from a different document.
 
 Public forms/links work without JS;
@@ -115,7 +121,7 @@ JS enhances submission, reply selection, reply expansion, pagination and CAPTCHA
 refresh by replacing the matching discussion block with server-rendered HTML.
 Reading/navigation preserves the current draft. Loading blocks parallel requests;
 network failures keep the draft and submission key for an explicit retry, without
-automatically replaying a POST. Edit and email-action pages use ordinary forms.
+automatically replaying a POST. Email confirmation and unsubscribe pages use ordinary forms.
 Autoheight and broken-avatar fallback are included; horizontal textarea resizing
 is disabled. No mandatory frontend framework or external CDN is used.
 Keyboard navigation moves focus to newly loaded messages after expansion or
@@ -123,7 +129,8 @@ pagination, to the reply field when choosing an addressee, and to error messages
 when a request fails. CAPTCHA refresh focuses the new answer field. The widget
 declares its translation language independently of the host document's language.
 Overridden widget templates should preserve `data-discussion`,
-`data-commentail-navigation`, the `.commentail-form` class and the localized
+`data-commentail-navigation`, the `.commentail-form` / `.commentail-edit-form`
+classes and the localized
 `.commentail-network-error` element to retain these enhancements.
 
 Lists use cumulative batches of 20 and signed snapshot windows. New publications
@@ -131,18 +138,26 @@ appear after refresh; target links expand the addressed thread and include the
 specific reply even beyond the first reply batch.
 
 Successful email-confirmation and guest-revision POSTs redirect to the host
-comment with HTTP 303. Opening a mail action link still shows its explicit
-confirmation/edit form; GET never confirms or changes a comment. Invalid or
-locked edits keep their error and link back to the host.
-
-Reply uses a quiet text control. Eligible authors find Edit in a named ellipsis
-disclosure, which also works without JavaScript. Escape and outside clicks close
-the disclosure when JavaScript is available.
+comment with HTTP 303. Email confirmation still requires its explicit action
+form; GET never confirms or changes a comment. Editing opens beneath the comment
+inside its host article, including without JavaScript. Guest edit links exchange
+their capability for a browser-session proof and redirect into that article;
+no capability appears in its URL or form. Every save rechecks access, expiry and
+editing eligibility. Legacy edit GETs also redirect; no standalone edit document
+or template exists. Validation retains a private draft and error in the article.
+Reply uses a quiet text control; eligible authors find Edit in the comment's
+ellipsis disclosure, which also works without JavaScript. With JavaScript,
+Escape/outside click closes the menu. Cancel removes the editor and returns focus
+to the visible ellipsis trigger; saving keeps
+the independent main/reply drafts and focuses the updated comment.
 
 With JavaScript, Reply opens a single composer directly below the addressed
 comment, including replies to replies. The main form keeps its separate draft.
 Switching the addressee keeps the reply draft; Cancel removes the reply form
-from the DOM and returns keyboard focus to its Reply link. Validation and
+from the DOM and returns keyboard focus to its Reply link. Updates preserve
+expanded threads, their loaded batches and the reader's position. Submission
+reveals the exact accepted message in its thread; its email notice stays beside
+it. Your pending replies appear beneath their visible addressee. Validation and
 CAPTCHA refresh keep the composer beside its addressee. Without JavaScript,
 Reply uses the ordinary server-rendered form at the top of the discussion.
 
@@ -175,6 +190,16 @@ individual; bulk actions apply to pending comments.
 
 Site settings control open/read-only/hidden mode, four moderation policies,
 author access, text length, clickable links and publication/rejection emails.
+The site-only **Send emails** switch (`email_enabled`) defaults to `True`. Turning
+it off blocks all comment emails and cancels queued mail before delivery; pages
+cannot override it. Guest submission is unavailable while mail is disabled or
+SMTP is not configured. Registered users can continue commenting without email.
+
+Public submissions automatically subscribe authors with an email address when
+site email and SMTP are enabled. There is no subscription checkbox or idle-form
+hint; after acceptance, a one-time notice says “We’ll email you about replies.”
+Every reply email retains its per-comment unsubscribe link. Existing comments and
+previous opt-outs are never subscribed retroactively.
 Pages inherit or override each value. Word/phrase rules are project-wide;
 rejection takes precedence over review when several rules match. The rule list
 supports phrase search, action/enabled filters and 25 records per page, retaining
@@ -402,13 +427,21 @@ that job safely; details in the delivery admin are technical error types only.
 Other queued messages continue processing. Correct the override, then retry the
 failed message from the admin while its original link remains valid.
 
-GET links show action pages; changes require POST/CSRF. Secrets are hashed in
+Confirmation, unsubscribe and status links show action pages; guest edit links
+open the inline editor in the host article. Comment changes require POST/CSRF.
+Action-token secrets are hashed in
 storage. Queued links derive from a random nonce and host SECRET_KEY; rotation
 prevents regenerating old queued links. Protect token queries in custom proxy
 logs/error reporters. The package redacts them in Django's development-server
 logger and action error context.
 
 ## Development checks
+
+The GitHub Actions workflow defines tests for Python 3.12, 3.13 and 3.14
+with SQLite and PostgreSQL 14, plus
+JavaScript, lint, migrations, translations and the source/wheel distributions.
+`requirements-test.txt` pins the acceptance environment; it is not a host-site
+production lockfile. Install it before running the checks below.
 
 ```sh
 python -m django test tests --settings=tests.settings
@@ -430,11 +463,33 @@ Supply PGPASSWORD securely in the environment. The runner creates/destroys
 
 Checks cover transitions/concurrency, CSRF/admission, site rights, owner visibility,
 guest confirmation/editing, mail claims, template detection, registered-object
-access/isolation/cleanup and Page create/edit saving on SQLite/PostgreSQL 14.24 with Wagtail 7.4/Django 5.2.18. Local browser
-checks cover submission, moderation, author revision and responsive layout.
-The full current/previous Safari, Chrome, Yandex and Firefox matrix and independent
+access/isolation/cleanup and Page create/edit saving. All 228 server tests passed
+from the installed wheel outside the source checkout on Python 3.12.14, 3.13.15
+and 3.14.7 with file SQLite and PostgreSQL 14.24, Wagtail 7.4.3 and Django 5.2.18.
+All six combinations include writer-concurrency checks. All 29 JavaScript tests,
+lint, migration drift and translation checks passed. The fresh source-distribution
+suite also passed (four concurrency/file-only checks skipped with in-memory SQLite).
+The source distribution installs in a fresh environment; its example was checked
+through migrations, repeated bootstrap, worker, static collection and both widgets.
+
+The minimum supported Wagtail patch is 7.4.3. Earlier 7.4 patches are excluded
+because of upstream security fixes; the test pin and installed environments use
+7.4.3. See the [Wagtail 7.4.3 release notes](https://docs.wagtail.org/en/stable/releases/7.4.3.html).
+
+Native browser checks cover Safari 27.0.1, Chrome 155.0.8059.40,
+Yandex Browser 26.8.3.1016 and Firefox 158.0. Recent regression checks exercised
+inline reply forms, cancellation/focus and independent drafts; Safari also covered
+the HTML reply/cancel fallback without scripts. Earlier passes covered moderation,
+revisions, CSV and responsive layout. A real SMTP guest chain reached an external
+inbox, including confirmation, publication, editing, reply notification and unsubscribe.
+This is a bounded local acceptance run, not a guarantee of delivery to every provider.
+After the 7.4.3 update, targeted reply/cancel/thread/draft checks passed in all
+four installed browsers. Publication, inline edit, author menu and immediate
+post-snapshot reply placement were checked in the in-app browser. These targeted
+checks do not repeat every earlier native-browser scenario.
+Previous browser versions, physical mobile devices, a hosted CI run and independent
 owner acceptance remain outstanding. Upstream Treebeard warnings are not suppressed.
-No production SMTP, deployment or public release is claimed.
+No production deployment or public release is claimed.
 
 MIT license. See [LICENSE](LICENSE).
 
