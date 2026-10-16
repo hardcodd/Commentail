@@ -794,5 +794,32 @@ msgstr "Подтвердите до:"
 msgid "This email is confirmed in this browser. A different email needs confirmation."
 msgstr "Этот email подтверждён в этом браузере. Другой адрес потребуется подтвердить."
 
+msgid "Reply notifications"
+msgstr "Уведомления об ответах"
+
+msgid "Comment status"
+msgstr "Статус комментария"
+
+msgid "Back to site"
+msgstr "Вернуться на сайт"
+
+msgid "Confirm your email to continue with your comment. The site's moderation policy will apply."
+msgstr "Подтвердите email, чтобы продолжить публикацию комментария. Далее он пройдёт проверку по правилам сайта."
+
+msgid "You will stop receiving notifications about direct replies to this comment."
+msgstr "Вы больше не будете получать письма о прямых ответах на этот комментарий."
+
+msgid "Your changes follow the site's moderation policy. The current text remains visible while a revision awaits review."
+msgstr "Правки проверяются по правилам сайта. Пока они ожидают модерации, читатели видят прежний текст."
+
+msgid "Send emails"
+msgstr "Отправлять письма"
+
+msgid "Disables all comment emails, including guest verification. Guests cannot comment while email is disabled."
+msgstr "Отключает все письма комментариев, включая подтверждение email. Пока письма отключены, гости не могут комментировать."
+
+msgid "We’ll email you about replies."
+msgstr "Об ответах сообщим по email."
+
 msgid "Comment actions"
 msgstr "Действия с комментарием"

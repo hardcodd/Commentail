@@ -25,7 +25,7 @@ from django.utils.module_loading import import_string
 
 from .config import technical_settings
 from .models import ActionToken, Comment, CommentRevision, MailJob, ReplySubscription
-from .policies import editorial_settings
+from .policies import editorial_settings, email_enabled
 from .security import digest, issue_token, token_secret
 from .services import DomainError, _permission
 
@@ -44,8 +44,10 @@ def _enqueue(
     recipient: Comment | None = None,
     purpose: str | None = None,
     revision: CommentRevision | None = None,
-) -> MailJob:
+) -> MailJob | None:
     """Called in the same transaction as the state transition."""
+    if not email_enabled(comment.discussion.site_id):
+        return None
     recipient = recipient or comment
     config = technical_settings(comment.discussion.site)
     expires = timezone.now() + timedelta(seconds=config["MAIL_RETENTION_SECONDS"])
@@ -228,7 +230,8 @@ def _guest_can_receive(recipient: Comment, target: Model) -> bool:
 def _valid(job: MailJob) -> bool:
     now = timezone.now()
     if (
-        job.expires_at <= now
+        not email_enabled(job.comment.discussion.site_id)
+        or job.expires_at <= now
         or not _email(job.recipient)
         or not _can_receive(job.recipient)
     ):

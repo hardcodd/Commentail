@@ -5,7 +5,7 @@ import re
 from django.core import signing
 from django.db import transaction
 from django.db.models import Exists, F, OuterRef, Prefetch, Q
-from django.http import HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -14,7 +14,7 @@ from django.utils.html import format_html, format_html_join
 from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
 from django.views.decorators.csrf import requires_csrf_token
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 from wagtail.models import Page, Site
 
 from .admission import accept_request, can_view, issue_form, smtp_configured
@@ -22,11 +22,11 @@ from .avatars import author_name, avatar_url, default_avatar
 from .detection import DetectionError, has_comments
 from .drafts import clear_drafts, is_document, load_draft, save_draft
 from .limits import client_ip, consume
-from .models import Access, Comment, Discussion, MailJob, Mode
+from .models import Access, Comment, Discussion, MailJob, Mode, ReplySubscription
 from .objects import comment_url, discussion_url
 from .outbox import resend_confirmation
-from .policies import editorial_settings
-from .security import create_captcha, remembered_guest
+from .policies import editorial_settings, email_enabled
+from .security import create_captcha, remembered_guest, verify_token
 from .services import DomainError, edit_block_reason, revise
 
 
@@ -50,13 +50,18 @@ def _draft_redirect(
 def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponse:
     """Optional host failure view: recover a draft without accepting its POST.
 
-    Configure CSRF_FAILURE_VIEW explicitly. Only the public submission endpoint
-    receives a fresh form; unrelated host views keep Django's default rejection.
+    Configure CSRF_FAILURE_VIEW explicitly. Public submission and editing
+    receive fresh forms; unrelated host views keep Django's default rejection.
     Neither admission nor comment mutations run on this path.
     """
     from django.views.csrf import csrf_failure as default_failure
 
     match = request.resolver_match
+    if match and match.func is edit_view:
+        comment = _edit_target(request, match.kwargs["identifier"])
+        return _edit_failure(request, comment, _(
+            "The form could not be verified. Your draft is preserved; review it and send again."
+        ), status=403)
     if match is None or match.func is not submit_view:
         return default_failure(request, reason=reason)
     discussion = get_discussion(request, **match.kwargs)
@@ -137,8 +142,7 @@ def render_text(text: str, clickable: bool) -> SafeString:
 def _window(
     request: HttpRequest, discussion: Discussion, key: str, thread: int = 0
 ) -> tuple[str, int]:
-    token = request.GET.get(key)
-    if token:
+    for token in request.GET.getlist(key):
         try:
             payload = signing.loads(token, salt="commentail.window", max_age=86400)
             if (
@@ -173,7 +177,7 @@ def _url(request: HttpRequest, **values: object) -> str:
             params.pop(key, None)
         else:
             params[key] = str(value)
-    path = request.path
+    path = request.META.get("COMMENTAIL_WIDGET_PATH", request.path)
     if (
         request.method == "POST"
         and request.resolver_match
@@ -181,6 +185,29 @@ def _url(request: HttpRequest, **values: object) -> str:
     ):
         path = discussion_url(get_discussion(request, **request.resolver_match.kwargs))
     return path + "?" + params.urlencode() + "#commentail"
+
+
+def guest_edit_secret(request: HttpRequest, comment: Comment) -> str | None:
+    """A remembered email is insufficient; revalidate this exact edit capability."""
+    secret = request.session.get("commentail_edits", {}).get(str(comment.pk))
+    if not secret or comment.user_id is not None or comment.account_deleted:
+        return None
+    try:
+        token = verify_token(secret, "edit", comment.discussion.site)
+    except DomainError:
+        return None
+    return secret if token.comment_id == comment.pk else None
+
+
+def _edit_owner(request: HttpRequest, comment: Comment) -> bool:
+    return bool(
+        (
+            request.user.is_authenticated
+            and request.user.is_active
+            and comment.user_id == request.user.pk
+        )
+        or guest_edit_secret(request, comment)
+    )
 
 
 def _present(
@@ -195,11 +222,7 @@ def _present(
         if comment.status == "hidden"
         else comment.text
     )
-    editable = (
-        request.user.is_authenticated
-        and comment.user_id == request.user.pk
-        and not edit_block_reason(comment)
-    )
+    editable = _edit_owner(request, comment) and not edit_block_reason(comment)
     return {
         "id": comment.pk,
         "display_name": name,
@@ -221,29 +244,55 @@ def _present(
         else "",
         "permalink": comment_url(comment.discussion, comment.pk),
         "reply_url": _url(request, reply_to=comment.pk, target=comment.pk),
-        "edit_url": reverse("commentail:edit", args=[comment.pk]) if editable else "",
+        "edit_url": comment_url(
+            comment.discussion, comment.pk,
+            navigation={"edit_comment": str(comment.pk)},
+        ) if editable else "",
     }
 
 
 def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, object]:
     request.META["COMMENTAIL_PRIVATE"] = True
+    if request.method == "POST":
+        request.META["COMMENTAIL_WIDGET_PATH"] = discussion_url(discussion)
     options = editorial_settings(discussion)
     restored, draft_error = load_draft(request, discussion)
     form_values = request.POST if request.method == "POST" else restored
+    edit_identifier = form_values.get("edit_comment") or request.GET.get("edit_comment", "")
+    editing = None
+    if edit_identifier.isdecimal():
+        candidate = (
+            discussion.comments.select_related("discussion__site")
+            .filter(pk=edit_identifier).first()
+        )
+        if candidate is not None and _edit_owner(request, candidate):
+            blocked = edit_block_reason(candidate)
+            editing = {
+                "id": candidate.pk,
+                "text": form_values.get("text", candidate.text),
+                "error": draft_error or (_(blocked) if blocked else ""),
+                "can_edit": not blocked,
+                "url": reverse("commentail:edit", args=[candidate.pk]),
+                "cancel_url": comment_url(discussion, candidate.pk),
+            }
     base: dict[str, object] = {
         "language_code": translation.get_language(),
         "discussion_id": discussion.pk,
         "page_id": discussion.page_id,
         "options": options,
         "hidden": options.mode == Mode.HIDDEN,
-        "entered_text": form_values.get("text", ""),
+        "entered_text": "" if edit_identifier else form_values.get("text", ""),
         "entered_name": form_values.get("name", ""),
         "entered_email": form_values.get("email", ""),
-        "entered_subscribe": form_values.get("subscribe") == "on",
-        "error": draft_error,
+        "error": "" if edit_identifier else draft_error,
+        "editing": editing,
     }
     if options.mode == Mode.HIDDEN:
         return base
+    notice = request.session.get("commentail_mail_notice")
+    if notice == discussion.pk:
+        request.session.pop("commentail_mail_notice")
+        base["mail_notice"] = _("We’ll email you about replies.")
     snapshot, limit = _window(request, discussion, "window")
     comments = discussion.comments.select_related(
         "user", "discussion__site", "reply_to__user"
@@ -268,13 +317,28 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
     target = None
     # Validation/refresh POSTs have no navigation query. Keep the addressee's
     # thread visible so progressive clients can restore the inline composer.
-    target_id = request.GET.get("target") or reply_identifier
+    target_id = str(editing["id"]) if editing else request.GET.get("target") or reply_identifier
     if target_id and target_id.isdecimal():
         target = comments.filter(pk=target_id, status="published").first()
+        if target is None:
+            private = comments.filter(pk=target_id)
+            if request.user.is_authenticated:
+                private = private.filter(user=request.user)
+            else:
+                private = private.filter(
+                    pk__in=request.session.get("commentail_own", []),
+                    user__isnull=True, account_deleted=False,
+                )
+            pending = private.first()
+            if pending and pending.reply_to_id:
+                target = comments.filter(pk=pending.reply_to_id, status="published").first()
         if target:
             root = target.root if target.root_id else target
             if root.pk not in {row.pk for row in rows}:
-                rows.append(root)
+                if target.root_id and rows and root.published_at < rows[0].published_at:
+                    rows.append(root)
+                else:
+                    rows.insert(0, root)
     presented = []
     for row in rows:
         data = _present(row, request, options.clickable_links)
@@ -283,10 +347,12 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
         )
         count = replies.count()
         data["reply_count"] = count
-        opened = request.GET.get("thread") == str(row.pk) or (
+        opened = str(row.pk) in request.GET.getlist("thread") or (
             target is not None and target.root_id == row.pk
         )
         _reply_snapshot, reply_limit = _window(request, discussion, "replies", row.pk)
+        data["opened"] = opened
+        data["reply_window"] = _next(discussion, _reply_snapshot, reply_limit - 20, row.pk)
         if opened:
             reply_rows = list(replies[:reply_limit])
             if (
@@ -295,6 +361,9 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
                 and target.pk not in {item.pk for item in reply_rows}
             ):
                 reply_rows.append(target)
+            # The addressed reply may be newer than the stable pagination
+            # snapshot. Its thread still needs to render when that count is zero.
+            data["reply_count"] = max(count, len(reply_rows))
             data["replies"] = [
                 _present(reply, request, options.clickable_links)
                 for reply in reply_rows
@@ -396,6 +465,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             or (
                 not request.user.is_authenticated
                 and options.access != Access.REGISTERED
+                and email_enabled(discussion.site_id)
                 and smtp_configured()
             )
         )
@@ -427,6 +497,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
         )
     base.update(
         {
+            "window_token": _next(discussion, snapshot, limit - 20),
             "rows": presented,
             "own": private_rows,
             "count": visible.count(),
@@ -503,7 +574,6 @@ def submit_view(
             reply_to=int(reply) if reply else None,
             challenge_id=request.POST.get("challenge", ""),
             answer=request.POST.get("answer", ""),
-            subscribe=request.POST.get("subscribe") == "on",
         )
     except DomainError as exc:
         if (response := _draft_redirect(request, discussion, str(exc))) is not None:
@@ -523,49 +593,72 @@ def submit_view(
     if not request.user.is_authenticated:
         owned = request.session.get("commentail_own", [])
         request.session["commentail_own"] = [*owned[-99:], comment.pk]
+    if ReplySubscription.objects.filter(comment=comment, enabled=True).exists():
+        request.session["commentail_mail_notice"] = discussion.pk
     clear_drafts(request, discussion)
-    return redirect(comment_url(discussion, comment.pk))
+    return redirect(comment_url(discussion, comment.pk, navigation=request.GET))
 
 
-def edit_view(request: HttpRequest, identifier: int) -> HttpResponse:
-    if not request.user.is_authenticated:
-        from django.http import Http404
-
-        raise Http404
+def _edit_target(request: HttpRequest, identifier: int) -> Comment:
     comment = get_object_or_404(
         Comment.objects.select_related("discussion__site", "discussion__page"),
         pk=identifier,
-        user=request.user,
     )
     discussion = (
         get_discussion(request, comment.discussion.page_id)
         if comment.discussion.page_id
         else get_discussion(request, discussion_id=comment.discussion_id)
     )
-    if discussion.pk != comment.discussion_id:
-        from django.http import Http404
-
+    if discussion.pk != comment.discussion_id or not _edit_owner(request, comment):
         raise Http404
-    blocked = edit_block_reason(comment)
-    error = _(blocked) if blocked else ""
-    if request.method == "POST":
+    return comment
+
+
+def _edit_failure(
+    request: HttpRequest, comment: Comment, error: str, *, status: int = 400
+) -> HttpResponse:
+    """Recover only the authorized target's draft, never a posted identifier."""
+    values = request.POST.copy()
+    values["edit_comment"] = str(comment.pk)
+    request.POST = values
+    if (response := _draft_redirect(request, comment.discussion, error)) is not None:
+        return response
+    context = block_context(request, comment.discussion)
+    if context["editing"]:
+        context["editing"]["error"] = error
+    response = TemplateResponse(request, "commentail/block.html", context, status=status)
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
+@require_http_methods(["GET", "POST"])
+def edit_view(request: HttpRequest, identifier: int) -> HttpResponse:
+    """Legacy GET locates the inline form; POST saves an authorized revision."""
+    comment = _edit_target(request, identifier)
+    discussion = comment.discussion
+    if request.method == "GET":
+        response = redirect(comment_url(
+            discussion, comment.pk, navigation={"edit_comment": str(comment.pk)}
+        ))
+        response.status_code = 303
+    else:
         try:
-            revise(comment.pk, request.POST.get("text", ""), user=request.user)
-            return redirect(comment_url(discussion, comment.pk))
+            if comment.user_id is not None:
+                revise(comment.pk, request.POST.get("text", ""), user=request.user)
+            else:
+                revise(
+                    comment.pk, request.POST.get("text", ""),
+                    edit_token=guest_edit_secret(request, comment), site=discussion.site,
+                )
         except DomainError as exc:
-            error = str(exc)
-    response = TemplateResponse(
-        request,
-        "commentail/edit.html",
-        {
-            "text": request.POST.get("text", comment.text),
-            "error": error,
-            "language_code": translation.get_language(),
-            "can_edit": not blocked,
-            "return_url": comment_url(discussion, comment.pk),
-        },
-        status=400 if request.method == "POST" and error else 200,
-    )
+            return _edit_failure(request, comment, str(exc))
+        else:
+            clear_drafts(request, discussion)
+            navigation = request.GET.copy()
+            navigation.pop("edit_comment", None)
+            response = redirect(comment_url(discussion, comment.pk, navigation=navigation))
+            if comment.user_id is None:
+                response.status_code = 303
     response["Cache-Control"] = "private, no-store"
     return response
 

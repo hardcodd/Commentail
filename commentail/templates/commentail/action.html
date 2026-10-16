@@ -1,10 +1,23 @@
-{% load i18n static commentail_tags %}<!doctype html>
-<html lang="{{ language_code|default:'en' }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="referrer" content="strict-origin"><title>{% trans "Comment action" %}</title><link rel="stylesheet" href="{% commentail_asset 'commentail.css' %}"><script defer src="{% commentail_asset 'commentail.js' %}"></script></head>
-<body><main class="commentail-action">
-<h1>{% trans "Comment action" %}</h1>
-{% if purpose == "view" %}<p>{{ status_label }}</p><blockquote class="commentail-text">{{ text }}</blockquote>{% if reason %}<p>{{ reason }}</p>{% endif %}{% elif message %}<p role="status">{{ message }}</p>{% else %}
-{% if error %}<p role="alert">{{ error }}</p>{% endif %}
-{% if purpose != "edit" or can_edit %}<form class="commentail-form" method="post">{% csrf_token %}<input type="hidden" name="token" value="{{ token }}">
-{% if purpose == 'edit' %}<label for="commentail-text">{% trans "Comment" %}</label><textarea id="commentail-text" name="text" class="commentail-input" rows="5" required>{{ text }}</textarea>{% endif %}
-<button class="commentail-button" type="submit">{% if purpose == 'confirm' %}{% trans "Confirm email" %}{% elif purpose == 'edit' %}{% trans "Submit revision" %}{% else %}{% trans "Disable notifications" %}{% endif %}</button>
-</form>{% endif %}{% endif %}<p><a href="{{ return_url }}">{% trans "Back to comments" %}</a></p></main></body></html>
+{% extends "commentail/base.html" %}
+{% load i18n %}
+{% block content %}
+  {% if purpose == "view" %}
+    <p class="commentail-action-notice">{{ status_label }}</p>
+    <blockquote class="commentail-action-quote commentail-text">{{ text }}</blockquote>
+    {% if reason %}<p>{{ reason }}</p>{% endif %}
+  {% elif message %}
+    <p class="commentail-action-notice" role="status">{{ message }}</p>
+  {% else %}
+    {% if error %}<p class="commentail-error" role="alert">{{ error }}</p>{% endif %}
+    {% if not unavailable %}
+      {% if purpose == "confirm" %}<p class="commentail-action-description">{% trans "Confirm your email to continue with your comment. The site's moderation policy will apply." %}</p>
+      {% elif purpose == "unsubscribe" %}<p class="commentail-action-description">{% trans "You will stop receiving notifications about direct replies to this comment." %}</p>
+      {% endif %}
+        <form class="commentail-form" method="post">
+          {% csrf_token %}<input type="hidden" name="token" value="{{ token }}">
+          <button class="commentail-button" type="submit">{% if purpose == "confirm" %}{% trans "Confirm email" %}{% else %}{% trans "Disable notifications" %}{% endif %}</button>
+        </form>
+    {% endif %}
+  {% endif %}
+{% endblock %}
+{% block return_label %}{% if unavailable %}{% trans "Back to site" %}{% else %}{% trans "Back to comments" %}{% endif %}{% endblock %}

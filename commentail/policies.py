@@ -44,6 +44,14 @@ def editorial_settings(discussion: Discussion) -> EditorialSettings:
     )
 
 
+def email_enabled(site_id: int) -> bool:
+    """Site-wide mail switch; pages cannot override it."""
+    value = SiteCommentSettings.objects.filter(site_id=site_id).values_list(
+        "email_enabled", flat=True
+    ).first()
+    return value is not False
+
+
 def words(text: str) -> tuple[str, ...]:
     return tuple(
         re.findall(r"[^\W_]+", text.casefold().replace("ё", "е"), flags=re.UNICODE)

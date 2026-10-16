@@ -37,7 +37,7 @@ def save_draft(
     ticket = FormTicket.objects.get(digest=digest(secret))
     ticket.draft = {
         "values": {key: request.POST.get(key, "") for key in (
-            "text", "name", "email", "reply_to", "subscribe"
+            "text", "name", "email", "reply_to", "subscribe", "edit_comment"
         )},
         "error": error,
     }
@@ -52,7 +52,13 @@ def save_draft(
     parts = urlsplit(destination)
     query = dict(parse_qsl(parts.query, keep_blank_values=True))
     query[QUERY_KEY] = str(ticket.pk)
-    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), "commentail"))
+    fragment = "commentail"
+    identifier = request.POST.get("edit_comment", "")
+    if identifier.isdecimal():
+        query["edit_comment"] = identifier
+        query["target"] = identifier
+        fragment = f"commentail-{identifier}"
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), fragment))
 
 
 def load_draft(request: HttpRequest, discussion: Discussion) -> tuple[QueryDict, str]:

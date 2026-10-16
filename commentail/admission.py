@@ -19,7 +19,7 @@ from wagtail.models import Site
 from .config import technical_settings
 from .limits import client_ip, consume
 from .models import Access, Comment, Discussion, FormTicket, Mode, SubmissionRecord
-from .policies import editorial_settings
+from .policies import editorial_settings, email_enabled
 from .security import digest, remembered_guest, verify_captcha
 from .services import DomainError, _text, confirm_email, submit_once
 
@@ -124,7 +124,11 @@ def accept_request(
             or (user is not None and options.access == Access.GUESTS)
         ):
             raise DomainError("Author cannot comment")
-        if user is None and not smtp_configured():
+        mail_available = email_enabled(site.pk) and smtp_configured()
+        subscribe = mail_available and bool(
+            guest_email.strip() if user is None else getattr(user, "email", "")
+        )
+        if user is None and not mail_available:
             raise DomainError("Guest comments require configured SMTP")
         actor = (
             "user:" + str(user.pk)

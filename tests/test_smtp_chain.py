@@ -75,6 +75,17 @@ class SMTPGuestChainTests(TestCase):
 
         def post_action(action_url, **data):
             page = browser.get(action_url)
+            if urlsplit(action_url).path.endswith("/edit/"):
+                from bs4 import BeautifulSoup
+
+                self.assertEqual(page.status_code, 303)
+                page = browser.get(page["Location"])
+                form = BeautifulSoup(page.content, "html.parser").select_one(".commentail-edit-form")
+                self.assertIsNotNone(form)
+                return browser.post(form["action"], {
+                    "csrfmiddlewaretoken": browser.cookies["csrftoken"].value,
+                    **data,
+                })
             self.assertEqual(page.status_code, 200)
             return browser.post(
                 urlsplit(action_url).path,
@@ -154,9 +165,9 @@ class SMTPGuestChainTests(TestCase):
             self.assertEqual(process_mail(), 0)
             moderate(reply.pk, "approve", actor=admin)
             self.assertEqual(process_mail(), 1)
-            locked = browser.get(edit_url)
-            self.assertNotContains(locked, 'name="text"')
-            self.assertContains(locked, 'href="/?target=' + str(comment.pk))
+            locked = browser.get(edit_url, follow=True)
+            self.assertNotContains(locked, 'class="commentail-edit-form"')
+            self.assertContains(locked, "Comment cannot be edited")
             notification = messages[-1]
             self.assertIn(
                 f"?target={reply.pk}#commentail-{reply.pk}", notification.get_content()

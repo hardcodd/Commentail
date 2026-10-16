@@ -10,10 +10,10 @@
 .commentail a { color: var(--commentail-color-accent, currentColor); text-underline-offset: .2em; }
 .commentail-header h2 { display: flex; align-items: center; gap: .6rem; margin: 0 0 1.25rem; font-size: 1.45em; }
 .commentail-count { font-size: .65em; padding: .15em .6em; border: 1px solid var(--commentail-color-border, currentColor); border-radius: 2em; }
-.commentail-form, .commentail-action form { display: grid; gap: calc(var(--commentail-spacing, 1rem) * .75); margin-bottom: calc(var(--commentail-spacing, 1rem) * 1.5); }
+.commentail-form, .commentail-edit-form, .commentail-action form { display: grid; gap: calc(var(--commentail-spacing, 1rem) * .75); margin-bottom: calc(var(--commentail-spacing, 1rem) * 1.5); }
 .commentail .commentail-reply-form { margin: var(--commentail-spacing, 1rem) 0 0; }
 .commentail-reply-context { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .5rem 1rem; margin: 0; font-size: .9em; }
-.commentail-form label { display: grid; gap: .3rem; font-weight: 500; }
+.commentail-form label, .commentail-edit-form label { display: grid; gap: .3rem; font-weight: 500; }
 .commentail-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 .commentail .commentail-input, .commentail-action .commentail-input {
   display: block; width: 100%; min-width: 0; padding: .7rem .85rem;
@@ -79,6 +79,77 @@
     background: var(--commentail-color-button-hover, color-mix(in srgb, currentColor 15%, transparent));
   }
 }
+
+/* Standalone actions have no host page from which to inherit typography/theme.
+   Keep every document rule scoped so embedded widgets retain their host styles. */
+.commentail-document {
+  color-scheme: light;
+  --commentail-document-default-background: #f2f4f7;
+  --commentail-document-default-surface: #fafbfc;
+  --commentail-document-default-text: #252c38;
+  --commentail-document-default-accent: #3c526c;
+  margin: 0; min-height: 100vh; padding: 1rem;
+  background: var(--commentail-document-background, var(--commentail-document-default-background));
+  color: var(--commentail-color-text, var(--commentail-document-default-text));
+  font-family: var(--commentail-font-family, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-size: var(--commentail-font-size, 1rem); line-height: 1.6;
+}
+.commentail-document .commentail-action {
+  max-width: var(--commentail-max-width, 38rem); margin: clamp(1rem, 7vh, 5rem) auto;
+  padding: clamp(1.25rem, 5vw, 2.5rem);
+  background: var(--commentail-color-surface, var(--commentail-document-default-surface));
+  border: 1px solid var(--commentail-color-border, #d4dae2);
+  border-radius: var(--commentail-border-radius, 1.25rem);
+  box-shadow: var(--commentail-document-shadow, 0 12px 40px rgb(20 30 45 / 6%));
+}
+.commentail-action-header { margin-bottom: 1.5rem; }
+.commentail-action-icon {
+  display: grid; place-items: center; width: 3rem; height: 3rem; margin-bottom: 1.25rem;
+  border: 1px solid var(--commentail-color-border, currentColor); border-radius: .9rem;
+  color: var(--commentail-color-accent, inherit);
+}
+.commentail-action-icon svg { display: block; width: 1.5rem; height: 1.5rem; }
+.commentail-action-eyebrow { margin: 0 0 .35rem; font-size: .8rem; font-weight: 650; letter-spacing: .06em; }
+.commentail-action-header h1 { margin: 0; font-size: clamp(1.5rem, 5vw, 2rem); line-height: 1.25; font-weight: 650; }
+.commentail-action-description { margin: 0 0 1.5rem; }
+.commentail-action-notice, .commentail-action-quote {
+  margin: 0 0 1.5rem; padding: 1rem;
+  border-inline-start: 3px solid var(--commentail-color-accent, currentColor);
+  background: var(--commentail-color-input-surface, transparent);
+}
+.commentail-action-footer { margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--commentail-color-border, currentColor); font-size: .9rem; }
+.commentail-document .commentail-form { margin-bottom: 0; }
+.commentail-document .commentail-button { padding: .8rem 1.1rem; font-weight: 600; }
+@media (prefers-color-scheme: dark) {
+  .commentail-document {
+    color-scheme: dark;
+    --commentail-document-default-background: #191d24;
+    --commentail-document-default-surface: #222832;
+    --commentail-document-default-text: #e2e7ef;
+    --commentail-document-default-accent: #bacde5;
+  }
+  .commentail-document .commentail-action { border-color: var(--commentail-color-border, #414b59); }
+}
+@supports (color: color-mix(in srgb, currentColor, transparent)) {
+  .commentail-document .commentail-action, .commentail-action-icon, .commentail-action-footer {
+    border-color: var(--commentail-color-border, color-mix(in srgb, currentColor 18%, transparent));
+  }
+  .commentail-action-notice, .commentail-action-quote {
+    background: var(--commentail-color-input-surface, color-mix(in srgb, currentColor 4%, transparent));
+  }
+}
+@media (max-width: 480px) {
+  .commentail-document { padding: .75rem; }
+  .commentail-document .commentail-action { margin: .75rem auto; }
+  .commentail-document .commentail-button { width: 100%; }
+}
+
+.commentail-document a { color: var(--commentail-color-accent, var(--commentail-document-default-accent)); }
+.commentail-document .commentail-button {
+  color: var(--commentail-color-button-text, var(--commentail-color-accent, var(--commentail-document-default-accent)));
+}
+
+.commentail-editor { margin-top: var(--commentail-spacing, 1rem); }
 
 /* Quiet actions: only interaction reveals a surface. */
 .commentail-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem .85rem; }

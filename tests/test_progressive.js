@@ -10,7 +10,7 @@ function harness(fetchImpl, next = null) {
   const field = { name: "text", value: "Unsent draft", type: "textarea" };
   const key = { name: "key", value: "original-session-key" };
   const button = { disabled: false };
-  const alert = { hidden: true, textContent: "", setAttribute() {}, focus() { this.focused = true; }, scrollIntoView() {} };
+  const alert = { hidden: true, textContent: "", setAttribute() {}, getBoundingClientRect() { return {top: 20, bottom: 80}; }, focus() { this.focused = true; }, scrollIntoView() {} };
   const attributes = {};
   const block = {
     dataset: { discussion: "17", networkError: "Connection failed" },
@@ -27,7 +27,7 @@ function harness(fetchImpl, next = null) {
     append(name, value) { this.values[name] = value; }
   }
   const document = { readyState: "complete", querySelectorAll: () => [], addEventListener: (name, handler) => { listeners[name] = handler; } };
-  const window = { innerHeight: 800, location: { href: "https://local.invalid/page/", origin: "https://local.invalid" }, fetch: fetchImpl, DOMParser: true, AbortController };
+  const window = { innerHeight: 800, scrollBy() {}, location: { href: "https://local.invalid/page/", origin: "https://local.invalid" }, fetch: fetchImpl, DOMParser: true, AbortController };
   const context = { document, window, fetch: fetchImpl, URL, FormData: Data, AbortController, setTimeout, clearTimeout,
     DOMParser: class { parseFromString() { return { querySelectorAll: () => next ? [next] : [] }; } } };
   vm.runInNewContext(script, context);
@@ -163,12 +163,12 @@ for (const boxSizing of ["border-box", "content-box"]) {
 }
 
 function focusTarget() {
-  return { attributes: {}, getBoundingClientRect() { return {top: 20, bottom: 80}; }, setAttribute(name, value) { this.attributes[name] = value; },
+  return { attributes: {}, querySelector() { return null; }, append() {}, getBoundingClientRect() { return {top: 20, bottom: 80}; }, setAttribute(name, value) { this.attributes[name] = value; },
     focus() { this.focused = true; }, scrollIntoView() {} };
 }
 
 test("keyboard expansion moves focus to the first newly loaded message", async () => {
-  const existing = {id: "commentail-1"};
+  const existing = {...focusTarget(), id: "commentail-1"};
   const added = {...focusTarget(), id: "commentail-2"};
   const next = { dataset: {discussion: "17"},
     querySelectorAll: (selector) => selector === ".commentail-comment" ? [existing, added] : [],
@@ -217,6 +217,114 @@ test("accepted submission focuses its private status instead of an empty form", 
   h.send(); await settle();
   assert.equal(accepted.focused, true);
   assert.equal(field.focused, undefined);
+});
+
+
+test("accepted message keeps focus instead of the section-level email notice", async () => {
+  const notice = focusTarget(), accepted = {...focusTarget(), id: "commentail-private-99"};
+  const next = {dataset: {discussion: "17"},
+    querySelectorAll: (selector) => selector === ".commentail-pending" ? [accepted] : [],
+    querySelector: (selector) => selector === ".commentail-mail-notice" ? notice : null};
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.send(); await settle();
+  assert.equal(notice.focused, undefined);
+  assert.equal(accepted.focused, true);
+});
+
+
+test("submission selects the exact accepted message rather than another newly revealed reply", async () => {
+  const unrelated = {...focusTarget(), id: "commentail-2"};
+  const accepted = {...focusTarget(), id: "commentail-99"};
+  const next = {dataset: {discussion: "17"},
+    querySelectorAll: (s) => s === ".commentail-comment" ? [unrelated, accepted] : [],
+    querySelector: (s) => s === "#commentail-99" ? accepted : null};
+  const h = harness(async () => ({status: 200, url: "https://local.invalid/page/?target=99", text: async () => "HTML"}), next);
+  h.send(); await settle();
+  assert.equal(accepted.focused, true);
+  assert.equal(unrelated.focused, undefined);
+});
+
+
+test("updates retain all expanded thread windows and the loaded root window", async () => {
+  let destination;
+  const h = harness(async (url) => {destination = url; return {status: 500};});
+  h.block.dataset.window = "signed-roots";
+  const original = h.block.querySelectorAll;
+  h.block.querySelectorAll = (s) => s === ".commentail-replies[data-open]"
+    ? [{dataset: {thread: "7", window: "signed-seven"}}, {dataset: {thread: "8", window: "signed-eight"}}] : original(s);
+  h.send(); await settle();
+  assert.deepEqual(destination.searchParams.getAll("thread"), ["7", "8"]);
+  assert.deepEqual(destination.searchParams.getAll("replies"), ["signed-seven", "signed-eight"]);
+  assert.equal(destination.searchParams.get("window"), "signed-roots");
+});
+
+test("visible accepted messages receive focus without scrolling to the section", async () => {
+  const accepted = {...focusTarget(), id: "commentail-99"};
+  let scrolls = 0, options;
+  accepted.focus = (value) => { options = value; };
+  accepted.scrollIntoView = () => {scrolls++;};
+  const next = {dataset: {discussion: "17"}, querySelectorAll: () => [],
+    querySelector: (s) => s === "#commentail-99" ? accepted : null};
+  const h = harness(async () => ({status: 200, url: "https://local.invalid/?target=99", text: async () => "HTML"}), next);
+  h.send(); await settle();
+  assert.equal(options.preventScroll, true);
+  assert.equal(scrolls, 0);
+});
+
+
+test("expansion ignores an inherited target and reveals the newly loaded reply", async () => {
+  const previous = {...focusTarget(), id: "commentail-99"};
+  const added = {...focusTarget(), id: "commentail-2"};
+  const next = {dataset: {discussion: "17"},
+    querySelectorAll: (s) => s === ".commentail-comment" ? [previous, added] : [],
+    querySelector: (s) => s === "#commentail-99" ? previous : null};
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.block.querySelectorAll = (s) => s === ".commentail-comment" ? [previous] : [];
+  h.listeners.click({button: 0, target: {closest: () => ({href: "https://local.invalid/?thread=2&target=99#commentail", dataset: {}, closest: () => h.block})}, preventDefault() {}});
+  await settle();
+  assert.equal(added.focused, true);
+  assert.equal(previous.focused, undefined);
+});
+
+test("opening an inline edit focuses its own textarea and preserves the main draft", async () => {
+  const editField = {...focusTarget(), value: "Original comment"};
+  const main = {name: "text", value: ""};
+  const editor = {dataset: {editComment: "7"}, querySelector: () => editField};
+  const next = {dataset: {discussion: "17"},
+    querySelectorAll: (s) => s.includes(":not(") && s.includes("[name]") ? [main] : [],
+    querySelector: (s) => s === ".commentail-edit-form" ? editor : null};
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.block.querySelector = (s) => s === ".commentail-network-error" ? h.alert : null;
+  h.listeners.click({button: 0, target: {closest: () => ({href: "https://local.invalid/?edit_comment=7&target=7#commentail-7", dataset: {commentailEdit: "7", commentailFocus: "text"}, closest: () => h.block})}, preventDefault() {}});
+  await settle();
+  assert.equal(editField.focused, true);
+  assert.equal(editField.value, "Original comment");
+  assert.equal(main.value, "Unsent draft");
+});
+
+test("edit cancellation removes its editor locally and returns focus to Edit", () => {
+  const trigger = focusTarget();
+  let removed = false, calls = 0;
+  const article = {...focusTarget(), id: "commentail-7"};
+  const editor = {remove() {removed = true;}, closest: () => article};
+  const link = {href: "https://local.invalid/?target=7#commentail-7", dataset: {commentailEditCancel: ""},
+    closest: (s) => s === ".commentail-editor" ? editor : s === ".commentail-comment" ? article : h.block};
+  const h = harness(async () => {calls++; return {status: 500};});
+  h.block.querySelector = (s) => s.includes("data-commentail-edit=") ? trigger : s === "#commentail-7" ? article : null;
+  h.listeners.click({button: 0, target: {closest: () => link}, preventDefault() {}});
+  assert.equal(removed, true);
+  assert.equal(calls, 0);
+  assert.equal(trigger.focused, true);
+});
+
+test("saving an edit keeps the independent reply composer in the navigation", async () => {
+  let destination;
+  const h = harness(async (url) => {destination = url; return {status: 500};});
+  h.block.querySelector = (s) => s === ".commentail-network-error" ? h.alert
+    : s === ".commentail-form[data-reply-to]" ? {dataset: {replyTo: "8"}} : null;
+  h.listeners.submit({target: {dataset: {editComment: "7"}, action: "https://local.invalid/comments/7/edit/", matches: () => true, closest: () => h.block}, preventDefault() {}});
+  await settle();
+  assert.equal(destination.searchParams.get("reply_to"), "8");
 });
 
 test("Escape closes the author disclosure and restores its trigger focus", () => {

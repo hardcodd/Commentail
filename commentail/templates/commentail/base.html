@@ -1,0 +1,23 @@
+{% load i18n commentail_tags %}<!doctype html>
+<html lang="{{ language_code|default:'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin">
+  <title>{% block title %}{{ page_title }}{% endblock %}</title>
+  {% commentail_css %}
+  {% commentail_js %}
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="commentail-document">
+  <main class="commentail commentail-action" aria-labelledby="commentail-page-title">
+    <header class="commentail-action-header">
+      <span class="commentail-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 18l-3 3V6a3 3 0 013-3h12a3 3 0 013 3v9a3 3 0 01-3 3H6z"/><path d="M7 8h10M7 12h7"/></svg></span>
+      <p class="commentail-action-eyebrow">{% trans "Comments" %}</p>
+      <h1 id="commentail-page-title">{% block heading %}{{ page_title }}{% endblock %}</h1>
+    </header>
+    {% block content %}{% endblock %}
+    <footer class="commentail-action-footer"><a href="{{ return_url }}">{% block return_label %}{% trans "Back to comments" %}{% endblock %}</a></footer>
+  </main>
+</body>
+</html>

@@ -14,7 +14,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
-from django.http import HttpRequest
+from django.http import HttpRequest, QueryDict
 from django.urls import reverse
 from django.utils.module_loading import import_string
 from wagtail.models import Page, Site
@@ -226,15 +226,25 @@ def comment_url(
     except ObjectAccessError:
         destination = discussion_url(discussion)
     parts = urlsplit(destination)
-    values = dict(parse_qsl(parts.query, keep_blank_values=True))
-    for key in ("thread", "window", "replies", "reply_to", "target"):
+    values: dict[str, str | list[str]] = dict(parse_qsl(parts.query, keep_blank_values=True))
+    for key in ("thread", "window", "replies", "reply_to", "target", "edit_comment"):
         if navigation and key in navigation:
-            values[key] = navigation[key]
+            values[key] = (
+                navigation.getlist(key)
+                if isinstance(navigation, QueryDict) and key in {"thread", "replies"}
+                else navigation[key]
+            )
     if identifier is not None:
         values["target"] = str(identifier)
     target = values.get("target", "")
-    fragment = f"commentail-{target}" if target.isdecimal() else "commentail"
-    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(values), fragment))
+    fragment = (
+        f"commentail-{target}"
+        if isinstance(target, str) and target.isdecimal()
+        else "commentail"
+    )
+    return urlunsplit(
+        (parts.scheme, parts.netloc, parts.path, urlencode(values, doseq=True), fragment)
+    )
 
 
 def clear_object_discussions(

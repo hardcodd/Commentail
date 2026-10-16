@@ -231,14 +231,14 @@ class PublicInterfaceTests(TestCase):
             host = self.client.get(response["Location"])
             self.assertContains(host, "Comment is empty or too long")
             self.assertContains(host, f'name="reply_to" value="{parent.pk}"')
-            self.assertContains(host, 'name="subscribe" checked')
+            self.assertNotContains(host, 'name="subscribe"')
         from bs4 import BeautifulSoup
 
         markup = BeautifulSoup(host.content, "html.parser")
         cancel = next(link for link in markup.select(".commentail-form a") if link.text == "Cancel")
         cancelled = self.client.get(cancel["href"])
         self.assertNotContains(cancelled, 'name="reply_to"')
-        self.assertContains(cancelled, 'name="subscribe" checked')
+        self.assertNotContains(cancelled, 'name="subscribe"')
         stranger = Client().get(response["Location"])
         self.assertNotContains(stranger, "Comment is empty or too long")
         self.assertNotContains(stranger, 'name="reply_to"')
@@ -407,14 +407,14 @@ class PublicInterfaceTests(TestCase):
         self.discussion.mode = "read_only"
         self.discussion.save()
         self.assertNotContains(self.client.get(self.url), f'href="{edit}"')
-        response = self.client.get(edit)
-        self.assertNotContains(response, 'name="text"')
+        response = self.client.get(edit, follow=True)
+        self.assertNotContains(response, 'class="commentail-edit-form"')
         self.assertEqual(response.headers["Cache-Control"], "private, no-store")
         self.discussion.mode = "open"
         self.discussion.save()
         comment.edit_locked = True
         comment.save()
-        self.assertNotContains(self.client.get(edit), 'name="text"')
+        self.assertNotContains(self.client.get(edit, follow=True), 'class="commentail-edit-form"')
 
     def test_authenticated_edit_is_owner_only(self):
         comment = submit(self.discussion.pk, text="Original", user=self.user)
@@ -621,3 +621,80 @@ class PublicInterfaceTests(TestCase):
                 parser = WidgetParser()
                 parser.feed(self.client.get(self.url).content.decode())
                 self.assertEqual(parser.language, language)
+
+
+    def test_reading_state_retains_multiple_open_threads_and_reply_windows(self):
+        from django.utils import timezone
+
+        from commentail.public import _next
+
+        roots = []
+        children = []
+        for index in range(2):
+            root = submit(self.discussion.pk, text=f"Root {index}", user=self.admin)
+            moderate(root.pk, "approve", actor=self.admin)
+            roots.append(root)
+            for number in range(22):
+                child = submit(self.discussion.pk, text=f"Child {index}-{number}", user=self.admin, reply_to=root.pk)
+                moderate(child.pk, "approve", actor=self.admin)
+            children.append(child)
+        snapshot = timezone.now().isoformat()
+        navigation = {"thread": [str(root.pk) for root in roots], "replies": [_next(self.discussion, snapshot, 20, root.pk) for root in roots]}
+        response = self.client.get(self.url, navigation)
+        for child in children:
+            self.assertContains(response, f'id="commentail-{child.pk}"')
+        redirected = self.client.get(self.url, navigation, HTTP_ACCEPT="text/html")
+        from urllib.parse import parse_qs, urlsplit
+        query = parse_qs(urlsplit(redirected["Location"]).query)
+        self.assertEqual(query["thread"], navigation["thread"])
+        self.assertEqual(query["replies"], navigation["replies"])
+
+    def test_pending_reply_target_opens_parent_only_for_its_author(self):
+        root = submit(self.discussion.pk, text="Root", user=self.admin)
+        moderate(root.pk, "approve", actor=self.admin)
+        child = submit(self.discussion.pk, text="Child", user=self.admin, reply_to=root.pk)
+        moderate(child.pk, "approve", actor=self.admin)
+        pending = submit(self.discussion.pk, text="Private reply", user=self.user, reply_to=child.pk)
+        self.client.force_login(self.user)
+        own = self.client.get(self.url, {"target": pending.pk})
+        self.assertContains(own, f'id="commentail-{child.pk}"')
+        self.assertContains(own, f'data-reply-to="{child.pk}"')
+        self.client.logout()
+        other = self.client.get(self.url, {"target": pending.pk})
+        self.assertNotContains(other, "Private reply")
+        self.assertNotContains(other, f'id="commentail-{child.pk}"')
+
+
+    def test_new_root_target_stays_first_without_discarding_loaded_snapshot(self):
+        from django.utils import timezone
+
+        from commentail.public import _next
+
+        previous = submit(self.discussion.pk, text="Previous", user=self.admin)
+        moderate(previous.pk, "approve", actor=self.admin)
+        window = _next(self.discussion, timezone.now().isoformat(), 0)
+        latest = submit(self.discussion.pk, text="New main comment", user=self.admin)
+        moderate(latest.pk, "approve", actor=self.admin)
+        response = self.client.get(self.url, {"window": window, "target": latest.pk})
+        self.assertEqual([row["id"] for row in response.context["rows"]], [latest.pk, previous.pk])
+
+    def test_target_reply_after_snapshot_is_rendered_and_new_root_stays_first(self):
+        from django.utils import timezone
+
+        from commentail.public import _next
+
+        previous = submit(self.discussion.pk, text="Previous root", user=self.admin)
+        moderate(previous.pk, "approve", actor=self.admin)
+        window = _next(self.discussion, timezone.now().isoformat(), 0)
+        latest = submit(self.discussion.pk, text="Root after snapshot", user=self.admin)
+        moderate(latest.pk, "approve", actor=self.admin)
+        reply = submit(self.discussion.pk, text="Targeted fresh reply", user=self.admin, reply_to=latest.pk)
+        moderate(reply.pk, "approve", actor=self.admin)
+        other = submit(self.discussion.pk, text="Unrequested fresh reply", user=self.admin, reply_to=latest.pk)
+        moderate(other.pk, "approve", actor=self.admin)
+
+        response = self.client.get(self.url, {"window": window, "target": reply.pk})
+        self.assertContains(response, f'id="commentail-{reply.pk}"')
+        self.assertNotContains(response, f'id="commentail-{other.pk}"')
+        self.assertEqual([row["id"] for row in response.context["rows"]], [latest.pk, previous.pk])
+        self.assertEqual(response.context["rows"][0]["reply_count"], 1)

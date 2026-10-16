@@ -33,8 +33,14 @@ EDITORIAL_LABELS = {
 class SiteSettingsForm(forms.ModelForm):
     class Meta:
         model = SiteCommentSettings
-        fields = EDITORIAL_FIELDS
-        labels = EDITORIAL_LABELS
+        fields = ("email_enabled", *EDITORIAL_FIELDS)
+        labels: ClassVar[dict[str, object]] = {"email_enabled": _("Send emails"), **EDITORIAL_LABELS}
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)
+        self.fields["email_enabled"].help_text = _(
+            "Disables all comment emails, including guest verification. Guests cannot comment while email is disabled."
+        )
 
     def clean_max_length(self) -> int:
         value = self.cleaned_data["max_length"]

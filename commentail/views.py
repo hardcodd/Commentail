@@ -20,7 +20,26 @@ from .security import (
     unsubscribe,
     verify_token,
 )
-from .services import DomainError, edit_block_reason, revise
+from .services import DomainError
+
+
+def _action_error(request: HttpRequest, message: str, status: int) -> HttpResponse:
+    """Render a capability failure without resolving or disclosing its target."""
+    response = TemplateResponse(
+        request,
+        "commentail/action.html",
+        {
+            "language_code": translation.get_language(),
+            "page_title": _("Comment action"),
+            "error": message,
+            "unavailable": True,
+            "return_url": "/",
+        },
+        status=status,
+    )
+    response["Referrer-Policy"] = "strict-origin"
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @require_http_methods(["GET", "POST"])
@@ -43,24 +62,37 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
             request.META[field] = redact(str(request.META[field]))
     site = Site.find_for_request(request)
     if site is None or purpose not in {"confirm", "edit", "unsubscribe", "view"}:
-        return HttpResponse(_("Invalid or expired link"), status=404)
+        return _action_error(request, _("Invalid or expired link"), 404)
     try:
         token = verify_token(secret, purpose, site)
     except DomainError:
-        return HttpResponse(_("Invalid or expired link"), status=404)
+        return _action_error(request, _("Invalid or expired link"), 404)
     comment = token.comment
     if purpose != "unsubscribe" and not can_view(request, comment.discussion):
-        return HttpResponse(_("Page access is required"), status=403)
+        return _action_error(request, _("Page access is required"), 403)
     if purpose == "view":
         from .policies import editorial_settings
 
         if editorial_settings(comment.discussion).mode == "hidden":
-            return HttpResponse(status=403)
+            return _action_error(request, _("Page access is required"), 403)
     if purpose == "view" and request.method != "GET":
         return HttpResponse(status=405)
-    blocked = edit_block_reason(comment) if purpose == "edit" else ""
+    if purpose == "edit":
+        from .public import edit_view
+
+        proofs = dict(request.session.get("commentail_edits", {}))
+        proofs[str(comment.pk)] = secret
+        while len(proofs) > 10:
+            proofs.pop(next(iter(proofs)))
+        request.session["commentail_edits"] = proofs
+        owned = request.session.get("commentail_own", [])
+        if comment.pk not in owned:
+            request.session["commentail_own"] = [*owned[-99:], comment.pk]
+        response = edit_view(request, comment.pk)
+        response["Referrer-Policy"] = "strict-origin"
+        return response
     message = ""
-    error = _(blocked) if blocked else ""
+    error = ""
     grant_secret = None
     if request.method == "POST":
         try:
@@ -77,14 +109,6 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
                         grant_secret = remember_guest(
                             site, comment.email, confirmed_at=comment.email_confirmed_at
                         )
-            elif purpose == "edit":
-                revise(
-                    comment.pk,
-                    request.POST.get("text", ""),
-                    edit_token=secret,
-                    site=site,
-                )
-                message = _("Revision submitted.")
             else:
                 changed = unsubscribe(secret, site)
                 message = (
@@ -95,7 +119,7 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
         except DomainError as exc:
             error = str(exc)
     response: HttpResponse
-    if message and purpose in {"confirm", "edit"}:
+    if message and purpose == "confirm":
         response = redirect(comment_url(comment.discussion, comment.pk))
         response.status_code = 303
     else:
@@ -105,15 +129,15 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
             {
                 "language_code": translation.get_language(),
                 "purpose": purpose,
+                "page_title": {
+                    "confirm": _("Confirm email"),
+                    "unsubscribe": _("Reply notifications"),
+                    "view": _("Comment status"),
+                }[purpose],
                 "token": secret,
                 "message": message,
                 "error": error,
-                "text": request.POST.get("text", comment.text)
-                if purpose == "edit"
-                else comment.text
-                if purpose == "view"
-                else "",
-                "can_edit": not blocked,
+                "text": comment.text if purpose == "view" else "",
                 "return_url": comment_url(comment.discussion, comment.pk),
                 "status_label": comment.get_status_display(),
                 "reason": comment.reason if purpose == "view" else "",

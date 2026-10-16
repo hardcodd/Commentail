@@ -158,10 +158,39 @@ class ActionViewTests(TestCase):
         url = "/commentail/actions/edit/"
         response = self.client.post(url, {"token": secret, "text": " "})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.context["text"], " ")
+        self.assertEqual(response.context["editing"]["text"], " ")
         self.assertContains(response, 'name="text"', status_code=400)
         self.comment.edit_locked = True
-        self.comment.save()
-        response = self.client.get(url, {"token": secret})
-        self.assertNotContains(response, 'name="text"')
+        self.comment.save(update_fields=["edit_locked"])
+        response = self.client.get(url, {"token": secret}, follow=True)
+        self.assertNotContains(response, 'class="commentail-edit-form"')
         self.assertContains(response, "Comment cannot be edited")
+
+    def test_action_documents_share_local_overridable_layout(self):
+        response = self.client.get(self.url)
+        self.assertTemplateUsed(response, "commentail/base.html")
+        self.assertContains(response, 'class="commentail-document"')
+        self.assertContains(response, '<h1 id="commentail-page-title">Confirm email</h1>')
+        self.assertContains(response, 'aria-labelledby="commentail-page-title"')
+        self.assertContains(response, 'name="token"')
+        self.assertContains(response, "Back to comments")
+        self.assertNotContains(response, "fonts.googleapis")
+
+    def test_invalid_capability_gets_styled_error_without_private_data_or_form(self):
+        response = self.client.get("/commentail/actions/confirm/?token=invalid")
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, "commentail/base.html")
+        self.assertContains(response, 'role="alert"', status_code=404)
+        self.assertNotContains(response, '<form', status_code=404)
+        self.assertNotContains(response, self.comment.text, status_code=404)
+        self.assertNotContains(response, self.comment.email, status_code=404)
+        self.assertIn("no-store", response["Cache-Control"])
+
+    def test_unsubscribe_result_remains_styled_and_has_host_return(self):
+        secret = issue_token(self.comment, "unsubscribe", timezone.now() + timedelta(days=1))
+        response = self.client.post("/commentail/actions/unsubscribe/", {"token": secret})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "commentail/base.html")
+        self.assertContains(response, 'role="status"')
+        self.assertNotContains(response, '<form')
+        self.assertContains(response, f'/?target={self.comment.pk}#commentail-{self.comment.pk}')
