@@ -29,6 +29,52 @@ class PublicInterfaceTests(TestCase):
     def test_service_returns_only_widget_fragment(self):
         self.assert_fragment(self.client.get(self.url))
 
+    def test_reply_exposes_independent_main_ticket_and_native_fallback(self):
+        import re
+        from unittest.mock import patch
+
+        from commentail.admission import accept_request
+
+        self.client.force_login(self.user)
+        parent = submit(self.discussion.pk, text="Parent", user=self.admin)
+        moderate(parent.pk, "approve", actor=self.admin)
+        response = self.client.get(self.url, {"reply_to": parent.pk, "target": parent.pk})
+        self.assertContains(response, f'data-reply-to="{parent.pk}"')
+        self.assertContains(response, 'class="commentail-main-template"')
+        self.assertContains(response, 'data-commentail-cancel')
+        self.assertContains(response, f'id="commentail-reply-length-{parent.pk}"')
+        self.assertNotEqual(response.context["form_key"], response.context["main_form_key"])
+        keys = re.findall(r'name="key" value="([^"]+)"', response.content.decode())
+        self.assertEqual(len(keys), 2)
+        self.assertEqual(len(set(keys)), 2)
+        # Both tickets must remain usable and deduplicate their own submission.
+        first = self.client.post(
+            reverse("commentail:submit", args=[self.site.root_page.pk]),
+            {"key": response.context["form_key"], "text": "Reply", "reply_to": parent.pk},
+        )
+        self.assertEqual(first.status_code, 302)
+        with patch("commentail.admission.consume"):
+            main = accept_request(
+                response.wsgi_request, self.discussion.pk,
+                response.context["main_form_key"], text="Separate main comment",
+            )
+        self.assertIsNone(main.reply_to_id)
+
+    def test_reply_error_keeps_nested_addressee_rendered(self):
+        self.client.force_login(self.user)
+        parent = submit(self.discussion.pk, text="Parent", user=self.admin)
+        moderate(parent.pk, "approve", actor=self.admin)
+        child = submit(self.discussion.pk, text="Child", user=self.admin, reply_to=parent.pk)
+        moderate(child.pk, "approve", actor=self.admin)
+        form = self.client.get(self.url, {"reply_to": child.pk, "target": child.pk})
+        response = self.client.post(
+            reverse("commentail:submit", args=[self.site.root_page.pk]),
+            {"key": form.context["form_key"], "text": " ", "reply_to": child.pk},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, f'id="commentail-{child.pk}"', status_code=400)
+        self.assertContains(response, f'data-reply-to="{child.pk}"', status_code=400)
+
     @override_settings(
         CSRF_FAILURE_VIEW="commentail.public.csrf_failure",
         EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",

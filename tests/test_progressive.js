@@ -85,6 +85,52 @@ test("navigation preserves the latest draft and cannot target a foreign origin",
   assert.equal(h.block.replacement, next);
 });
 
+test("reading navigation preserves independent main and reply drafts", async () => {
+  const main = {name: "text", value: "Main draft"};
+  const reply = {name: "text", value: "Reply draft"};
+  const newMain = {name: "text", value: ""};
+  const newReply = {name: "text", value: ""};
+  const next = {dataset: {discussion: "17"}, querySelector: () => null,
+    querySelectorAll: (s) => s.includes("[name]") ? (s.includes(":not(") ? [newMain] : [newReply]) : []};
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.block.querySelectorAll = (s) => s.includes("[name]") ? (s.includes(":not(") ? [main] : [reply]) : [];
+  h.listeners.click({button: 0, target: {closest: () => ({href: "https://local.invalid/?thread=2", dataset: {}, closest: () => h.block})}, preventDefault() {}});
+  await settle();
+  assert.equal(newMain.value, "Main draft");
+  assert.equal(newReply.value, "Reply draft");
+});
+
+test("reply submission keeps the unsent main draft after acceptance", async () => {
+  const newMain = {name: "text", value: ""};
+  const next = {dataset: {discussion: "17"}, querySelector: () => null,
+    querySelectorAll: (s) => s.includes("[name]") ? [newMain] : []};
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.listeners.submit({target: {dataset: {replyTo: "7"}, action: "https://local.invalid/comments/submit/", matches: () => true, closest: () => h.block}, preventDefault() {}});
+  await settle();
+  assert.equal(newMain.value, "Unsent draft");
+});
+
+test("pagination cannot reopen a cancelled reply from a stale rendered URL", async () => {
+  let destination;
+  const h = harness(async (url) => {destination = url; return {status: 500};});
+  h.block.querySelector = (s) => s === ".commentail-network-error" ? h.alert : null;
+  h.listeners.click({button: 0, target: {closest: () => ({href: "https://local.invalid/?thread=2&reply_to=7", dataset: {}, closest: () => h.block})}, preventDefault() {}});
+  await settle();
+  assert.equal(destination.searchParams.has("reply_to"), false);
+  assert.equal(destination.searchParams.get("thread"), "2");
+});
+
+test("pagination after validation keeps the active reply and its target", async () => {
+  let destination;
+  const h = harness(async (url) => {destination = url; return {status: 500};});
+  h.block.querySelector = (s) => s === ".commentail-network-error" ? h.alert : {dataset: {replyTo: "7"}};
+  h.listeners.click({button: 0, target: {closest: () => ({href: "https://local.invalid/?thread=2", dataset: {}, closest: () => h.block})}, preventDefault() {}});
+  await settle();
+  assert.equal(destination.searchParams.get("reply_to"), "7");
+  assert.equal(destination.searchParams.get("target"), "7");
+  assert.equal(destination.searchParams.get("thread"), "2");
+});
+
 // Layout dimensions model the browser box contract, independently of the helper.
 for (const boxSizing of ["border-box", "content-box"]) {
   test(`autoheight fits content with custom borders and padding (${boxSizing})`, () => {

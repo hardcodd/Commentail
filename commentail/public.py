@@ -260,8 +260,16 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
     )
     rows = list(roots[:limit])
     total = roots.count()
+    reply_identifier = (
+        request.GET.get("reply_to", form_values.get("reply_to", ""))
+        if request.method == "GET"
+        else form_values.get("reply_to", request.GET.get("reply_to", ""))
+    )
     target = None
-    if (target_id := request.GET.get("target")) and target_id.isdecimal():
+    # Validation/refresh POSTs have no navigation query. Keep the addressee's
+    # thread visible so progressive clients can restore the inline composer.
+    target_id = request.GET.get("target") or reply_identifier
+    if target_id and target_id.isdecimal():
         target = comments.filter(pk=target_id, status="published").first()
         if target:
             root = target.root if target.root_id else target
@@ -413,11 +421,6 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             can_post = False
             base["error"] = str(exc)
     reply_to = None
-    reply_identifier = (
-        request.GET.get("reply_to", form_values.get("reply_to", ""))
-        if request.method == "GET"
-        else form_values.get("reply_to", request.GET.get("reply_to", ""))
-    )
     if identifier := reply_identifier:
         reply_to = (
             visible.filter(pk=identifier).first() if identifier.isdecimal() else None
@@ -432,6 +435,9 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             else "",
             "can_post": can_post,
             "form_key": form_key,
+            "main_form_key": issue_form(request, discussion)
+            if can_post and reply_to is not None
+            else "",
             "captcha": task,
             "remembered_email": grant.email if grant else "",
             "guest_email_confirmed": email_confirmed,

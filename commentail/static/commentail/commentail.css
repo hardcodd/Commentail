@@ -11,6 +11,8 @@
 .commentail-header h2 { display: flex; align-items: center; gap: .6rem; margin: 0 0 1.25rem; font-size: 1.45em; }
 .commentail-count { font-size: .65em; padding: .15em .6em; border: 1px solid var(--commentail-color-border, currentColor); border-radius: 2em; }
 .commentail-form, .commentail-action form { display: grid; gap: calc(var(--commentail-spacing, 1rem) * .75); margin-bottom: calc(var(--commentail-spacing, 1rem) * 1.5); }
+.commentail .commentail-reply-form { margin: var(--commentail-spacing, 1rem) 0 0; }
+.commentail-reply-context { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .5rem 1rem; margin: 0; font-size: .9em; }
 .commentail-form label { display: grid; gap: .3rem; font-weight: 500; }
 .commentail-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 .commentail .commentail-input, .commentail-action .commentail-input {

@@ -19,17 +19,35 @@
       if (image.complete && !image.naturalWidth) image.remove();
     });
   };
-  const draft = (block) => {
+  // Server forms remain a native fallback; mount only the active reply inline.
+  // Its independent main ticket avoids deduplicating a different main comment.
+  const mountReply = (block) => {
+    const form = block.querySelector(".commentail-form[data-reply-to]");
+    if (!form?.dataset?.replyTo) return;
+    const target = block.querySelector(`#commentail-${form.dataset.replyTo} .commentail-content`);
+    const template = block.querySelector(".commentail-main-template");
+    if (!target || !template) return;
+    form.before(template.content.firstElementChild.cloneNode(true));
+    target.append(form);
+    form.classList.add("commentail-reply-form");
+    const error = block.querySelector('.commentail-error[role="alert"]:not(.commentail-network-error)');
+    if (error) form.prepend(error);
+    const network = block.querySelector(".commentail-network-error");
+    if (network) form.prepend(network);
+  };
+  const draft = (block, reply = false) => {
     const values = {};
-    block.querySelectorAll('.commentail-form [name]').forEach((field) => {
+    const selector = reply ? '.commentail-form[data-reply-to] [name]' : '.commentail-form:not([data-reply-to]) [name]';
+    block.querySelectorAll(selector).forEach((field) => {
       if (["text", "name", "email", "subscribe"].includes(field.name)) {
         values[field.name] = field.type === "checkbox" ? field.checked : field.value;
       }
     });
     return values;
   };
-  const restoreDraft = (block, values) => {
-    block.querySelectorAll('.commentail-form [name]').forEach((field) => {
+  const restoreDraft = (block, values, reply = false) => {
+    const selector = reply ? '.commentail-form[data-reply-to] [name]' : '.commentail-form:not([data-reply-to]) [name]';
+    block.querySelectorAll(selector).forEach((field) => {
       if (!(field.name in values)) return;
       if (field.type === "checkbox") field.checked = values[field.name];
       else field.value = values[field.name];
@@ -41,7 +59,7 @@
     element.setAttribute("tabindex", "-1");
     element.focus();
   };
-  const update = async (block, url, { body, focus, keepDraft = false } = {}) => {
+  const update = async (block, url, { body, focus, keepDraft = false, reply = false } = {}) => {
     if (block.getAttribute("aria-busy") === "true") return;
     const destination = new URL(url, window.location.href);
     if (destination.origin !== window.location.origin) return;
@@ -66,12 +84,22 @@
       const next = [...html.querySelectorAll(".commentail[data-discussion]")]
         .find((item) => item.dataset.discussion === block.dataset.discussion);
       if (!next) throw new Error("Missing discussion");
+      mountReply(next);
       // Preserve drafts during reading/navigation, including typing during the fetch.
-      if (keepDraft) restoreDraft(next, draft(block));
+      if (keepDraft || reply) restoreDraft(next, draft(block));
+      if (keepDraft) {
+        const previousReply = draft(block, true);
+        const main = draft(block);
+        restoreDraft(next, Object.keys(previousReply).length ? previousReply : {
+          name: main.name || "", email: main.email || "",
+        }, true);
+      }
       block.replaceWith(next);
       enhance(next);
       const error = next.querySelector('[role="alert"]:not([hidden])');
-      const field = focus && next.querySelector(`.commentail-form [name="${focus}"]`);
+      const composer = next.querySelector(".commentail-reply-form");
+      const active = composer?.dataset?.replyTo ? composer : next;
+      const field = focus && active.querySelector(`.commentail-form [name="${focus}"], [name="${focus}"]`);
       const added = [...next.querySelectorAll(".commentail-comment")].find((item) => !previousMessages.has(item.id));
       const accepted = [...next.querySelectorAll(".commentail-pending")].find((item) => !previousPrivate.has(item.id));
       if (error) focusContent(error);
@@ -93,15 +121,47 @@
     }
   };
   const start = () => {
+    if (!window.fetch || !window.DOMParser || !window.AbortController) {
+      enhance(document);
+      return;
+    }
+    document.querySelectorAll(".commentail[data-discussion]").forEach(mountReply);
     enhance(document);
-    if (!window.fetch || !window.DOMParser || !window.AbortController) return;
     document.addEventListener("click", (event) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const link = event.target.closest("a[data-commentail-navigation]");
       const block = link && link.closest(".commentail[data-discussion]");
       if (!block || new URL(link.href).origin !== window.location.origin) return;
+      if (block.getAttribute("aria-busy") === "true") {
+        event.preventDefault();
+        return;
+      }
       event.preventDefault();
-      update(block, link.href, { focus: link.dataset.commentailFocus, keepDraft: true });
+      if (link.dataset.commentailCancel !== undefined) {
+        const form = link.closest(".commentail-reply-form");
+        if (form) {
+          const trigger = block.querySelector(`[data-commentail-reply="${form.dataset.replyTo}"]`);
+          const network = form.querySelector(".commentail-network-error");
+          if (network) { network.hidden = true; block.prepend(network); }
+          form.remove();
+          const current = new URL(window.location.href);
+          current.searchParams.delete("reply_to");
+          window.history?.replaceState(null, "", current);
+          trigger?.focus();
+          return;
+        }
+      }
+      const destination = new URL(link.href);
+      // POST fragments have no navigation query; cancelled forms leave stale
+      // rendered URLs behind. The live composer is the navigation authority.
+      if (link.dataset.commentailReply === undefined) {
+        const activeReply = block.querySelector(".commentail-form[data-reply-to]");
+        if (activeReply?.dataset?.replyTo) {
+          destination.searchParams.set("reply_to", activeReply.dataset.replyTo);
+          destination.searchParams.set("target", activeReply.dataset.replyTo);
+        } else destination.searchParams.delete("reply_to");
+      }
+      update(block, destination.href, { focus: link.dataset.commentailFocus, keepDraft: true });
     });
     document.addEventListener("submit", (event) => {
       const form = event.target;
@@ -111,7 +171,7 @@
       const body = new FormData(form);
       const button = event.submitter;
       if (button && button.name) body.append(button.name, button.value);
-      update(block, form.action, { body, focus: button?.name === "refresh" ? "answer" : "text" });
+      update(block, form.action, { body, reply: Boolean(form.dataset?.replyTo), focus: button?.name === "refresh" ? "answer" : "text" });
     });
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });

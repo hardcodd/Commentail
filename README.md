@@ -133,6 +133,13 @@ comment with HTTP 303. Opening a mail action link still shows its explicit
 confirmation/edit form; GET never confirms or changes a comment. Invalid or
 locked edits keep their error and link back to the host.
 
+With JavaScript, Reply opens a single composer directly below the addressed
+comment, including replies to replies. The main form keeps its separate draft.
+Switching the addressee keeps the reply draft; Cancel removes the reply form
+from the DOM and returns keyboard focus to its Reply link. Validation and
+CAPTCHA refresh keep the composer beside its addressee. Without JavaScript,
+Reply uses the ordinary server-rendered form at the top of the discussion.
+
 Comment permalinks and successful submission/edit returns point to the host
 Page or registered object's URL, keeping the addressed comment in its discussion.
 Opening a discussion service URL as a browser document redirects to that host
