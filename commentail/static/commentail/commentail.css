@@ -40,7 +40,7 @@
 .commentail-content header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem .75rem; }
 .commentail .commentail-date, .commentail-muted { color: var(--commentail-color-muted, inherit); font-size: .85em; }
 .commentail-text { white-space: pre-wrap; margin: .5rem 0; }
-.commentail-content footer { display: flex; flex-wrap: wrap; gap: 1rem; font-size: .85em; }
+.commentail-content footer { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .65rem; font-size: .85em; }
 .commentail-replies { padding-left: calc(var(--commentail-avatar-size, 2.5rem) + .75rem); }
 .commentail-expand { display: inline-block; margin: 0 0 1rem; }
 .commentail-pending { padding: 1rem; margin-bottom: 1rem; border: 1px dashed var(--commentail-color-border, currentColor); border-radius: var(--commentail-border-radius, .75rem); }
@@ -77,5 +77,50 @@
   }
   .commentail-button:hover, .commentail-action button:hover {
     background: var(--commentail-color-button-hover, color-mix(in srgb, currentColor 15%, transparent));
+  }
+}
+
+/* Quiet actions: only interaction reveals a surface. */
+.commentail-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem .85rem; }
+.commentail a.commentail-control {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 2.1rem; max-width: 100%; padding: .3rem .6rem;
+  border: 0; border-radius: var(--commentail-border-radius, .75rem);
+  color: var(--commentail-color-accent, currentColor);
+  background: var(--commentail-color-control-surface, transparent);
+  font: inherit; font-weight: 500; line-height: 1.4; text-align: center;
+  text-decoration: none;
+}
+.commentail-actions .commentail-secondary { border-color: transparent; }
+.commentail a.commentail-control:hover { text-decoration: none; }
+.commentail-menu { position: relative; margin-inline-start: auto; flex: 0 0 auto; align-self: flex-start; }
+.commentail-menu summary {
+  display: flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem; margin: -.3rem 0;
+  list-style: none; cursor: pointer; border-radius: 50%;
+  font-size: 1.4em; line-height: 1; color: var(--commentail-color-muted, inherit);
+}
+.commentail-menu summary::-webkit-details-marker { display: none; }
+.commentail-menu-panel {
+  position: absolute; inset-inline-end: 0; top: calc(100% + .4rem); z-index: 2;
+  min-width: 10rem; max-width: calc(100vw - 3rem); padding: .3rem;
+  border: 1px solid var(--commentail-color-border, currentColor);
+  border-radius: var(--commentail-border-radius, .75rem);
+  background: var(--commentail-color-menu-surface, Canvas);
+  color: var(--commentail-color-menu-text, CanvasText);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+}
+.commentail .commentail-menu-panel a {
+  display: block; padding: .5rem .75rem; border-radius: .5rem;
+  color: inherit; font-size: .9em; text-decoration: none;
+}
+@supports (color: color-mix(in srgb, currentColor, transparent)) {
+  .commentail a.commentail-control:hover, .commentail-actions .commentail-secondary:hover,
+  .commentail-menu summary:hover, .commentail-menu[open] summary, .commentail-menu-panel a:hover {
+    background: var(--commentail-color-control-hover, color-mix(in srgb, currentColor 8%, transparent));
+  }
+  .commentail-menu-panel {
+    background: var(--commentail-color-menu-surface, color-mix(in srgb, Canvas 97%, CanvasText));
+    border-color: var(--commentail-color-border, color-mix(in srgb, currentColor 18%, transparent));
   }
 }

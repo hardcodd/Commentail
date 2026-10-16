@@ -793,3 +793,6 @@ msgstr "Подтвердите до:"
 
 msgid "This email is confirmed in this browser. A different email needs confirmation."
 msgstr "Этот email подтверждён в этом браузере. Другой адрес потребуется подтвердить."
+
+msgid "Comment actions"
+msgstr "Действия с комментарием"

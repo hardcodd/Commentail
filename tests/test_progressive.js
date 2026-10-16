@@ -27,7 +27,7 @@ function harness(fetchImpl, next = null) {
     append(name, value) { this.values[name] = value; }
   }
   const document = { readyState: "complete", querySelectorAll: () => [], addEventListener: (name, handler) => { listeners[name] = handler; } };
-  const window = { location: { href: "https://local.invalid/page/", origin: "https://local.invalid" }, fetch: fetchImpl, DOMParser: true, AbortController };
+  const window = { innerHeight: 800, location: { href: "https://local.invalid/page/", origin: "https://local.invalid" }, fetch: fetchImpl, DOMParser: true, AbortController };
   const context = { document, window, fetch: fetchImpl, URL, FormData: Data, AbortController, setTimeout, clearTimeout,
     DOMParser: class { parseFromString() { return { querySelectorAll: () => next ? [next] : [] }; } } };
   vm.runInNewContext(script, context);
@@ -163,7 +163,7 @@ for (const boxSizing of ["border-box", "content-box"]) {
 }
 
 function focusTarget() {
-  return { attributes: {}, setAttribute(name, value) { this.attributes[name] = value; },
+  return { attributes: {}, getBoundingClientRect() { return {top: 20, bottom: 80}; }, setAttribute(name, value) { this.attributes[name] = value; },
     focus() { this.focused = true; }, scrollIntoView() {} };
 }
 
@@ -217,4 +217,15 @@ test("accepted submission focuses its private status instead of an empty form", 
   h.send(); await settle();
   assert.equal(accepted.focused, true);
   assert.equal(field.focused, undefined);
+});
+
+test("Escape closes the author disclosure and restores its trigger focus", () => {
+  const h = harness(undefined);
+  // No progressive fetch: native disclosures still get keyboard dismissal.
+  const summary = focusTarget();
+  let closed = false;
+  const menu = {removeAttribute(name) {if (name === "open") closed = true;}, querySelector: () => summary};
+  h.listeners.keydown?.({key: "Escape", target: {closest: () => menu}, preventDefault() {}});
+  assert.equal(closed, true);
+  assert.equal(summary.focused, true);
 });

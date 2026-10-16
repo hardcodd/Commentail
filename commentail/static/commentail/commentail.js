@@ -53,6 +53,13 @@
       else field.value = values[field.name];
     });
   };
+  const reveal = (element) => {
+    element.focus({ preventScroll: true });
+    const rect = element.getBoundingClientRect();
+    if (rect.top < 16 || rect.bottom > window.innerHeight - 16) {
+      element.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" });
+    }
+  };
   const focusContent = (element) => {
     if (!element) return;
     // Programmatic focus must not add reading targets to the normal Tab order.
@@ -121,6 +128,14 @@
     }
   };
   const start = () => {
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      const menu = event.target.closest("details.commentail-menu[open]");
+      if (!menu) return;
+      event.preventDefault();
+      menu.removeAttribute("open");
+      reveal(menu.querySelector("summary"));
+    });
     if (!window.fetch || !window.DOMParser || !window.AbortController) {
       enhance(document);
       return;
@@ -128,6 +143,9 @@
     document.querySelectorAll(".commentail[data-discussion]").forEach(mountReply);
     enhance(document);
     document.addEventListener("click", (event) => {
+      document.querySelectorAll("details.commentail-menu[open]").forEach((menu) => {
+        if (!menu.contains(event.target)) menu.removeAttribute("open");
+      });
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const link = event.target.closest("a[data-commentail-navigation]");
       const block = link && link.closest(".commentail[data-discussion]");

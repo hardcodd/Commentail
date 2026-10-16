@@ -96,6 +96,8 @@ package stylesheet. For example, map the site's own accent token explicitly:
 | `color-input-surface` | 3% text-color tint |
 | `color-button-text` | Accent or inherited text color |
 | `color-button-surface`, `color-button-hover` | 8% / 15% button-text tint |
+| `color-control-surface`, `color-control-hover` | Quiet actions: transparent / 8% text-color tint |
+| `color-menu-surface`, `color-menu-text` | Action popup: browser canvas with a subtle tint / canvas text |
 | `border-radius`, `avatar-size` | `.75rem` / `2.5rem` |
 | `spacing`, `max-width` | `1rem` form spacing unit / `48rem` widget limit |
 | `input-min-height`, `input-max-height` | `6rem` / `24rem` |
@@ -132,6 +134,10 @@ Successful email-confirmation and guest-revision POSTs redirect to the host
 comment with HTTP 303. Opening a mail action link still shows its explicit
 confirmation/edit form; GET never confirms or changes a comment. Invalid or
 locked edits keep their error and link back to the host.
+
+Reply uses a quiet text control. Eligible authors find Edit in a named ellipsis
+disclosure, which also works without JavaScript. Escape and outside clicks close
+the disclosure when JavaScript is available.
 
 With JavaScript, Reply opens a single composer directly below the addressed
 comment, including replies to replies. The main form keeps its separate draft.
