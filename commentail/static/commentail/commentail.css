@@ -45,6 +45,7 @@
 .commentail-expand { display: inline-block; margin: 0 0 1rem; }
 .commentail-pending { padding: 1rem; margin-bottom: 1rem; border: 1px dashed var(--commentail-color-border, currentColor); border-radius: var(--commentail-border-radius, .75rem); }
 .commentail-status { display: block; color: var(--commentail-color-muted, inherit); font-size: .85em; }
+.commentail-announcement { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .commentail-error { padding: .75rem; border: 1px solid var(--commentail-color-error, currentColor); border-radius: var(--commentail-border-radius, .75rem); }
 @media (max-width: 480px) { .commentail-fields { grid-template-columns: minmax(0, 1fr); } .commentail-replies { padding-left: 1rem; } .commentail-page { margin: 0 auto; padding: .75rem; } }
 

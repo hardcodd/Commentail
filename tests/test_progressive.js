@@ -20,13 +20,14 @@ function harness(fetchImpl, next = null) {
     querySelector: () => alert,
     querySelectorAll: (selector) => selector.includes("[name]") ? [field, key] : selector.startsWith("button") ? [button] : [],
     replaceWith: (value) => { block.replacement = value; },
+    before: (value) => { block.announcement = value; },
   };
   const form = { action: "https://local.invalid/comments/submit/", matches: () => true, closest: () => block };
   class Data {
     constructor() { this.values = { text: field.value, key: key.value }; }
     append(name, value) { this.values[name] = value; }
   }
-  const document = { readyState: "complete", querySelectorAll: () => [], addEventListener: (name, handler) => { listeners[name] = handler; } };
+  const document = { readyState: "complete", createElement: () => ({setAttribute() {}, textContent: ""}), querySelectorAll: () => [], addEventListener: (name, handler) => { listeners[name] = handler; } };
   const window = { innerHeight: 800, scrollBy() {}, location: { href: "https://local.invalid/page/", origin: "https://local.invalid" }, fetch: fetchImpl, DOMParser: true, AbortController };
   const context = { document, window, fetch: fetchImpl, URL, FormData: Data, AbortController, setTimeout, clearTimeout,
     DOMParser: class { parseFromString() { return { querySelectorAll: () => next ? [next] : [] }; } } };
@@ -217,6 +218,32 @@ test("accepted submission focuses its private status instead of an empty form", 
   h.send(); await settle();
   assert.equal(accepted.focused, true);
   assert.equal(field.focused, undefined);
+});
+
+test("accepted message exposes its author and outcome as the focused article name", async () => {
+  const accepted = {...focusTarget(), id: "commentail-private-99",
+    querySelector: (selector) => selector === "strong" ? {textContent: "Alex"}
+      : selector === ".commentail-status" ? {textContent: "Awaiting moderation"} : null};
+  const next = {dataset: {discussion: "17", publishedLabel: "Published"},
+    querySelectorAll: (selector) => selector === ".commentail-pending" ? [accepted] : [],
+    querySelector: () => null};
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.send(); await settle();
+  assert.equal(accepted.focused, true);
+  assert.equal(accepted.attributes["aria-label"], "Alex. Awaiting moderation");
+  assert.equal(h.block.announcement.textContent, "Alex. Awaiting moderation");
+});
+
+test("published submission announces publication without a visible status badge", async () => {
+  const accepted = {...focusTarget(), id: "commentail-99",
+    querySelector: (selector) => selector === "strong" ? {textContent: "Alex"} : null};
+  const next = {dataset: {discussion: "17", publishedLabel: "Published"},
+    querySelectorAll: () => [],
+    querySelector: (selector) => selector === "#commentail-99" ? accepted : null};
+  const h = harness(async () => ({status: 200, url: "https://local.invalid/?target=99", text: async () => "HTML"}), next);
+  h.send(); await settle();
+  assert.equal(h.block.announcement.textContent, "Alex. Published");
+  assert.equal(accepted.focused, true);
 });
 
 

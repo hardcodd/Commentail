@@ -1,5 +1,20 @@
 /* Progressive HTML interactions; the same endpoints work without JavaScript. */
 (() => {
+  const announcements = new WeakMap();
+  const announcementFor = (block) => {
+    let node = announcements.get(block);
+    if (!node) {
+      node = document.createElement("p");
+      node.className = "commentail-announcement";
+      node.setAttribute("role", "status");
+      node.setAttribute("aria-atomic", "true");
+      if (block.lang) node.lang = block.lang;
+      block.before(node);
+      announcements.set(block, node);
+    }
+    node.textContent = "";
+    return node;
+  };
   const enhance = (root) => {
     root.querySelectorAll("textarea.commentail-input").forEach((field) => {
       const resize = () => {
@@ -93,6 +108,8 @@
     if (block.getAttribute("aria-busy") === "true") return;
     const destination = new URL(url, window.location.href);
     if (destination.origin !== window.location.origin) return;
+    // A live region must already exist outside the replaced subtree.
+    const announcement = body ? announcementFor(block) : announcements.get(block);
     if (body) {
       const activeReply = block.querySelector(".commentail-form[data-reply-to]");
       if (editing && activeReply?.dataset?.replyTo) destination.searchParams.set("reply_to", activeReply.dataset.replyTo);
@@ -154,6 +171,7 @@
       }
       const position = viewportAnchor(block, anchor);
       block.replaceWith(next);
+      if (announcement) announcements.set(next, announcement);
       enhance(next);
       restorePosition(next, position);
       const error = next.querySelector('[role="alert"]:not([hidden])');
@@ -178,7 +196,15 @@
         window.history?.replaceState(null, "", current);
       }
       if (error) focusContent(error);
-      else if (body && submitted) focusContent(submitted);
+      else if (body && submitted) {
+        // VoiceOver does not reliably read an unnamed article after replacement.
+        const author = submitted.querySelector("strong")?.textContent?.trim();
+        const status = submitted.querySelector(".commentail-status")?.textContent?.trim()
+          || next.dataset.publishedLabel;
+        if (author && status) submitted.setAttribute("aria-label", `${author}. ${status}`);
+        focusContent(submitted);
+        if (announcement && author && status) announcement.textContent = `${author}. ${status}`;
+      }
       else if (field) reveal(field);
       else if (exact) focusContent(exact);
       else focusContent(added || next.querySelector(".commentail-header h2"));

@@ -466,7 +466,7 @@ guest confirmation/editing, mail claims, template detection, registered-object
 access/isolation/cleanup and Page create/edit saving. All 229 server tests passed
 from the installed wheel outside the source checkout on Python 3.12.14, 3.13.15
 and 3.14.7 with file SQLite and PostgreSQL 14.24, Wagtail 7.4.3 and Django 5.2.18.
-All six combinations include writer-concurrency checks. All 29 JavaScript tests,
+All six combinations include writer-concurrency checks. All 31 JavaScript tests,
 lint, migration drift and translation checks passed. The fresh source-distribution
 suite also passed (four concurrency/file-only checks skipped with in-memory SQLite).
 The source distribution installs in a fresh environment; its example was checked
@@ -488,8 +488,11 @@ pagination passed in all four installed browsers, both with JavaScript and with
 all page scripts blocked using CSP. The final pass fixed host-page navigation
 after a failed submission and added a regression test. The owner also confirmed
 a successful phone test over the local network; this is not a mobile-device matrix.
-Previous browser versions, a hosted CI run and a complete screen-reader pass
-remain outstanding. Upstream Treebeard warnings are not suppressed.
+VoiceOver checks in Safari cover inline reply/edit controls, submission status,
+CAPTCHA refresh/errors, email action pages and moderation results. These are
+bounded scenario checks, not a full accessibility audit. Previous browser
+versions and a hosted CI run remain outstanding. Upstream Treebeard warnings
+are not suppressed.
 No production deployment or public release is claimed.
 
 MIT license. See [LICENSE](LICENSE).
