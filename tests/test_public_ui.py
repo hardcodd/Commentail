@@ -60,6 +60,27 @@ class PublicInterfaceTests(TestCase):
             )
         self.assertIsNone(main.reply_to_id)
 
+    def test_failed_progressive_post_keeps_navigation_on_host(self):
+        from urllib.parse import urlsplit
+
+        from bs4 import BeautifulSoup
+
+        self.client.force_login(self.user)
+        parent = submit(self.discussion.pk, text="Parent", user=self.user)
+        moderate(parent.pk, "approve", actor=self.admin)
+        child = submit(self.discussion.pk, text="Child", user=self.admin, reply_to=parent.pk)
+        moderate(child.pk, "approve", actor=self.admin)
+        submit_url = reverse("commentail:submit", args=[self.site.root_page.pk])
+        for data in ({"text": " "}, {"refresh": "1", "text": "Draft"}):
+            with self.subTest(data=data):
+                key = self.client.get(self.url).context["form_key"]
+                response = self.client.post(submit_url, {"key": key, **data})
+                markup = BeautifulSoup(response.content, "html.parser")
+                navigation = markup.select("a[data-commentail-navigation], a[data-commentail-cancel]")
+                self.assertTrue(navigation)
+                for link in navigation:
+                    self.assertEqual(urlsplit(link["href"]).path, "/")
+
     def test_reply_error_keeps_nested_addressee_rendered(self):
         self.client.force_login(self.user)
         parent = submit(self.discussion.pk, text="Parent", user=self.admin)

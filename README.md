@@ -9,8 +9,8 @@ nesting level, pending author revisions, safe links, site/page policies and grou
 capabilities. Moderators approve, reject, hide, restore or erase text; they cannot
 rewrite another author's comment.
 
-The local 0.1.0 candidate is prepared for review. Previous browser releases,
-physical mobile devices and independent owner acceptance remain unverified.
+The local 0.1.0 candidate is prepared for review. Previous browser releases and a hosted CI run remain unverified.
+The owner has confirmed a successful phone test on the local network.
 No production integration is included.
 
 ## Integration
@@ -463,7 +463,7 @@ Supply PGPASSWORD securely in the environment. The runner creates/destroys
 
 Checks cover transitions/concurrency, CSRF/admission, site rights, owner visibility,
 guest confirmation/editing, mail claims, template detection, registered-object
-access/isolation/cleanup and Page create/edit saving. All 228 server tests passed
+access/isolation/cleanup and Page create/edit saving. All 229 server tests passed
 from the installed wheel outside the source checkout on Python 3.12.14, 3.13.15
 and 3.14.7 with file SQLite and PostgreSQL 14.24, Wagtail 7.4.3 and Django 5.2.18.
 All six combinations include writer-concurrency checks. All 29 JavaScript tests,
@@ -483,12 +483,13 @@ the HTML reply/cancel fallback without scripts. Earlier passes covered moderatio
 revisions, CSV and responsive layout. A real SMTP guest chain reached an external
 inbox, including confirmation, publication, editing, reply notification and unsubscribe.
 This is a bounded local acceptance run, not a guarantee of delivery to every provider.
-After the 7.4.3 update, targeted reply/cancel/thread/draft checks passed in all
-four installed browsers. Publication, inline edit, author menu and immediate
-post-snapshot reply placement were checked in the in-app browser. These targeted
-checks do not repeat every earlier native-browser scenario.
-Previous browser versions, physical mobile devices, a hosted CI run and independent
-owner acceptance remain outstanding. Upstream Treebeard warnings are not suppressed.
+On Wagtail 7.4.3, publication, inline editing, replies/cancellation and root/thread
+pagination passed in all four installed browsers, both with JavaScript and with
+all page scripts blocked using CSP. The final pass fixed host-page navigation
+after a failed submission and added a regression test. The owner also confirmed
+a successful phone test over the local network; this is not a mobile-device matrix.
+Previous browser versions, a hosted CI run and a complete screen-reader pass
+remain outstanding. Upstream Treebeard warnings are not suppressed.
 No production deployment or public release is claimed.
 
 MIT license. See [LICENSE](LICENSE).

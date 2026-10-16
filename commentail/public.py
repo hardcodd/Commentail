@@ -1,11 +1,12 @@
 """Server-rendered visitor boundary, owner visibility and signed snapshot windows."""
 
 import re
+from urllib.parse import urlsplit, urlunsplit
 
 from django.core import signing
 from django.db import transaction
 from django.db.models import Exists, F, OuterRef, Prefetch, Q
-from django.http import Http404, HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -171,20 +172,19 @@ def _next(discussion: Discussion, snapshot: str, limit: int, thread: int = 0) ->
 
 
 def _url(request: HttpRequest, **values: object) -> str:
-    params = request.GET.copy()
+    destination = urlsplit(request.META.get("COMMENTAIL_WIDGET_PATH", request.path))
+    params = QueryDict(destination.query, mutable=True)
+    for key in request.GET:
+        params.setlist(key, request.GET.getlist(key))
     for key, value in values.items():
         if value is None:
             params.pop(key, None)
         else:
             params[key] = str(value)
-    path = request.META.get("COMMENTAIL_WIDGET_PATH", request.path)
-    if (
-        request.method == "POST"
-        and request.resolver_match
-        and request.resolver_match.url_name in {"submit", "object_submit"}
-    ):
-        path = discussion_url(get_discussion(request, **request.resolver_match.kwargs))
-    return path + "?" + params.urlencode() + "#commentail"
+    return urlunsplit((
+        destination.scheme, destination.netloc, destination.path,
+        params.urlencode(), "commentail",
+    ))
 
 
 def guest_edit_secret(request: HttpRequest, comment: Comment) -> str | None:
@@ -253,8 +253,8 @@ def _present(
 
 def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, object]:
     request.META["COMMENTAIL_PRIVATE"] = True
-    if request.method == "POST":
-        request.META["COMMENTAIL_WIDGET_PATH"] = discussion_url(discussion)
+    # Fragment responses must keep every reading control on the host document.
+    request.META["COMMENTAIL_WIDGET_PATH"] = comment_url(discussion)
     options = editorial_settings(discussion)
     restored, draft_error = load_draft(request, discussion)
     form_values = request.POST if request.method == "POST" else restored
