@@ -9,7 +9,7 @@ nesting level, pending author revisions, safe links, site/page policies and grou
 capabilities. Moderators approve, reject, hide, restore or erase text; they cannot
 rewrite another author's comment.
 
-The local 0.1.0 candidate is prepared for review. Previous browser releases and a hosted CI run remain unverified.
+The 0.1.0 candidate has passed local acceptance checks and hosted CI. Previous browser releases remain unverified.
 The owner has confirmed a successful phone test on the local network.
 No production integration is included.
 
@@ -491,7 +491,9 @@ a successful phone test over the local network; this is not a mobile-device matr
 VoiceOver checks in Safari cover inline reply/edit controls, submission status,
 CAPTCHA refresh/errors, email action pages and moderation results. These are
 bounded scenario checks, not a full accessibility audit. Previous browser
-versions and a hosted CI run remain outstanding. Upstream Treebeard warnings
+versions remain outstanding. The [hosted CI run](https://github.com/hardcodd/Commentail/actions/runs/38998348044)
+passed all six Python/database combinations, quality checks and distribution checks.
+Upstream Treebeard warnings
 are not suppressed.
 No production deployment or public release is claimed.
 
