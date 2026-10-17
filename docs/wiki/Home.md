@@ -4,7 +4,7 @@
 Pages and registered Django models using your site's accounts, templates and styles.
 
 > **0.1.0 compatibility:** Wagtail >=7.4.3,<7.5 · Django 5.2 · Python 3.12–3.14.
-> Wagtail 8.0 is outside this release. PyPI publication is pending.
+> Wagtail 8.0 is outside this release.
 
 ## Find your guide
 

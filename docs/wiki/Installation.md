@@ -10,15 +10,16 @@
 | Database | SQLite or PostgreSQL; CI covers PostgreSQL 14 |
 | Frontend | Django templates, JavaScript optional |
 
-Use a virtual environment. PyPI publication is pending; install the prepared wheel:
+Use a virtual environment and install the release from PyPI:
 
 ```sh
-python -m pip install /path/to/commentail-0.1.0-py3-none-any.whl
+python -m pip install commentail==0.1.0
 ```
 
-Alternatively, extract the source archive and run `python -m pip install .` in its
-root. For the PostgreSQL driver use `python -m pip install '.[postgres]'` from
-source. Your site's `DATABASES` setting still selects the actual database.
+For the PostgreSQL driver use `python -m pip install 'commentail[postgres]==0.1.0'`.
+Alternatively, install a downloaded wheel or extract the source archive and run
+`python -m pip install .` in its root. Your site's `DATABASES` setting still selects
+the actual database.
 
 ## 1. Apps, middleware and templates
 

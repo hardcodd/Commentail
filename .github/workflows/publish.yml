@@ -1,0 +1,110 @@
+name: Publish to PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact version from pyproject.toml to publish
+        required: true
+        default: '0.1.0'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pypi-publication
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'hardcodd/Commentail' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Require successful CI for this exact commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow tests.yml \
+            --commit "$GITHUB_SHA" --event push --limit 1 \
+            --json status,conclusion,headSha > "$RUNNER_TEMP/ci.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          runs = json.loads((Path(os.environ["RUNNER_TEMP"]) / "ci.json").read_text())
+          if not runs or not (
+              runs[0]["headSha"] == os.environ["GITHUB_SHA"]
+              and runs[0]["status"] == "completed"
+              and runs[0]["conclusion"] == "success"
+          ):
+              raise SystemExit("The exact main commit must pass Tests and distributions first")
+          PY
+      - name: Validate release version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          python - <<'PY'
+          import os, tomllib
+          from pathlib import Path
+          project = tomllib.loads(Path("pyproject.toml").read_text())["project"]
+          if project["name"] != "commentail" or project["version"] != os.environ["RELEASE_VERSION"]:
+              raise SystemExit("Requested release does not match package metadata")
+          PY
+      - run: python -m pip install setuptools==84.0.0 twine==7.0.0
+      - name: Build wheel from source distribution
+        run: |
+          python -c 'from setuptools.build_meta import build_sdist; build_sdist("release/packages")'
+          mkdir unpacked
+          tar -xzf release/packages/commentail-*.tar.gz -C unpacked
+          destination="$PWD/release/packages"
+          cd unpacked/commentail-*
+          python -c 'import sys; from setuptools.build_meta import build_wheel; build_wheel(sys.argv[1])' "$destination"
+      - run: python tools/check_dist.py release/packages
+      - run: python -m twine check --strict release/packages/*
+      - name: Record archive checksums
+        run: |
+          cd release
+          sha256sum packages/*.whl packages/*.tar.gz > SHA256SUMS
+          sha256sum -c SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pypi-distributions
+          path: release/
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/project/commentail/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: pypi-distributions
+          path: release/
+          digest-mismatch: error
+      - name: Verify downloaded archive checksums
+        run: |
+          cd release
+          sha256sum -c SHA256SUMS
+      - name: Publish with PyPI Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          packages-dir: release/packages/
+          print-hash: true
+          attestations: true

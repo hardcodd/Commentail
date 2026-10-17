@@ -22,8 +22,7 @@ The widget inherits your site's typography and colors. CSS custom properties,
 replaceable templates and Python callbacks let you adapt it without a frontend
 framework or an external comments platform.
 
-> **0.1.0 is prepared for release; PyPI publication is pending.** Install the
-> supplied wheel or source archive for now. Wagtail 8.0 is not supported by 0.1.0.
+> Wagtail 8.0 is not supported by 0.1.0.
 
 ## Why Commentail?
 
@@ -63,14 +62,15 @@ provides login and registration. No required external CDN or CAPTCHA service.
 
 ### 1. Install
 
-In your site's virtual environment, install the prepared wheel:
+In your site's virtual environment, install the release:
 
 ```sh
-python -m pip install /path/to/commentail-0.1.0-py3-none-any.whl
+python -m pip install commentail==0.1.0
 ```
 
-Or extract the source distribution and run `python -m pip install .` in its root.
-For the optional PostgreSQL driver, use `python -m pip install '.[postgres]'` from source.
+For the optional PostgreSQL driver, use `python -m pip install 'commentail[postgres]==0.1.0'`.
+You can also install a downloaded wheel directly, or extract the source distribution
+and run `python -m pip install .` in its root.
 
 ### 2. Connect Django and Wagtail
 

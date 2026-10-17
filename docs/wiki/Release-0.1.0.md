@@ -22,7 +22,7 @@ PostgreSQL 14 is covered by hosted CI. Wagtail 8.0 is outside this release.
 
 ## Artifacts
 
-PyPI publication is pending. Install the wheel or source archive using
+Install from PyPI or use a downloaded wheel/source archive; see
 [Installation](Installation.md). Verify SHA256SUMS before installing. The wheel
 contains runtime/metadata; source additionally includes tests, example and guides.
 

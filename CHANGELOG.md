@@ -13,4 +13,3 @@ Initial Commentail release candidate for Wagtail 7.4 LTS.
 - Theme inheritance, template overrides, Python hooks and English/Russian UI.
 
 See [release notes](docs/releases/0.1.0.md) and [setup guides](docs/wiki/Home.md).
-PyPI publication is pending.
