@@ -23,7 +23,12 @@ class PublicInterfaceTests(TestCase):
         self.assertEqual(response.status_code, status)
         self.assertTemplateUsed(response, "commentail/block.html")
         content = response.content.decode().lower()
-        self.assertNotRegex(content, r"<!doctype|<(?:html|head|body|script|link)(?:\s|>)")
+        self.assertNotRegex(content, r"<!doctype|<(?:html|head|body|link)(?:\s|>)")
+        from bs4 import BeautifulSoup
+
+        for script in BeautifulSoup(response.content, "html.parser").select("script"):
+            self.assertEqual(script.get("type"), "application/ld+json")
+            self.assertFalse(script.has_attr("src"))
         self.assertContains(response, f'data-discussion="{self.discussion.pk}"', status_code=status)
 
     def test_service_returns_only_widget_fragment(self):

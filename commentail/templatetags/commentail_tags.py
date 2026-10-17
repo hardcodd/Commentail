@@ -1,5 +1,7 @@
 """Public tags render server HTML; resources are explicitly placed by the host."""
 
+from collections.abc import Iterable
+
 from django import template
 from django.db.models import Model
 from django.template import Context, Node, TemplateSyntaxError
@@ -9,6 +11,7 @@ from django.utils.html import format_html
 from wagtail.models import Page
 
 from commentail.assets import Asset, asset_url
+from commentail.structured import CommentMarkup, render_json_ld
 
 register = template.Library()
 
@@ -69,3 +72,9 @@ def commentail_js() -> str:
 @register.simple_tag
 def commentail_asset(name: Asset) -> str:
     return asset_url(name)
+
+
+@register.simple_tag
+def commentail_json_ld(comments: Iterable[CommentMarkup]) -> str:
+    """Render the widget's eligible public comment entities as passive JSON-LD."""
+    return render_json_ld(comments)

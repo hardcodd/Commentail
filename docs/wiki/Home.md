@@ -19,6 +19,7 @@ Pages and registered Django models using your site's accounts, templates and sty
 | Deliver email and schedule cleanup | [Email and worker](Email-and-worker.md) |
 | Match the host theme | [Styling](Styling.md) |
 | Replace markup and email layouts | [Templates](Templates.md) |
+| Describe published comments to search engines | [Structured data](Structured-data.md) |
 | Supply avatars, names or CAPTCHA | [Callbacks](Callbacks.md) |
 | Add comments to other Django models | [Object adapters](Object-adapters.md) |
 | Understand access and stored data | [Security and privacy](Security-and-privacy.md) |

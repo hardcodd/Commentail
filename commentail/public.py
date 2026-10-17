@@ -20,15 +20,17 @@ from wagtail.models import Page, Site
 
 from .admission import accept_request, can_view, issue_form, smtp_configured
 from .avatars import author_name, avatar_url, default_avatar
+from .config import technical_settings
 from .detection import DetectionError, has_comments
 from .drafts import clear_drafts, is_document, load_draft, save_draft
 from .limits import client_ip, consume
 from .models import Access, Comment, Discussion, MailJob, Mode, ReplySubscription
-from .objects import comment_url, discussion_url
+from .objects import ObjectAccessError, comment_url, discussion_url, target_url
 from .outbox import resend_confirmation
 from .policies import editorial_settings, email_enabled
 from .security import create_captcha, remembered_guest, verify_token
 from .services import DomainError, edit_block_reason, revise
+from .structured import CommentMarkup, comment_markup
 
 
 def _draft_redirect(
@@ -211,7 +213,7 @@ def _edit_owner(request: HttpRequest, comment: Comment) -> bool:
 
 
 def _present(
-    comment: Comment, request: HttpRequest, clickable: bool
+    comment: Comment, request: HttpRequest, clickable: bool, structured_target: str = ""
 ) -> dict[str, object]:
     name = author_name(comment, request)
     initials, gradient = default_avatar(name)
@@ -223,6 +225,7 @@ def _present(
         else comment.text
     )
     editable = _edit_owner(request, comment) and not edit_block_reason(comment)
+    permalink = comment_url(comment.discussion, comment.pk)
     return {
         "id": comment.pk,
         "display_name": name,
@@ -242,7 +245,10 @@ def _present(
         "reply_to_name": author_name(comment.reply_to, request)
         if comment.reply_to_id
         else "",
-        "permalink": comment_url(comment.discussion, comment.pk),
+        "permalink": permalink,
+        "schema": comment_markup(
+            comment, name, structured_target, request.build_absolute_uri(permalink),
+        ) if structured_target else None,
         "reply_url": _url(request, reply_to=comment.pk, target=comment.pk),
         "edit_url": comment_url(
             comment.discussion, comment.pk,
@@ -339,9 +345,21 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
                     rows.append(root)
                 else:
                     rows.insert(0, root)
+    structured_mode = technical_settings(discussion.site)["STRUCTURED_DATA"]
+    structured_target = ""
+    if structured_mode != "off":
+        try:
+            absolute = urlsplit(request.build_absolute_uri(target_url(discussion)))
+            structured_target = urlunsplit(absolute._replace(fragment=""))
+        except ObjectAccessError:
+            # A broken adapter must not create indexed service-page URLs.
+            pass
+    structured_comments: list[CommentMarkup] = []
     presented = []
     for row in rows:
-        data = _present(row, request, options.clickable_links)
+        data = _present(row, request, options.clickable_links, structured_target)
+        if isinstance(data["schema"], CommentMarkup):
+            structured_comments.append(data["schema"])
         replies = visible.filter(root=row, published_at__lte=snapshot).order_by(
             "published_at", "pk"
         )
@@ -364,10 +382,15 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             # The addressed reply may be newer than the stable pagination
             # snapshot. Its thread still needs to render when that count is zero.
             data["reply_count"] = max(count, len(reply_rows))
-            data["replies"] = [
-                _present(reply, request, options.clickable_links)
+            reply_data = [
+                _present(reply, request, options.clickable_links, structured_target)
                 for reply in reply_rows
             ]
+            data["replies"] = reply_data
+            structured_comments.extend(
+                item["schema"] for item in reply_data
+                if isinstance(item["schema"], CommentMarkup)
+            )
         data["expand_url"] = _url(
             request, thread=row.pk, window=_next(discussion, snapshot, limit - 20)
         )
@@ -382,6 +405,10 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             else ""
         )
         presented.append(data)
+    base["structured_microdata"] = structured_mode in ("both", "microdata")
+    base["structured_comments"] = (
+        structured_comments if structured_mode in ("both", "json_ld") else []
+    )
     own = comments.none()
     if request.user.is_authenticated:
         own = comments.filter(user=request.user)

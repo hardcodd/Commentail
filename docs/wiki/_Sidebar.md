@@ -10,6 +10,7 @@
 - [Email and worker](Email-and-worker.md)
 - [Styling](Styling.md)
 - [Templates](Templates.md)
+- [Structured data](Structured-data.md)
 - [Callbacks](Callbacks.md)
 - [Object adapters](Object-adapters.md)
 - [Security and privacy](Security-and-privacy.md)

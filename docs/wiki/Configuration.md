@@ -51,6 +51,7 @@ their issued deadlines when a configured duration changes.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
+| `STRUCTURED_DATA` | `"both"` | Schema.org output: `both`, `json_ld`, `microdata` or `off`; per-host overrides supported. See [Structured data](Structured-data.md). |
 | `OBJECT_ADAPTERS` | `{}` | Model label → adapter class import path (project-wide). |
 | `RULES_CSV_MAX_BYTES` | `5242880` | Maximum CSV upload bytes (project-wide). |
 | `RULES_CSV_MAX_ROWS` | `20000` | Maximum imported rule rows (project-wide). |

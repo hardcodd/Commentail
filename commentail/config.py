@@ -1,14 +1,17 @@
 """Technical settings inherit library defaults, default, then Site.hostname."""
 
 import ipaddress
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from wagtail.models import Site
 
+StructuredDataMode = Literal["both", "json_ld", "microdata", "off"]
+
 
 class TechnicalSettings(TypedDict):
+    STRUCTURED_DATA: StructuredDataMode
     OBJECT_ADAPTERS: dict[str, str]
     RULES_CSV_MAX_BYTES: int
     RULES_CSV_MAX_ROWS: int
@@ -40,6 +43,7 @@ class TechnicalSettings(TypedDict):
 
 
 DEFAULTS: TechnicalSettings = {
+    "STRUCTURED_DATA": "both",
     "OBJECT_ADAPTERS": {},
     "RULES_CSV_MAX_BYTES": 5242880,
     "RULES_CSV_MAX_ROWS": 20000,
@@ -89,6 +93,11 @@ def configuration_errors() -> list[str]:
         for key, value in values.items():
             if key not in DEFAULTS:
                 errors.append(f"Unknown COMMENTAIL key: {key}")
+            elif key == "STRUCTURED_DATA":
+                if not isinstance(value, str) or value not in (
+                    "both", "json_ld", "microdata", "off"
+                ):
+                    errors.append("STRUCTURED_DATA must be both, json_ld, microdata or off")
             elif key == "OBJECT_ADAPTERS":
                 from .objects import registry_errors
 

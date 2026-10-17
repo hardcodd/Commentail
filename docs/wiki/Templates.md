@@ -22,6 +22,12 @@ Keep `data-discussion`, `data-commentail-navigation`, `.commentail-form`,
 Preserve labels, status/error roles, focus targets and language attributes.
 Do not cache personalized widget HTML. Test with JS and without it.
 
+## Structured data
+
+The default widget includes conditional Comment microdata and script-safe JSON-LD.
+See [Structured data](Structured-data.md) before replacing the comment/block templates
+or combining their output with a host page graph.
+
 ## Style action documents
 
 Copy `commentail/base.html` into your project and add your stylesheet to its

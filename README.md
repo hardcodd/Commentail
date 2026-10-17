@@ -39,6 +39,10 @@ clickable HTTP(S) links use safe attributes. Replies can address any visible
 message while keeping one visual nesting level. Moderators approve, reject,
 hide, restore or erase text; they never rewrite another author's words.
 
+Published comments include **Schema.org Comment microdata and JSON-LD**, using
+the visible text and author name. Choose either format or disable output in Python.
+[Structured-data guide →](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Structured-data.md)
+
 ## Compatibility
 
 | Component | Version / requirement |
