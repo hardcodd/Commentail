@@ -46,10 +46,19 @@ def check(folder: Path) -> None:
             data = archive.read(name)
             expected = base64.urlsafe_b64encode(hashlib.sha256(data).digest()).rstrip(b"=").decode()
             assert digest == "sha256=" + expected and int(size) == len(data), name
+    public_docs = {
+        p.relative_to(root).as_posix(): p.read_bytes()
+        for folder_name, pattern in (
+            ("wiki", "*.md"), ("releases", "*.md"), ("assets", "*.png")
+        )
+        for p in (root / "docs" / folder_name).glob(pattern)
+    }
+    assert public_docs, "Missing public documentation"
     roots = {"commentail", "tests", "example", "tools", "commentail.egg-info"}
-    files = {"README.md", "LICENSE", "MANIFEST.in", "pyproject.toml", "requirements-test.txt", "PKG-INFO", "setup.cfg"}
+    files = {"README.md", "LICENSE", "MANIFEST.in", "pyproject.toml", "requirements-test.txt", "PKG-INFO", "setup.cfg", "CHANGELOG.md"}
     with tarfile.open(sdist) as archive:
         shipped = {}
+        shipped_docs = {}
         for member in archive.getmembers():
             path = PurePosixPath(member.name)
             assert not path.is_absolute() and ".." not in path.parts
@@ -58,13 +67,21 @@ def check(folder: Path) -> None:
             if len(path.parts) == 1:
                 continue
             relative = PurePosixPath(*path.parts[1:])
-            assert relative.parts[0] in roots or relative.as_posix() in files, member.name
+            assert (
+                relative.parts[0] in roots
+                or relative.as_posix() in files
+                or relative.as_posix() in public_docs
+                or (member.isdir() and relative.parts[0] == "docs")
+            ), member.name
             assert not any(part.startswith(".") or part == "__pycache__" for part in relative.parts)
             if member.isfile() and relative.parts[0] == "commentail":
                 shipped[relative.as_posix()] = archive.extractfile(member).read()
+            if member.isfile() and relative.parts[0] == "docs":
+                shipped_docs[relative.as_posix()] = archive.extractfile(member).read()
+        assert shipped_docs == public_docs, "sdist documentation differs from source"
         assert shipped == runtime, "sdist runtime differs from source"
         names = {PurePosixPath(*PurePosixPath(n).parts[1:]).as_posix() for n in archive.getnames()}
-        assert {"tests/test_reply.js", "example/manage.py", "tools/check_dist.py", "requirements-test.txt"} <= names
+        assert {"tests/test_reply.js", "example/manage.py", "tools/check_dist.py", "requirements-test.txt", "CHANGELOG.md"} <= names
     print(f"Validated {version}: {len(runtime)} runtime files, archive scope and RECORD")
 
 

@@ -2,3 +2,8 @@ recursive-include tests *.py *.html *.js
 recursive-include example *.py *.html *.md
 include requirements-test.txt
 recursive-include tools *.py
+include CHANGELOG.md
+recursive-include docs/wiki *.md
+recursive-include docs/releases *.md
+include docs/assets/commentail-preview.png
+include docs/assets/support-qr.png

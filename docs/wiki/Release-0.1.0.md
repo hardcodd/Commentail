@@ -1,0 +1,37 @@
+# Commentail 0.1.0
+
+**First release candidate · MIT · Wagtail 7.4 LTS**
+
+## Included
+
+- Template-tag integration for Pages and explicit ordinary Django model adapters.
+- Site defaults, Page/object inheritance and open/read-only/hidden modes.
+- Site accounts, verified guests, browser proof and replaceable local CAPTCHA.
+- Four moderation policies, phrase rules, CSV upsert/export and Site-scoped permissions.
+- Threaded replies at one display level, targeted links and batched loading.
+- Inline author edits, publication-based deadline, permanent reply lock and revision review.
+- Database outbox, retries, direct-reply mail and per-comment unsubscribe.
+- Theme inheritance, CSS custom properties and overridable widget/action/mail templates.
+- English/Russian UI, progressive JS, plain HTML fallbacks and focus handling.
+
+## Compatibility
+
+Python 3.12–3.14; Django >=5.2,<5.3; Wagtail >=7.4.3,<7.5; SQLite/PostgreSQL.
+PostgreSQL 14 is covered by hosted CI. Wagtail 8.0 is outside this release.
+
+## Artifacts
+
+PyPI publication is pending. Install the wheel or source archive using
+[Installation](Installation.md). Verify SHA256SUMS before installing. The wheel
+contains runtime/metadata; source additionally includes tests, example and guides.
+
+## Limits
+
+No separate REST API, rich-text/Markdown editor, uploads, likes, reports or live
+updates. Moderators cannot alter author text. SMTP uncertainty can duplicate mail;
+inbox delivery depends on the provider. Selected accessibility/browser checks are
+not an exhaustive certification. Microdata and JSON-LD are not yet implemented in this candidate.
+
+---
+
+[← Example and testing](Example-and-testing.md) · [Documentation home](Home.md) · [Support →](Support.md)

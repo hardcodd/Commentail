@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "commentail"
 version = "0.1.0"
-description = "Comments for Wagtail CMS"
+description = "Self-hosted Wagtail comments with moderation, verified guests and threaded replies"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
@@ -23,6 +23,9 @@ classifiers = [
 [project.urls]
 Source = "https://github.com/hardcodd/Commentail"
 Issues = "https://github.com/hardcodd/Commentail/issues"
+Documentation = "https://github.com/hardcodd/Commentail/wiki"
+Changelog = "https://github.com/hardcodd/Commentail/blob/main/CHANGELOG.md"
+Funding = "https://pay.cloudtips.ru/p/f92ee349"
 
 [tool.setuptools.packages.find]
 include = ["commentail*"]
