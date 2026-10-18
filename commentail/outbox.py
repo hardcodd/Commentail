@@ -19,7 +19,7 @@ from django.db import transaction
 from django.db.models import F, Model, Q
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.template.loader import get_template, render_to_string
-from django.urls import NoReverseMatch
+from django.urls import NoReverseMatch, reverse
 from django.utils import timezone, translation
 from django.utils.module_loading import import_string
 
@@ -306,7 +306,11 @@ def deliver(job: MailJob) -> None:
     if job.token:
         action_url = (
             site.root_url
-            + f"/commentail/actions/{job.token.purpose}/?token={token_secret(job.token)}"
+            + reverse(
+                "commentail:action",
+                args=[job.token.purpose],
+                query={"token": token_secret(job.token)},
+            )
         )
     view_url = ""
     if job.kind == "confirm":
@@ -316,7 +320,11 @@ def deliver(job: MailJob) -> None:
         if view_token:
             view_url = (
                 site.root_url
-                + f"/commentail/actions/view/?token={token_secret(view_token)}"
+                + reverse(
+                    "commentail:action",
+                    args=["view"],
+                    query={"token": token_secret(view_token)},
+                )
             )
     reason = ""
     if job.kind == "rejected":

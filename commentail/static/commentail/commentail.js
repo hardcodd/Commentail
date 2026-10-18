@@ -16,6 +16,19 @@
     return node;
   };
   const enhance = (root) => {
+    root.querySelectorAll("input[data-commentail-name-limit]").forEach((field) => {
+      // Native maxlength counts UTF-16 units and would reject valid Unicode names.
+      // Older browsers retain the authoritative server validation.
+      if (typeof Intl === "undefined" || !Intl.Segmenter) return;
+      const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+      const validate = () => {
+        const length = [...segmenter.segment(field.value.trim())].length;
+        field.setCustomValidity(length > Number(field.dataset.commentailNameLimit)
+          ? field.dataset.commentailNameError : "");
+      };
+      field.addEventListener("input", validate);
+      validate();
+    });
     root.querySelectorAll("textarea.commentail-input").forEach((field) => {
       const resize = () => {
         field.style.height = "auto";

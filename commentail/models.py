@@ -111,7 +111,7 @@ class Comment(models.Model):
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL
     )
     account_deleted = models.BooleanField(default=False)
-    # The domain limit is 80 graphemes, not 80 database code points.
+    # New names allow 40 graphemes; preserve longer historical names.
     guest_name = models.TextField(blank=True)
     email = models.EmailField(blank=True)
     email_confirmed_at = models.DateTimeField(null=True, blank=True)

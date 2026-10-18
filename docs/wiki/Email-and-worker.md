@@ -20,6 +20,8 @@ Use your provider's actual settings and authorized sender. Implicit TLS normally
 uses port 465 with SSL=True and TLS=False; never enable both. Keep credentials
 outside source. Correct configuration is not proof of inbox delivery: test a real
 message. Configure correct Wagtail Site host/port and HTTPS/proxy settings for links.
+Email action and status links use the named `commentail:action` route, including
+the prefix where your project includes `commentail.urls`.
 
 ## Schedule once per minute
 
@@ -71,6 +73,11 @@ Use Comments → Email delivery, filter by Site/status, fix the underlying probl
 then retry eligible failures with moderation permission. Original expiry and access
 still apply. Sent means SMTP acceptance, not inbox delivery. See
 [Templates](Templates.md) for overrides and [Troubleshooting](Troubleshooting.md).
+
+After restoring an older database backup, keep the worker paused until the queue
+has been reviewed. Jobs pending in that snapshot may already have been delivered
+later; restoring them can send duplicates with the original Message-ID. See
+[upgrade and restoration](Installation.md#upgrading-and-restoring).
 
 ---
 

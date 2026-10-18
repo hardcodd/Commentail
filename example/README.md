@@ -1,7 +1,9 @@
 # Commentail example
 
-A local Wagtail 7.4 LTS (>=7.4.3) / Django 5.2 project showing Page and non-Page integration, inherited
-settings and the progressive comment widget. Python 3.12 or newer is required.
+A local project showing Page and non-Page integration, inherited settings and the
+progressive comment widget on the [supported Wagtail/Django pairs](../docs/wiki/Installation.md).
+Python 3.12–3.14 is supported. Installation below selects compatible framework
+versions; use explicit framework constraints to exercise another supported pair.
 
 From this directory, create and activate a virtual environment, then run:
 

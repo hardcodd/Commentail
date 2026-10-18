@@ -126,9 +126,9 @@ def submit(
         raise DomainError("Author cannot comment")
     if guest:
         guest_name = guest_name.strip()
-        if not guest_name or character_count(guest_name) > 80:
+        if not guest_name or character_count(guest_name) > 40:
             raise DomainError(
-                "Guest name is required and must be at most 80 characters"
+                "Guest name is required and must be at most 40 characters"
             )
         try:
             validate_email(guest_email)

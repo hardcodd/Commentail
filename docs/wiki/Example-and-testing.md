@@ -18,11 +18,22 @@ Do not run bootstrap against a production database.
 
 ## Automated checks
 
-GitHub Actions runs the contract suite for Python 3.12, 3.13 and 3.14
-with SQLite and PostgreSQL 14, plus
+The GitHub Actions workflow defines 30 contract jobs: Wagtail 7.4.3+ with
+Django 5.2/6.0 and Wagtail 8.0 with Django 5.2/6.0/6.1, each on Python 3.12,
+3.13 and 3.14 with file SQLite and PostgreSQL 16, plus
 JavaScript, lint, migrations, translations and the source/wheel distributions.
 `requirements-test.txt` pins the acceptance environment; it is not a host-site
 production lockfile. Install it before running the checks below.
+
+`requirements-test-common.txt` pins shared test dependencies without selecting
+Django or Wagtail. To test another supported pair, use a fresh environment, for example:
+
+```sh
+python -m pip install -r requirements-test-common.txt 'Wagtail~=8.0.0' 'Django~=6.1.0' .
+python -m pip check
+```
+
+Keep the framework pair within the [support matrix](Installation.md).
 
 ```sh
 python -m django test tests --settings=tests.settings
@@ -40,7 +51,9 @@ COMMENTAIL_TEST_POSTGRES=1 PGUSER=commentail_test PGHOST=127.0.0.1 PGPORT=55432 
 ```
 
 Supply PGPASSWORD securely in the environment. The runner creates/destroys
-`commentail_synthetic_tests`; never use a production cluster.
+`commentail_synthetic_tests`; set `COMMENTAIL_TEST_DB_NAME` to a unique disposable
+database name for parallel runs. The PostgreSQL test settings include
+`django.contrib.postgres`, as required by Django 6.x. Never use a production cluster.
 
 Checks cover transitions and concurrent writers, CSRF/admission, Site permissions,
 author-only visibility, guest confirmation/editing, mail claims, template detection,
@@ -54,8 +67,9 @@ because of upstream security fixes; the test pin and installed environments use
 
 ## Acceptance boundaries
 
-The current suite includes 229 server tests and 31 JS tests. CI runs six
-Python 3.12–3.14 × file SQLite/PostgreSQL 14 combinations, quality and distributions.
+The suite covers server contracts and JavaScript behavior. The workflow covers
+the 30 combinations above, quality and distributions. Local matrix results are
+separate from hosted CI status; inspect the workflow run for the revision in use.
 See [GitHub Actions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml).
 Installed Safari, Chrome, Yandex and Firefox were exercised with/without JS, including
 CSV, guest mail and inline interactions. Selected Safari VoiceOver scenarios and a
@@ -65,4 +79,4 @@ customizations and deployment policies need their own acceptance checks.
 
 ---
 
-[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 0.1.0 →](Release-0.1.0.md)
+[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 0.1.1 →](Release-0.1.1.md)

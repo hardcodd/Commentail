@@ -1,4 +1,4 @@
-## Commentail 0.1.0
+## Commentail
 
 - [Home](Home.md)
 - [Installation](Installation.md)
@@ -18,4 +18,7 @@
 - [Troubleshooting](Troubleshooting.md)
 - [Example and testing](Example-and-testing.md)
 - [Release 0.1.0](Release-0.1.0.md)
+- [Release 0.1.1](Release-0.1.1.md)
+- [Changelog](Changelog.md)
+- [Roadmap](Roadmap.md)
 - [Support](Support.md)

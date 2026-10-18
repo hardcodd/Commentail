@@ -14,7 +14,7 @@ Moderated discussions, verified guests and inline replies — styled by your sit
 
 </div>
 
-Commentail is a Django comments library built for **Wagtail 7.4 LTS**. Add a
+Commentail is a Django comments library for **Wagtail 7.4 LTS and 8.0**. Add a
 Django template tag to an article, moderate discussions inside Wagtail, and keep
 content, accounts and email delivery in your own application.
 
@@ -22,7 +22,9 @@ The widget inherits your site's typography and colors. CSS custom properties,
 replaceable templates and Python callbacks let you adapt it without a frontend
 framework or an external comments platform.
 
-> Wagtail 8.0 is not supported by 0.1.0.
+> **0.1.1 Beta** adds Wagtail 8.0 and Django 6.x support.
+> [Version-to-version changelog](https://github.com/hardcodd/Commentail/blob/main/CHANGELOG.md) · [Roadmap](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Roadmap.md).
+> [Changes and upgrade notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.1.1.md).
 
 ## Why Commentail?
 
@@ -47,12 +49,17 @@ the visible text and author name. Choose either format or disable output in Pyth
 | Component | Version / requirement |
 | --- | --- |
 | Python | 3.12–3.14 |
-| Wagtail | >=7.4.3, <7.5 |
-| Django | >=5.2, <5.3 |
-| Database | SQLite or PostgreSQL; CI covers PostgreSQL 14 |
+| Wagtail / Django | 7.4.3+ in 7.4 / Django 5.2 or 6.0; 8.0.x / Django 5.2, 6.0 or 6.1 |
+| Database | File SQLite or PostgreSQL 16 |
 | UI languages | English and Russian |
 | Frontend | Django templates, optional progressive JavaScript |
 | License | [MIT](https://github.com/hardcodd/Commentail/blob/main/LICENSE) |
+
+This table describes the 0.1.1 beta release. All five framework pairs are
+tested on Python 3.12, 3.13 and 3.14 with both databases (30 combinations).
+Package bounds are `Wagtail>=7.4.3,<8.1` and `Django>=5.2,<6.2`; only the pairs
+listed above are supported. Wagtail 7.4 with Django 6.1 is outside this matrix.
+Wagtail 8.1 and later require separate verification before support is declared.
 
 Guest comments require configured SMTP and the scheduled worker. Registered
 users can comment without an email address, but receive no mail. Your site
@@ -65,16 +72,21 @@ provides login and registration. No required external CDN or CAPTCHA service.
 In your site's virtual environment, install the release:
 
 ```sh
-python -m pip install commentail==0.1.0
+python -m pip install commentail==0.1.1
 ```
 
-For the optional PostgreSQL driver, use `python -m pip install 'commentail[postgres]==0.1.0'`.
+For the optional PostgreSQL driver, use `python -m pip install 'commentail[postgres]==0.1.1'`.
 You can also install a downloaded wheel directly, or extract the source distribution
 and run `python -m pip install .` in its root.
+When upgrading from 0.1.0, review the
+[upgrade notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.1.1.md),
+including guest-name validation and overridden forms. The 0.1.0 package retains
+its original Wagtail 7.4 and Django 5.2 limits.
 
 ### 2. Connect Django and Wagtail
 
 - Add `commentail` and `wagtail.contrib.settings` to your existing `INSTALLED_APPS`.
+- With PostgreSQL, also include `django.contrib.postgres` (required by Django 6.x checks).
 - Insert `commentail.middleware.CapabilityHeadersMiddleware` before CSRF middleware.
 - Retain the host session/authentication/messages middleware and template request context processor.
 - Include Commentail URLs **before** Wagtail's catch-all:
@@ -147,18 +159,19 @@ cover the same topics. Start with the task you need:
 
 ## Release scope and verification
 
-[0.1.0 release notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.1.0.md) describe the initial feature set and
-limits. The source distribution includes the runnable Wagtail example, tests and
+[0.1.1 beta notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.1.1.md) describe the changes and upgrade steps;
+[0.1.0 release notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.1.0.md) preserve the initial release contract.
+The source distribution includes the runnable Wagtail example, tests and
 guides; the wheel includes the runtime, translations, templates and static assets.
 
-CI checks six Python/database combinations, JavaScript, lint, migration drift,
+The CI workflow defines 30 framework/Python/database combinations, JavaScript, lint, migration drift,
 translations and source/wheel installation. Browser checks covered installed Safari,
 Chrome, Yandex Browser and Firefox with and without JS, plus selected VoiceOver
 scenarios and a phone. Previous major browser versions remain unverified; this is
 not an exhaustive accessibility or device certification.
 
 There is no separate REST API, rich-text editor, uploads, likes, reports or live
-updates in 0.1.0. SMTP retries can duplicate mail after an uncertain delivery result.
+updates in 0.1.1. SMTP retries can duplicate mail after an uncertain delivery result.
 Host-specific themes, access rules and email delivery need their own acceptance checks.
 
 ## Support Commentail

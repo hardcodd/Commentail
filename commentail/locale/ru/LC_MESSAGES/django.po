@@ -184,8 +184,8 @@ msgstr "Гостевые комментарии требуют настроен�
 msgid "Guest email is required"
 msgstr "Укажите email"
 
-msgid "Guest name is required and must be at most 80 characters"
-msgstr "Укажите имя длиной до 80 символов"
+msgid "Guest name is required and must be at most 40 characters"
+msgstr "Укажите имя длиной до 40 символов"
 
 msgid "Guests"
 msgstr "Гости"
@@ -235,6 +235,7 @@ msgstr "Политика модерации"
 msgid "Moderation rules"
 msgstr "Правила модерации"
 
+msgctxt "comment author"
 msgid "Name"
 msgstr "Имя"
 
@@ -823,3 +824,9 @@ msgstr "Об ответах сообщим по email."
 
 msgid "Comment actions"
 msgstr "Действия с комментарием"
+
+msgid "Name: up to 40 characters."
+msgstr "Имя: до 40 символов."
+
+msgid "Use at most 40 characters for your name."
+msgstr "В имени должно быть не более 40 символов."

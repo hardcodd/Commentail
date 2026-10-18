@@ -1,6 +1,6 @@
 recursive-include tests *.py *.html *.js
 recursive-include example *.py *.html *.md
-include requirements-test.txt
+include requirements-test.txt requirements-test-common.txt
 recursive-include tools *.py
 include CHANGELOG.md
 recursive-include docs/wiki *.md

@@ -6,8 +6,15 @@ from django.db import close_old_connections, connection
 from django.test import TransactionTestCase
 from wagtail.models import Site
 
-from commentail.models import Comment, Discussion, ModerationEvent
-from commentail.services import DomainError, moderate, revise, submit, submit_once
+from commentail.models import Comment, CommentRevision, Discussion, ModerationEvent
+from commentail.services import (
+    DomainError,
+    moderate,
+    moderate_revision,
+    revise,
+    submit,
+    submit_once,
+)
 
 
 class SQLiteConcurrencyTests(TransactionTestCase):
@@ -105,3 +112,36 @@ class SQLiteConcurrencyTests(TransactionTestCase):
         self.assertEqual(sum(item is not None for item in outcomes), 1)
         job.refresh_from_db()
         self.assertEqual(job.attempts, 1)
+
+    def test_competing_author_revisions_preserve_one_pending_draft(self):
+        comment = self.published()
+        outcomes = self.race(
+            lambda: revise(comment.pk, "First draft", user=self.author),
+            lambda: revise(comment.pk, "Second draft", user=self.author),
+        )
+        self.assertEqual(sum(isinstance(item, CommentRevision) for item in outcomes), 1)
+        self.assertEqual(sum(isinstance(item, DomainError) for item in outcomes), 1)
+        revision = comment.revisions.get()
+        self.assertEqual(revision.status, "pending")
+        self.assertIn(revision.text, ["First draft", "Second draft"])
+        comment.refresh_from_db()
+        self.assertEqual(comment.text, "Original")
+
+    def test_competing_revision_decisions_apply_one_result_and_erase_draft(self):
+        comment = self.published()
+        revision = revise(comment.pk, "Private draft", user=self.author)
+        outcomes = self.race(
+            lambda: moderate_revision(revision.pk, "approve", actor=self.admin),
+            lambda: moderate_revision(revision.pk, "reject", actor=self.admin),
+        )
+        self.assertEqual(sum(isinstance(item, DomainError) for item in outcomes), 1)
+        revision.refresh_from_db()
+        comment.refresh_from_db()
+        self.assertIn(revision.status, ["approved", "rejected"])
+        self.assertEqual(revision.text, "")
+        self.assertEqual(
+            comment.text, "Private draft" if revision.status == "approved" else "Original"
+        )
+        self.assertEqual(
+            ModerationEvent.objects.filter(action__startswith="revision_").count(), 1
+        )

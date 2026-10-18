@@ -2,10 +2,14 @@
 
 ## First submission
 
-Guests enter a required name (up to 80 visible characters), email and plain-text
+Guests enter a required name (up to 40 visible characters), email and plain-text
 comment. Email is private and shown only in the admin. Text defaults to 5000 visible
 characters, including spaces and line breaks; composed emoji count as one character.
 HTML and Markdown are not rendered.
+
+Names may include a first and last name or a nickname. Surrounding whitespace is
+trimmed before counting Unicode graphemes. Longer new names are rejected without
+truncation; existing saved names and registered account names are unchanged.
 
 An unremembered guest completes a local arithmetic CAPTCHA: five-minute expiry,
 five attempts, refresh available. Refresh invalidates the old challenge. This is

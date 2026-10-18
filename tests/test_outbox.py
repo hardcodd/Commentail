@@ -1,5 +1,10 @@
 from datetime import timedelta
-from smtplib import SMTPDataError
+from smtplib import (
+    SMTPAuthenticationError,
+    SMTPDataError,
+    SMTPRecipientsRefused,
+    SMTPServerDisconnected,
+)
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -14,7 +19,7 @@ from commentail.models import (
     ReplySubscription,
     SiteCommentSettings,
 )
-from commentail.outbox import process_mail, requeue
+from commentail.outbox import claim_job, deliver, process_mail, requeue
 from commentail.security import confirm_from_token, unsubscribe
 from commentail.services import DomainError, moderate, revise, submit
 
@@ -124,6 +129,78 @@ class OutboxTests(TestCase):
         ):
             process_mail()
         self.assertEqual(MailJob.objects.get().status, "failed")
+
+    def test_worker_recovers_expired_claim_but_leaves_active_claim_alone(self) -> None:
+        self.guest()
+        job = MailJob.objects.get()
+        claimed = claim_job(job.pk)
+        self.assertIsNotNone(claimed)
+        self.assertEqual(process_mail(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+        MailJob.objects.filter(pk=job.pk).update(
+            lease_until=timezone.now() - timedelta(seconds=1)
+        )
+        self.assertEqual(process_mail(), 1)
+        job.refresh_from_db()
+        self.assertEqual(job.status, "sent")
+        self.assertEqual(job.attempts, 2)
+        self.assertIsNone(job.lease_until)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_reclaimed_expired_message_is_cancelled_without_delivery(self) -> None:
+        self.guest()
+        job = MailJob.objects.get()
+        claim_job(job.pk)
+        MailJob.objects.filter(pk=job.pk).update(
+            lease_until=timezone.now() - timedelta(seconds=1),
+            expires_at=timezone.now() - timedelta(seconds=1),
+        )
+        self.assertEqual(process_mail(), 0)
+        job.refresh_from_db()
+        self.assertEqual(job.status, "cancelled")
+        self.assertIsNone(job.lease_until)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_uncertain_delivery_retry_keeps_message_id_and_original_deadline(self) -> None:
+        self.guest()
+        job = MailJob.objects.get()
+        deadline = job.expires_at
+
+        def accepted_then_disconnected(message: MailJob) -> None:
+            deliver(message)
+            raise TimeoutError("Synthetic disconnect after SMTP acceptance")
+
+        with patch("commentail.outbox.deliver", side_effect=accepted_then_disconnected):
+            self.assertEqual(process_mail(), 0)
+        job.refresh_from_db()
+        self.assertEqual(job.status, "pending")
+        self.assertEqual(job.error, "TimeoutError")
+        MailJob.objects.filter(pk=job.pk).update(next_attempt_at=timezone.now())
+        self.assertEqual(process_mail(), 1)
+        job.refresh_from_db()
+        self.assertEqual(job.expires_at, deadline)
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[0].extra_headers["Message-ID"], mail.outbox[1].extra_headers["Message-ID"])
+        self.assertEqual(mail.outbox[0].body, mail.outbox[1].body)
+
+    def test_smtp_response_classes_control_retry_without_private_diagnostics(self) -> None:
+        for failure, status in [
+            (SMTPAuthenticationError(535, b"private credentials detail"), "failed"),
+            (SMTPServerDisconnected("private connection detail"), "pending"),
+            (SMTPDataError(451, b"private transport detail"), "pending"),
+            (SMTPDataError(550, b"private transport detail"), "failed"),
+            (SMTPRecipientsRefused({"guest@example.invalid": (450, b"private detail")}), "pending"),
+            (SMTPRecipientsRefused({"guest@example.invalid": (550, b"private detail")}), "failed"),
+        ]:
+            with self.subTest(failure=type(failure).__name__, status=status):
+                comment = self.guest()
+                job = MailJob.objects.get(comment=comment)
+                with patch("commentail.outbox.deliver", side_effect=failure):
+                    self.assertEqual(process_mail(), 0)
+                job.refresh_from_db()
+                self.assertEqual(job.status, status)
+                self.assertEqual(job.error, type(failure).__name__)
+                self.assertIsNone(job.lease_until)
 
     def test_requeue_requires_site_moderation_permission(self):
         self.guest()

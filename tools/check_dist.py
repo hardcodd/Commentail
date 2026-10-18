@@ -55,7 +55,7 @@ def check(folder: Path) -> None:
     }
     assert public_docs, "Missing public documentation"
     roots = {"commentail", "tests", "example", "tools", "commentail.egg-info"}
-    files = {"README.md", "LICENSE", "MANIFEST.in", "pyproject.toml", "requirements-test.txt", "PKG-INFO", "setup.cfg", "CHANGELOG.md"}
+    files = {"README.md", "LICENSE", "MANIFEST.in", "pyproject.toml", "requirements-test.txt", "requirements-test-common.txt", "PKG-INFO", "setup.cfg", "CHANGELOG.md"}
     with tarfile.open(sdist) as archive:
         shipped = {}
         shipped_docs = {}
@@ -81,7 +81,7 @@ def check(folder: Path) -> None:
         assert shipped_docs == public_docs, "sdist documentation differs from source"
         assert shipped == runtime, "sdist runtime differs from source"
         names = {PurePosixPath(*PurePosixPath(n).parts[1:]).as_posix() for n in archive.getnames()}
-        assert {"tests/test_reply.js", "example/manage.py", "tools/check_dist.py", "requirements-test.txt", "CHANGELOG.md"} <= names
+        assert {"tests/test_reply.js", "example/manage.py", "tools/check_dist.py", "requirements-test.txt", "requirements-test-common.txt", "CHANGELOG.md"} <= names
     print(f"Validated {version}: {len(runtime)} runtime files, archive scope and RECORD")
 
 

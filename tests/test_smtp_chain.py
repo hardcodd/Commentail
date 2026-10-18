@@ -4,6 +4,7 @@ import re
 import socketserver
 from contextlib import contextmanager
 from email import policy
+from email.message import EmailMessage
 from email.parser import BytesParser
 from threading import Thread
 from urllib.parse import urlsplit
@@ -65,7 +66,15 @@ def smtp_receiver():
 
 
 class SMTPGuestChainTests(TestCase):
-    def test_received_mail_drives_confirmation_revision_and_unsubscribe(self):
+    def test_received_mail_drives_confirmation_revision_and_unsubscribe(self) -> None:
+        self._check_received_mail_actions("/commentail/")
+
+    @override_settings(ROOT_URLCONF="tests.urls_custom_prefix")
+    def test_received_mail_actions_use_custom_url_prefix(self) -> None:
+        self._check_received_mail_actions("/community/feedback/")
+
+    def _check_received_mail_actions(self, prefix: str) -> None:
+        """Follow real loopback mail links under the host's configured URL prefix."""
         site = Site.objects.get(is_default_site=True)
         discussion = Discussion.objects.create(site=site, page=site.root_page)
         admin = get_user_model().objects.create_superuser("smtp-admin", "", "synthetic")
@@ -96,12 +105,15 @@ class SMTPGuestChainTests(TestCase):
                 },
             )
 
-        def mail_link(message, purpose):
+        def mail_link(message: EmailMessage, purpose: str) -> str:
             body = message.get_content()
             matches = re.findall(
                 r"http[^\s]+/actions/" + purpose + r"/\?token=[^\s]+", body
             )
             self.assertEqual(len(matches), 1)
+            parts = urlsplit(matches[0])
+            self.assertEqual(parts.path, f"{prefix}actions/{purpose}/")
+            self.assertEqual(f"{parts.scheme}://{parts.netloc}", site.root_url)
             return matches[0]
 
         with smtp_receiver() as messages:
@@ -128,6 +140,8 @@ class SMTPGuestChainTests(TestCase):
             confirmation = messages[-1]
             self.assertEqual(confirmation["To"], "guest@example.invalid")
             confirm_url = mail_link(confirmation, "confirm")
+            status_url = mail_link(confirmation, "view")
+            self.assertEqual(browser.get(status_url).status_code, 200)
             browser.get(confirm_url)
             comment.refresh_from_db()
             self.assertEqual(comment.status, "awaiting_email")

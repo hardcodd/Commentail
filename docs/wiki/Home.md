@@ -3,8 +3,8 @@
 **Self-hosted comments for Wagtail CMS.** Add moderated discussions to Wagtail
 Pages and registered Django models using your site's accounts, templates and styles.
 
-> **0.1.0 compatibility:** Wagtail >=7.4.3,<7.5 · Django 5.2 · Python 3.12–3.14.
-> Wagtail 8.0 is outside this release.
+> **0.1.1 Beta:** Wagtail 7.4.3+ / Django 5.2 or 6.0; Wagtail 8.0 / Django 5.2, 6.0 or 6.1; Python 3.12–3.14; file SQLite and PostgreSQL 16.
+> Published 0.1.0 retains Wagtail >=7.4.3,<7.5 and Django 5.2 support.
 
 ## Find your guide
 
@@ -26,7 +26,10 @@ Pages and registered Django models using your site's accounts, templates and sty
 | Prepare a deployment | [Deployment](Deployment.md) |
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md) |
 | Run the example and tests | [Example and testing](Example-and-testing.md) |
-| Read release scope | [Release 0.1.0](Release-0.1.0.md) |
+| Read the current release scope | [Release 0.1.1](Release-0.1.1.md) |
+| Compare versions | [Changelog](Changelog.md) |
+| See planned work | [Roadmap](Roadmap.md) |
+| Read the initial release scope | [Release 0.1.0](Release-0.1.0.md) |
 | Support development | [Support](Support.md) |
 
 ## Recommended first run

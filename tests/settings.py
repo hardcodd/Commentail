@@ -57,6 +57,7 @@ if os.environ.get("COMMENTAIL_TEST_SQLITE"):
 DATABASES["default"]["OPTIONS"] = {"timeout": 20}
 
 if os.environ.get("COMMENTAIL_TEST_POSTGRES") == "1":
+    INSTALLED_APPS.append("django.contrib.postgres")
     DATABASES["default"] = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "postgres",
@@ -64,7 +65,7 @@ if os.environ.get("COMMENTAIL_TEST_POSTGRES") == "1":
         "PASSWORD": os.environ["PGPASSWORD"],
         "HOST": os.environ.get("PGHOST", "127.0.0.1"),
         "PORT": os.environ.get("PGPORT", "55432"),
-        "TEST": {"NAME": "commentail_synthetic_tests"},
+        "TEST": {"NAME": os.environ.get("COMMENTAIL_TEST_DB_NAME", "commentail_synthetic_tests")},
     }
 
 WAGTAIL_SITE_NAME = "Commentail test"

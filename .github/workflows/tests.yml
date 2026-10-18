@@ -19,11 +19,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        stack:
+          - {wagtail: '~=7.4.3', django: '~=5.2.18'}
+          - {wagtail: '~=7.4.3', django: '~=6.0.0'}
+          - {wagtail: '~=8.0.0', django: '~=5.2.18'}
+          - {wagtail: '~=8.0.0', django: '~=6.0.0'}
+          - {wagtail: '~=8.0.0', django: '~=6.1.0'}
         python: ['3.12', '3.13', '3.14']
         database: [sqlite, postgres]
     services:
       postgres:
-        image: postgres:14
+        image: postgres:16
         env:
           POSTGRES_USER: commentail_test
           POSTGRES_PASSWORD: synthetic-ci-only
@@ -43,7 +49,12 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python }}
-      - run: python -m pip install -r requirements-test.txt .
+      - name: Install the selected supported framework pair
+        env:
+          WAGTAIL_SPEC: ${{ matrix.stack.wagtail }}
+          DJANGO_SPEC: ${{ matrix.stack.django }}
+        run: python -m pip install -r requirements-test-common.txt "Wagtail$WAGTAIL_SPEC" "Django$DJANGO_SPEC" .
+      - run: python -m pip check
       - name: Test installed library outside the checkout
         env:
           COMMENTAIL_TEST_SQLITE: ${{ runner.temp }}/contracts.sqlite3
@@ -53,6 +64,7 @@ jobs:
           cp -R tests "$work/tests"
           cd "$work"
           python -m django test tests --settings=tests.settings --noinput
+          python -m django makemigrations --check --dry-run --settings=tests.settings
 
   quality:
     runs-on: ubuntu-24.04
