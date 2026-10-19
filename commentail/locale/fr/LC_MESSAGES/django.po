@@ -918,3 +918,16 @@ msgstr "Votre commentaire a été publié. Vous pouvez ouvrir la discussion sur 
 #, python-format
 msgid "%(label)s:"
 msgstr "%(label)s :"
+
+msgid "Confirm text erasure"
+msgstr "Confirmer l’effacement du texte"
+
+#, python-format
+msgid "Comments to erase: %(count)s"
+msgstr "Commentaires dont le texte sera effacé : %(count)s"
+
+msgid "The selected comments' text and revisions will be permanently erased."
+msgstr "Le texte et les révisions des commentaires sélectionnés seront définitivement effacés."
+
+msgid "This cannot be undone. Replies will be preserved."
+msgstr "Cette action est irréversible. Les réponses seront conservées."

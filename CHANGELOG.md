@@ -5,6 +5,9 @@ describe changes that an existing installation needs to review.
 
 ## Unreleased
 
+- Require confirmation before single or bulk text erasure, showing the comment
+  count and irreversible-erasure warning, with cancellation that leaves data intact.
+
 - Add bulk hide, restore and permanent text erasure to the comment list,
   including All statuses, with per-Site permissions and status-aware selection.
   Invalid batches roll back entirely; successful actions retain list filters.

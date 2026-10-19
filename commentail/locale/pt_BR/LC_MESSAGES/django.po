@@ -918,3 +918,16 @@ msgstr "Seu comentário foi publicado. Você pode abrir a discussão no site."
 #, python-format
 msgid "%(label)s:"
 msgstr "%(label)s:"
+
+msgid "Confirm text erasure"
+msgstr "Confirmar exclusão do texto"
+
+#, python-format
+msgid "Comments to erase: %(count)s"
+msgstr "Comentários cujo texto será apagado: %(count)s"
+
+msgid "The selected comments' text and revisions will be permanently erased."
+msgstr "O texto e as revisões dos comentários selecionados serão apagados permanentemente."
+
+msgid "This cannot be undone. Replies will be preserved."
+msgstr "Esta ação não pode ser desfeita. As respostas serão preservadas."

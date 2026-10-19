@@ -1,0 +1,25 @@
+{% extends "wagtailadmin/base.html" %}
+{% load i18n commentail_tags %}
+{% block titletag %}{% trans "Confirm text erasure" %}{% endblock %}
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
+{% block content %}
+{% trans "Confirm text erasure" as title %}
+{% include "wagtailadmin/shared/header.html" with title=title icon="warning" classname="commentail-admin-heading" %}
+<div class="nice-padding commentail-admin">
+  <section class="commentail-admin-card" aria-labelledby="erasure-count">
+    <h2 id="erasure-count">{% blocktrans %}Comments to erase: {{ count }}{% endblocktrans %}</h2>
+    <p>{% trans "The selected comments' text and revisions will be permanently erased." %}</p>
+    <p><strong>{% trans "This cannot be undone. Replies will be preserved." %}</strong></p>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete">
+      <input type="hidden" name="return_query" value="{{ return_query }}">
+      {% for identifier in identifiers %}<input type="hidden" name="ids" value="{{ identifier }}">{% endfor %}
+      <div class="commentail-admin-actions">
+        <a class="button button-secondary" href="{{ cancel_url }}">{% trans "Cancel" %}</a>
+        <button class="button serious" name="confirm_delete" value="yes">{% trans "Erase text permanently" %}</button>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

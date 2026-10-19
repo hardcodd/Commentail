@@ -143,6 +143,7 @@ class AdminInterfaceTests(TestCase):
             with self.subTest(action=action):
                 response = self.client.post(reverse("commentail_admin:bulk"), {
                     "action": action, "ids": [self.comment.pk], "return_query": "status=&q=Visible",
+                    "confirm_delete": "yes",
                 })
                 self.assertRedirects(response, reverse("commentail_admin:list") + "?status=&q=Visible")
                 self.comment.refresh_from_db()
@@ -154,10 +155,116 @@ class AdminInterfaceTests(TestCase):
         self.client.force_login(self.admin)
         moderate(self.foreign.pk, "approve", actor=self.admin)
         response = self.client.post(reverse("commentail_admin:bulk"), {
-            "action": "delete", "ids": [self.comment.pk, self.foreign.pk, self.comment.pk],
+            "action": "delete", "ids": [self.comment.pk, self.foreign.pk, f"0{self.comment.pk}"],
+            "confirm_delete": "yes",
         }, follow=True)
         self.assertContains(response, "Deleted: 2")
         self.assertEqual(Comment.objects.filter(status="deleted", text="").count(), 2)
+
+    def test_single_delete_requires_confirmation_and_cancel_keeps_data(self):
+        self.client.force_login(self.admin)
+        url = reverse("commentail_admin:action", args=[self.comment.pk])
+        event_count = self.comment.events.count()
+        response = self.client.post(url, {"action": "delete"})
+        self.assertContains(response, "Comments to erase: 1")
+        self.assertContains(response, "This cannot be undone. Replies will be preserved.")
+        self.assertContains(response, 'name="confirm_delete" value="yes"')
+        self.client.get(response.context["cancel_url"])
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.text, "Visible queue text")
+        self.assertEqual(self.comment.events.count(), event_count)
+        response = self.client.post(url, {"action": "delete", "confirm_delete": "yes"})
+        self.assertEqual(response.status_code, 302)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.text, "")
+
+    def test_bulk_confirmation_counts_unique_ids_and_cancel_retains_query(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse("commentail_admin:bulk"), {
+            "action": "delete", "ids": [self.comment.pk, self.foreign.pk, f"0{self.comment.pk}"],
+            "return_query": "status=&q=Visible&p=2",
+        })
+        self.assertContains(response, "Comments to erase: 2")
+        self.assertEqual(response.context["cancel_url"],
+                         reverse("commentail_admin:list") + "?status=&q=Visible&p=2")
+        self.client.get(response.context["cancel_url"])
+        self.assertFalse(Comment.objects.filter(status="deleted").exists())
+
+    def test_single_delete_rechecks_permissions_after_confirmation(self):
+        self.permission.delete = True
+        self.permission.save()
+        url = reverse("commentail_admin:action", args=[self.comment.pk])
+        self.assertEqual(self.client.post(url, {"action": "delete"}).status_code, 200)
+        self.permission.delete = False
+        self.permission.save()
+        self.assertEqual(self.client.post(url, {
+            "action": "delete", "confirm_delete": "yes",
+        }).status_code, 403)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.text, "Visible queue text")
+
+    def test_single_erasure_removes_revisions_but_preserves_reply_text(self):
+        self.client.force_login(self.admin)
+        moderate(self.comment.pk, "approve", actor=self.admin)
+        revise(self.comment.pk, "Pending replacement", user=self.admin)
+        reply = submit(self.discussion.pk, text="Keep this reply", user=self.admin,
+                       reply_to=self.comment.pk)
+        url = reverse("commentail_admin:action", args=[self.comment.pk])
+        self.client.post(url, {"action": "delete"})
+        self.assertEqual(self.comment.revisions.count(), 1)
+        response = self.client.post(url, {"action": "delete", "confirm_delete": "yes"})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(self.comment.revisions.exists())
+        reply.refresh_from_db()
+        self.assertEqual(reply.text, "Keep this reply")
+        self.assertEqual(reply.reply_to_id, self.comment.pk)
+
+    def test_bulk_delete_rechecks_revoked_right_without_partial_changes(self):
+        self.permission.delete = True
+        self.permission.save()
+        other_permission = SiteGroupPermission.objects.create(
+            group=self.permission.group, site=self.other, view=True, delete=True,
+        )
+        data = {"action": "delete", "ids": [self.comment.pk, self.foreign.pk]}
+        url = reverse("commentail_admin:bulk")
+        self.assertEqual(self.client.post(url, data).status_code, 200)
+        other_permission.delete = False
+        other_permission.save()
+        response = self.client.post(url, {**data, "confirm_delete": "yes"})
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Comment.objects.filter(status="deleted").exists())
+
+    def test_delete_preview_rejects_invisible_and_deleted_comments(self):
+        response = self.client.post(reverse("commentail_admin:bulk"), {
+            "action": "delete", "ids": [self.comment.pk, self.foreign.pk],
+        })
+        self.assertEqual(response.status_code, 403)
+        self.permission.delete = True
+        self.permission.save()
+        response = self.client.post(reverse("commentail_admin:bulk"), {
+            "action": "delete", "ids": [self.comment.pk, self.foreign.pk],
+        })
+        self.assertEqual(response.status_code, 404)
+        Comment.objects.filter(pk=self.comment.pk).update(status="deleted", text="")
+        for name, args, data in [
+            ("action", [self.comment.pk], {"action": "delete"}),
+            ("bulk", [], {"action": "delete", "ids": [self.comment.pk]}),
+        ]:
+            self.assertEqual(self.client.post(
+                reverse(f"commentail_admin:{name}", args=args), data,
+            ).status_code, 400)
+
+    def test_bulk_delete_rechecks_status_after_confirmation(self):
+        self.client.force_login(self.admin)
+        data = {"action": "delete", "ids": [self.comment.pk, self.foreign.pk]}
+        self.assertEqual(self.client.post(reverse("commentail_admin:bulk"), data).status_code, 200)
+        Comment.objects.filter(pk=self.foreign.pk).update(status="deleted", text="")
+        response = self.client.post(reverse("commentail_admin:bulk"), {
+            **data, "confirm_delete": "yes",
+        })
+        self.assertEqual(response.status_code, 400)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.text, "Visible queue text")
 
     def test_bulk_invalid_status_rolls_back_every_comment(self):
         self.client.force_login(self.admin)

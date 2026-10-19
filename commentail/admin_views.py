@@ -289,9 +289,31 @@ def _mutate(request: HttpRequest, comment: Comment) -> None:
         )
 
 
+def _delete_confirmation(
+    request: HttpRequest, identifiers: list[int], cancel_url: str,
+) -> TemplateResponse:
+    """Preview a validated selection without erasing text or recording events."""
+    return TemplateResponse(request, "commentail/admin/confirm_delete.html", {
+        "identifiers": identifiers,
+        "count": len(identifiers),
+        "cancel_url": cancel_url,
+        "return_query": QueryDict(request.POST.get("return_query", "")).urlencode(),
+    })
+
+
 @require_POST
 def action(request: HttpRequest, identifier: int) -> HttpResponse:
     comment = get_object_or_404(_comments(request), pk=identifier)
+    if request.POST.get("action") == "delete":
+        if not can(request.user, comment.discussion.site_id, "delete"):
+            return HttpResponse("Permission denied", status=403)
+        if comment.status not in _BULK_STATUSES["delete"]:
+            return HttpResponse("Invalid selection", status=400)
+        if request.POST.get("confirm_delete") != "yes":
+            return _delete_confirmation(
+                request, [comment.pk],
+                reverse("commentail_admin:detail", args=[comment.pk]),
+            )
     try:
         _mutate(request, comment)
     except PermissionDenied:
@@ -318,10 +340,25 @@ def bulk(request: HttpRequest) -> HttpResponse:
         or request.POST.get("action") not in _BULK_STATUSES
     ):
         return HttpResponse("Invalid selection", status=400)
+    identifiers = sorted({int(value) for value in identifiers})
+    query = QueryDict(request.POST.get("return_query", "")).urlencode()
+    list_url = reverse("commentail_admin:list") + (f"?{query}" if query else "")
+    if request.POST["action"] == "delete" and request.POST.get("confirm_delete") != "yes":
+        # Check the whole selection before displaying its count. Execution below
+        # revalidates access and state inside the existing atomic writer path.
+        selected = []
+        for identifier in identifiers:
+            comment = get_object_or_404(_comments(request), pk=identifier)
+            if not can(request.user, comment.discussion.site_id, "delete"):
+                return HttpResponse("Permission denied", status=403)
+            if comment.status not in _BULK_STATUSES["delete"]:
+                return HttpResponse("Invalid selection", status=400)
+            selected.append(comment.pk)
+        return _delete_confirmation(request, selected, list_url)
     try:
         # Acquire the writer lock before dependent reads on SQLite as well.
         Comment.objects.filter(pk__in=identifiers).update(edit_locked=F("edit_locked"))
-        for identifier in sorted(set(identifiers), key=int):
+        for identifier in identifiers:
             comment = get_object_or_404(_comments(request), pk=identifier)
             if comment.status not in _BULK_STATUSES[request.POST["action"]]:
                 transaction.set_rollback(True)
@@ -338,11 +375,10 @@ def bulk(request: HttpRequest) -> HttpResponse:
     }[request.POST["action"]]
     messages.success(
         request,
-        f"{outcome}: {len(set(identifiers))}",
+        f"{outcome}: {len(identifiers)}",
         extra_tags="commentail-action-result",
     )
-    query = QueryDict(request.POST.get("return_query", "")).urlencode()
-    return redirect(reverse("commentail_admin:list") + (f"?{query}" if query else ""))
+    return redirect(list_url)
 
 
 @require_POST

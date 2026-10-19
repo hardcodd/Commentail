@@ -42,6 +42,11 @@ selected comment supports that action; **Select all** selects eligible rows on
 the current page. The server rechecks the entire selection and rolls back all
 changes if any row is no longer eligible or permitted. A batch accepts at most
 100 identifiers. Successful actions preserve the list filters and pagination.
+Single and bulk text erasure first open a confirmation page showing the number
+of comments and an irreversible-erasure warning. Cancel leaves text and revisions
+unchanged; bulk cancellation returns to the same list filters and page. Confirming
+erases the selected comments' text and revisions, preserving replies. Confirmation
+works without JavaScript, and execution rechecks current permissions and states.
 Author revisions are decided individually.
 Pending revisions keep the old published text visible. Closing a discussion does
 not remove its moderation queue. Logs record actions without copies of comment text.
