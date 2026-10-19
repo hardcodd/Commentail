@@ -1,6 +1,6 @@
 # Performance and load testing
 
-The changes below are in the current source, after published 0.1.1. Measure the
+The changes below are included in the 0.2.0 Beta release. Measure the
 installed revision on your own database and infrastructure before setting a
 traffic or latency target.
 
@@ -34,10 +34,12 @@ effect on the next submission.
 
 ## Database upgrade
 
-Run migration `0014_reading_indexes` when installing this source revision. It
+Run migration `0014_reading_indexes` when upgrading from 0.1.1 to 0.2.0. It
 adds indexes for global publication order, ordered roots, published replies,
 active CAPTCHA lookup by Site/session and rate-event cleanup by creation time.
-It changes no comment content or state. The migration is reversible.
+It changes no comment content or state. The migration is reversible. On SQLite,
+Django rebuilds the rate-event table for the indexed-field change, copying its
+existing rows; allow for that temporary copy as well as the new indexes.
 
 Index creation needs additional disk space and write work, and the standard
 migration can block concurrent writes while building indexes. For a large

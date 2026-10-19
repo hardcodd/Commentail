@@ -21,6 +21,7 @@
 - [Example and testing](Example-and-testing.md)
 - [Release 0.1.0](Release-0.1.0.md)
 - [Release 0.1.1](Release-0.1.1.md)
+- [Release 0.2.0](Release-0.2.0.md)
 - [Changelog](Changelog.md)
 - [Roadmap](Roadmap.md)
 - [Support](Support.md)

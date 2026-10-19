@@ -20,7 +20,7 @@ Open **Comments**, choose Site/status and filter by search, date or Page. Counts
 respect permitted Sites and active filters. Open a message to see its author,
 state, text, action journal and any pending author revision.
 
-In the current unreleased source, the Page filter opens Wagtail's standard
+Since 0.2.0, the Page filter opens Wagtail's standard
 searchable chooser instead of loading every discussion Page into the list.
 Choosing a Page does not grant permission to its comments; Site grants still
 bound the resulting queue.

@@ -13,8 +13,10 @@
 | Rejection emails | Off | Yes |
 | Send emails | On | No, Site only |
 
-Each Page/object field can **Use site setting**. Select the correct Site before
-editing defaults. Policy changes do not automatically decide existing queue items.
+The Page editor groups Comments controls by discussion behavior, content and
+notifications. Page settings still save with the standard Page action and apply
+immediately, independently of publication. Each Page/object field can
+**Use site setting**. Select the correct Site before editing defaults. Policy changes do not automatically decide existing queue items.
 
 | Mode | Existing public discussion | New comments / edits |
 | --- | --- | --- |
@@ -27,9 +29,8 @@ not erase data. Target access still governs visibility; each Site has its own di
 
 ## Languages
 
-Published 0.1.1 includes English (`en`) and Russian (`ru`). Unreleased source also
-includes German (`de`), French (`fr`), Spanish (`es`) and Brazilian Portuguese
-(`pt-br`) for the public UI, moderation/admin screens and all notification emails.
+Version 0.2.0 includes English (`en`), Russian (`ru`), German (`de`), French (`fr`),
+Spanish (`es`) and Brazilian Portuguese (`pt-br`) for the public UI, moderation/admin screens and all notification emails.
 The compiled catalogs are included in the package; no runtime translation service
 is required. Documentation stays in English and Russian.
 

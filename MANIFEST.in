@@ -2,7 +2,7 @@ recursive-include tests *.py *.html *.js
 recursive-include example *.py *.html *.md
 include requirements-test.txt requirements-test-common.txt
 recursive-include tools *.py
-include CHANGELOG.md
+include CHANGELOG.md README.ru.md
 recursive-include docs/wiki *.md
 recursive-include docs/releases *.md
 include docs/assets/commentail-preview.png

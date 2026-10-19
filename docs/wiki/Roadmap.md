@@ -1,22 +1,26 @@
 # Commentail roadmap
 
 This page records planned directions. A target release or delivery date is only
-listed once it has been agreed. Planned work is not part of the current package.
+listed once agreed. Planned work is not part of the published package.
 
-## In unreleased source: four additional languages
+## Released in 0.2.0 Beta
 
-German (`de`), French (`fr`), Spanish (`es`) and Brazilian Portuguese (`pt-br`)
-cover reader-facing forms, validation and action pages, moderation/settings,
-delivery screens and all five notification email types, including revision decisions.
+Version 0.2.0 contains recent comments with filters and host-owned markup,
+indexed/batched database reads, grouped Page settings, HTML emails and four
+additional languages (German, French, Spanish and Brazilian Portuguese).
 English and Russian remain available; documentation remains in those two languages.
 
-Catalog coverage, interpolation, compiled files, plural metadata and saved-recipient
-mail language are checked automatically. Host projects continue to choose the
-active language. Native-speaker review remains a separate quality step.
+**Status:** included in 0.2.0 Beta.
+See [0.2.0 release scope and upgrade steps](Release-0.2.0.md),
+[version history](Changelog.md) and [performance guidance](Performance.md).
 
-**Status:** implemented in source, not released. Published 0.1.1 contains English
-and Russian only. A release version/date and any further locales are not selected.
+## Later: most-discussed threads
 
-See [language configuration](Configuration.md#languages),
-[current version history](Changelog.md), [0.1.1 release notes](Release-0.1.1.md)
-and [documentation home](Home.md).
+A ranking of threads by discussion activity is deferred. No API, release number
+or delivery date has been agreed. The recent-comments API does not supply this ranking.
+
+Additional locales have no agreed list or date. Native-speaker review of the
+new catalogs remains a separate quality step; automated coverage does not
+replace language review. See [language configuration](Configuration.md#languages).
+
+[Documentation home](Home.md)

@@ -1,0 +1,83 @@
+# Commentail 0.2.0
+
+**Beta · 19 October 2026 · MIT**
+
+This release adds reusable recent-comment lists, four languages, HTML email
+presentation and database optimizations. It retains the 0.1.1 framework bounds.
+The version number is 0.2.0; the package remains classified as Beta.
+
+## Changes since 0.1.1
+
+- Use `commentail_recent` to select published comments across the current Site or
+  one Page, limit the count, include/exclude replies and render your own markup.
+  Selection respects visitor access and hidden discussions. Results contain
+  presentation fields, not private ORM objects. Never share-cache this output.
+- Add German, French, Spanish and Brazilian Portuguese across the public UI,
+  moderation/settings and all five email types, alongside English and Russian.
+  Queued mail uses the recipient's saved language. Documentation remains English
+  and Russian; catalog checks do not replace native-speaker review.
+- Include minimal HTML emails with equivalent plain text, host Site names and
+  descriptive actions. Revision decisions have distinct wording. Host overrides
+  retain precedence; no comment text or tracking assets are added to mail.
+- Group Page-editor Comments settings without changing inheritance or when
+  settings take effect. Use Wagtail's searchable Page chooser in moderation.
+- Batch recent-comment access checks and thread counts, reuse target settings
+  and URLs, preload mail relations, narrow cleanup locks and optimize phrase rules.
+  Add migration `0014_reading_indexes` for publication/thread reads, active
+  CAPTCHA lookup and rate cleanup. Include a reproducible synthetic load tool.
+- Include the Russian README in the source archive.
+
+## Compatibility and verification boundaries
+
+Python 3.12–3.14; Wagtail 7.4.3+ within 7.4 with Django 5.2 or 6.0; Wagtail
+8.0.x with Django 5.2, 6.0 or 6.1. File SQLite and PostgreSQL 16 are the declared
+CI database matrix. Wagtail 7.4 with Django 6.1 and Wagtail 8.1+ remain outside
+scope. This release does not expand stable API or browser/accessibility promises.
+
+The runtime already passed a local 30-combination matrix on SQLite and PostgreSQL
+18.6; the [performance report](Performance.md) gives the workloads,
+measurements and limits. These are local synthetic checks, not a promise of
+capacity on arbitrary servers. The installed 0.2.0 wheel also passed 314 tests
+on each of Wagtail 7.4/Django 5.2 and Wagtail 8.0/Django 6.1 with SQLite and
+PostgreSQL 16; each PostgreSQL job skips one SQLite-only plan check. JavaScript
+checks (33), Ruff and all shipped translation catalogs passed. Upgrade from the
+published 0.1.1 wheel and independent pre/post-upgrade backup restoration passed
+on SQLite and PostgreSQL 16, preserving data, existing capabilities and host
+configuration, with new writes and local mail verified after restoration.
+Email-client/native-language review and host-site acceptance remain separate
+from automated checks.
+
+## Upgrade from 0.1.1
+
+1. Rehearse on a restored database and keep all rehearsal mail local. Back up the
+   database, media, host settings/templates, `SECRET_KEY` and exact package versions.
+   Pause site writes and the Commentail worker for final backup and cutover.
+2. In the test environment, install `python -m pip install --upgrade commentail==0.2.0`.
+   If using a downloaded wheel, verify its supplied checksum first.
+3. Run `python manage.py migrate`. Migration `0014_reading_indexes` changes
+   indexes only; it does not rewrite comments or their state. Standard index
+   builds may block writes and require extra disk space. SQLite also rebuilds
+   the rate-event table while preserving its rows. Measure migration time
+   on representative data and plan a maintenance window for large databases.
+4. Run `python manage.py check` and `python manage.py collectstatic --noinput`.
+   Review HTML and plain-text email overrides together. Existing per-kind paths
+   and context remain compatible; shared `base.html`/`button.html` are presentation
+   helpers. Enable new languages through the host's Django language settings.
+5. Check old comments/replies, pending revisions, settings, permissions, tokens,
+   subscriptions and queued mail. Exercise new writes and local mail after
+   restoring both pre-upgrade and post-upgrade backups independently.
+6. Resume production traffic and the worker after the rehearsal and live-site
+   integration checks pass. Review restored queues: mail pending in an
+   older snapshot may already have been delivered and can be sent again.
+
+Existing widgets need no changes. The new recent-comments tag is opt-in. The
+index migration is reversible, but replacing the wheel alone is not a complete
+rollback procedure. Restoring an older database discards subsequent writes;
+retain a bounded recovery plan. Upgrades from 0.1.0 also need the
+[0.1.1 upgrade notes](Release-0.1.1.md).
+
+See [installation and restoration](Installation.md),
+[recent comments](Recent-comments.md),
+[email overrides](Templates.md#mail-templates-and-public-context),
+[performance and migration guidance](Performance.md) and
+[version history](Changelog.md).

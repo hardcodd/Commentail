@@ -1,6 +1,6 @@
 # Recent comments in your own markup
 
-Available in the current source; not included in published 0.1.1.
+Added in the 0.2.0 Beta release; not included in 0.1.1.
 
 Use `commentail_recent` for a sidebar, home page or another list outside the
 discussion widget. It returns presentation dictionaries for your template and

@@ -3,7 +3,9 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
-## Unreleased
+## [0.2.0] — 2026-10-19 · Beta
+
+Changes from **0.1.1 → 0.2.0**.
 
 ### Added
 
@@ -11,6 +13,14 @@ describe changes that an existing installation needs to review.
   exact Page filter, optional replies and host-owned markup. Selection enforces
   visitor access, Site isolation and hidden-discussion settings; results contain
   plain presentation fields and comment permalinks without private model data.
+
+- Grouped Comments settings in the Wagtail Page editor, with site inheritance
+  and existing save/publication behavior preserved.
+- Russian README included in the source distribution.
+
+- Minimal HTML emails for all five notification types, with host Site names,
+  explanatory copy, labelled action links and equivalent plain text in all six
+  supported languages. Revision decisions have distinct subjects and explanations.
 
 - German (`de`), French (`fr`), Spanish (`es`) and Brazilian Portuguese (`pt-br`)
   translations for public forms, validation/action messages, moderation/settings,
@@ -28,18 +38,24 @@ describe changes that an existing installation needs to review.
 - The moderation Page filter uses Wagtail's searchable chooser instead of loading
   every discussion Page into its HTML. Added reproducible synthetic load checks.
 
+- Email copy distinguishes revision approval from public visibility, explains
+  editing cutoff for replies awaiting moderation, and uses contextual action
+  labels without promising new replies in read-only discussions.
+
 - Generated author labels in reply emails use the recipient's saved language,
   including the generic account name, instead of the mail worker's language.
 
 ### Upgrade notes
 
-- These locales are in the source tree and are not included in published 0.1.1.
+- Host email overrides keep precedence; review
+  both MIME alternatives and any custom subject/body wording when upgrading.
 - Enable the desired language through the host site's Django language settings;
   use `pt-br` for Brazilian Portuguese. Commentail's gettext directory is `pt_BR`.
 - Documentation remains in English and Russian.
 - Run migration `0014_reading_indexes` for publication/thread, active CAPTCHA and
   rate-cleanup indexes, then recollect static files. Index builds may block writes
-  on large tables; see [performance and migration guidance](Performance.md).
+  on large tables; SQLite also rebuilds the rate-event table. See
+  [performance and migration guidance](Performance.md).
 
 ## [0.1.1] — 2026-10-19 · Beta
 
@@ -96,3 +112,5 @@ See [0.1.0 release notes](Release-0.1.0.md).
 
 [0.1.1]: https://github.com/hardcodd/Commentail/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/hardcodd/Commentail/releases/tag/v0.1.0
+
+[0.2.0]: https://github.com/hardcodd/Commentail/compare/v0.1.1...v0.2.0

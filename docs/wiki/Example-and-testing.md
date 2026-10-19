@@ -85,4 +85,4 @@ customizations and deployment policies need their own acceptance checks.
 
 ---
 
-[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 0.1.1 →](Release-0.1.1.md)
+[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 0.2.0 →](Release-0.2.0.md)

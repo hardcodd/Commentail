@@ -2,31 +2,32 @@
 
 ## Requirements and package
 
-| Component | 0.1.1 Beta |
+| Component | 0.2.0 Beta |
 | --- | --- |
 | Python | 3.12, 3.13, 3.14 |
 | Wagtail / Django | 7.4.3+ in 7.4 / Django 5.2 or 6.0; 8.0.x / Django 5.2, 6.0 or 6.1 |
 | Database | File SQLite or PostgreSQL 16 |
 | Frontend | Django templates, JavaScript optional |
 
-All five framework pairs are tested on each listed Python version and both
+CI defines all five framework pairs on each listed Python version and both
 databases. Package bounds are `Wagtail>=7.4.3,<8.1` and `Django>=5.2,<6.2`;
 Wagtail 7.4 with Django 6.1 is not supported. Wagtail 8.1+ requires separate
 verification. The published 0.1.0 artifact retains its original bounds:
 `Wagtail>=7.4.3,<7.5` and `Django>=5.2,<5.3`.
 
-Use a virtual environment and install the release from PyPI:
+In a virtual environment, install the release from PyPI:
 
 ```sh
-python -m pip install commentail==0.1.1
+python -m pip install commentail==0.2.0
 ```
 
-For the PostgreSQL driver use `python -m pip install 'commentail[postgres]==0.1.1'`.
+For the PostgreSQL driver use
+`python -m pip install 'commentail[postgres]==0.2.0'`.
 Alternatively, install a downloaded wheel or extract the source archive and run
 `python -m pip install .` in its root. Your site's `DATABASES` setting still selects
 the actual database.
 For downloaded release archives, verify the supplied checksum before installation.
-See [0.1.1 changes and upgrade notes](Release-0.1.1.md) and the
+See [0.2.0 changes and upgrade notes](Release-0.2.0.md) and the
 [version-to-version changelog](Changelog.md).
 
 ## 1. Apps, middleware and templates
@@ -94,14 +95,17 @@ message before opening the integration to visitors.
 
 ## Upgrading and restoring
 
-Version 0.1.1 adds no Commentail migrations compared with 0.1.0. It changes
-the limit for newly submitted guest names from 80 to 40 Unicode graphemes;
-historical names and account names are preserved. Update overridden guest forms
-to include the new guidance and validation attributes. Recollect static files to
-load the corresponding JavaScript. Mail templates and public URL names are
-unchanged; generated mail links now follow the configured Commentail URL prefix.
-Already queued mail uses the installed version's link generation; previously
-delivered emails are not rewritten. See [the release notes](Release-0.1.1.md).
+Version 0.2.0 adds migration `0014_reading_indexes` over 0.1.1. It creates
+publication/thread, active CAPTCHA and rate-cleanup indexes without changing
+comment content or state. Standard index builds may block writes and need extra
+disk space; SQLite also rebuilds the rate-event table for the field-index change.
+Measure on a representative restored copy and plan a maintenance
+window where appropriate. See [performance guidance](Performance.md#database-upgrade).
+Recollect static files for the searchable moderation Page chooser. Review both
+HTML and plain-text email overrides; existing host overrides retain precedence.
+The recent-comments tag is additive and requires no changes to existing widgets.
+See [0.2.0 release notes](Release-0.2.0.md). For upgrades from 0.1.0, also follow
+[0.1.1 notes](Release-0.1.1.md), including guest-name validation.
 
 Rehearse the upgrade on a restored copy of your site's database before changing
 the live installation. Keep the previous package and exact dependency versions,

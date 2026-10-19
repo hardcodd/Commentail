@@ -3,7 +3,9 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
-## Unreleased
+## [0.2.0] — 2026-10-19 · Beta
+
+Changes from **0.1.1 → 0.2.0**.
 
 ### Added
 
@@ -11,6 +13,10 @@ describe changes that an existing installation needs to review.
   exact Page filter, optional replies and host-owned markup. Selection enforces
   visitor access, Site isolation and hidden-discussion settings; results contain
   plain presentation fields and comment permalinks without private model data.
+
+- Grouped Comments settings in the Wagtail Page editor, with site inheritance
+  and existing save/publication behavior preserved.
+- Russian README included in the source distribution.
 
 - Minimal HTML emails for all five notification types, with host Site names,
   explanatory copy, labelled action links and equivalent plain text in all six
@@ -41,15 +47,15 @@ describe changes that an existing installation needs to review.
 
 ### Upgrade notes
 
-- These locales and the new email presentation are in the source tree and are
-  not included in published 0.1.1. Host email overrides keep precedence; review
+- Host email overrides keep precedence; review
   both MIME alternatives and any custom subject/body wording when upgrading.
 - Enable the desired language through the host site's Django language settings;
   use `pt-br` for Brazilian Portuguese. Commentail's gettext directory is `pt_BR`.
 - Documentation remains in English and Russian.
 - Run migration `0014_reading_indexes` for publication/thread, active CAPTCHA and
   rate-cleanup indexes, then recollect static files. Index builds may block writes
-  on large tables; see [performance and migration guidance](docs/wiki/Performance.md).
+  on large tables; SQLite also rebuilds the rate-event table. See
+  [performance and migration guidance](docs/wiki/Performance.md).
 
 ## [0.1.1] — 2026-10-19 · Beta
 
@@ -106,3 +112,5 @@ See [0.1.0 release notes](docs/releases/0.1.0.md).
 
 [0.1.1]: https://github.com/hardcodd/Commentail/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/hardcodd/Commentail/releases/tag/v0.1.0
+
+[0.2.0]: https://github.com/hardcodd/Commentail/compare/v0.1.1...v0.2.0
