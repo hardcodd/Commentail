@@ -3,6 +3,16 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## [1.0.0] — 2026-10-19 · Stable
+
+The feature set is frozen at 0.2.0 Beta. This release introduces the documented
+stable API and compatibility policy; runtime, dependencies and migration files
+are unchanged from 0.2.0. Live-site verification of published 0.2.0 is recorded
+in the [verification guide](Example-and-testing.md#reported-live-site-verification-020).
+The documented integration surface now follows semantic versioning and the
+stated deprecation policy. Direct upgrade and backup-restoration rehearsals
+cover 0.1.0 and 0.2.0 on SQLite and PostgreSQL 16.
+
 ## [0.2.0] — 2026-10-19 · Beta
 
 Changes from **0.1.1 → 0.2.0**.
@@ -113,4 +123,5 @@ See [0.1.0 release notes](Release-0.1.0.md).
 [0.1.1]: https://github.com/hardcodd/Commentail/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/hardcodd/Commentail/releases/tag/v0.1.0
 
+[1.0.0]: https://github.com/hardcodd/Commentail/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/hardcodd/Commentail/compare/v0.1.1...v0.2.0

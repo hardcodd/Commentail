@@ -3,6 +3,9 @@
 For lists outside the discussion widget, use
 [`commentail_recent` with your own markup](Recent-comments.md).
 
+For the guarantees from 1.0.0, see the [template contract](Template-contract.md)
+and [stability policy](Stability.md).
+
 ## Override paths
 
 Put matching relative paths in your project templates directory ahead of app

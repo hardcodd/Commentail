@@ -13,4 +13,4 @@ For setup help or reproducible bugs, use these guides and
 
 ---
 
-[← Release 0.2.0](Release-0.2.0.md) · [Documentation home](Home.md)
+[← Release 1.0.0](Release-1.0.0.md) · [Documentation home](Home.md)

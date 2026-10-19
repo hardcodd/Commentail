@@ -67,6 +67,39 @@ The minimum supported Wagtail patch is 7.4.3. Earlier 7.4 patches are excluded
 because of upstream security fixes; the test pin and installed environments use
 7.4.3. See the [Wagtail 7.4.3 release notes](https://docs.wagtail.org/en/stable/releases/7.4.3.html).
 
+## Reported live-site verification: 0.2.0
+
+On 19 October 2026, the integrating site's owner supplied a verification report
+for published 0.2.0 on Django 6.1.2/Wagtail 8.0, using private Firefox sessions
+and real Gmail/Yandex inboxes. It covered guest submission with CAPTCHA, email
+confirmation, moderation, edits retaining the previous public text until approval,
+reply notifications received after approval, and unsubscribe. Approved replies
+after unsubscribe created no mail jobs; repeated unsubscribe kept delivery disabled.
+Expired edit links were rejected, including while the comments were public.
+
+All 24 reported negative cases were rejected without changes to the checked
+related records: six altered-token GETs, six altered-token POSTs with valid CSRF
+(404), and twelve POSTs without or with incorrect CSRF (403). Record counts and
+SHA-256 digests of full serialized related records matched before and after.
+This is bounded verification, not a complete security audit.
+
+The report also covered a PyPI 0.1.0 → 0.2.0 upgrade, migration/data preservation,
+independent backup restoration, host email overrides, static assets, RU/EN routes
+and the scheduled worker. Host tests passed 346/350 initially; four analytics
+configuration errors were followed by 30 passing affected tests with the usual
+test setting. A full corrected 350-test rerun was not reported.
+
+Two observations remain: Yandex initially classified confirmation mail as spam;
+later checked messages reached the inbox after marking it as not spam. The owner
+reports that Yandex advised recipients to mark legitimate mail as not spam to help
+build sender reputation over time. This delivery observation is not treated as a
+code defect or release blocker; future inbox placement is not guaranteed. Repeated
+email confirmation showed the ordinary confirmation form, without a distinct
+already-confirmed message, while preserving confirmation/subscription state.
+Neither sustained deliverability nor all browser/email-client combinations were
+established. These are owner-reported 0.2.0 results; they support the unchanged
+runtime of 1.0.0 and are not a live-site test of an installed 1.0.0 package.
+
 ## Acceptance boundaries
 
 [Performance](Performance.md) describes query regressions, the synthetic load
@@ -79,10 +112,14 @@ separate from hosted CI status; inspect the workflow run for the revision in use
 See [GitHub Actions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml).
 Installed Safari, Chrome, Yandex and Firefox were exercised with/without JS, including
 CSV, guest mail and inline interactions. Selected Safari VoiceOver scenarios and a
-physical phone were checked. Previous major browser versions remain unverified;
-this is not exhaustive device coverage or accessibility certification. Host-specific
+physical phone were checked. Historical checks also covered Chrome 142 on macOS
+and Windows ARM64 and Firefox 140 ESR on Windows ARM64, with and without JavaScript.
+They exercised responsive layouts, pagination, replies, editing, validation and
+network-error draft retention. Windows Chrome x64 ran under emulation; native
+Windows x64 was not checked. Older Firefox on macOS could not complete startup
+for automation. This is not exhaustive device coverage or accessibility certification. Host-specific
 customizations and deployment policies need their own acceptance checks.
 
 ---
 
-[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 0.2.0 →](Release-0.2.0.md)
+[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 1.0.0 →](Release-1.0.0.md)

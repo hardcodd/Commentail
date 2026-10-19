@@ -6,7 +6,7 @@
 
 Moderated discussions, verified guests and inline replies — styled by your site.
 
-**Current release: [0.2.0 Beta](https://github.com/hardcodd/Commentail/releases/tag/v0.2.0)** · [PyPI](https://pypi.org/project/commentail/0.2.0/)
+**Current release: [1.0.0](https://github.com/hardcodd/Commentail/releases/tag/v1.0.0)** · [PyPI](https://pypi.org/project/commentail/1.0.0/)
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -27,10 +27,10 @@ The widget inherits your site's typography and colors. CSS custom properties,
 replaceable templates and Python callbacks let you adapt it without a frontend
 framework or an external comments platform.
 
-> **0.2.0 Beta** adds recent comments, six languages,
-> HTML emails and indexed database reads.
+> **1.0.0** starts the stable API and compatibility policy with the
+> feature set of 0.2.0 Beta, including recent comments, six languages and HTML emails.
 > [Version-to-version changelog](https://github.com/hardcodd/Commentail/blob/main/CHANGELOG.md) · [Roadmap](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Roadmap.md).
-> [Changes and upgrade notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.2.0.md).
+> [Changes and upgrade notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.0.0.md).
 
 ## Why Commentail?
 
@@ -50,6 +50,8 @@ Published comments include **Schema.org Comment microdata and JSON-LD**, using
 the visible text and author name. Choose either format or disable output in Python.
 [Structured-data guide →](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Structured-data.md)
 
+From **1.0.0**, documented integration contracts follow the [stable API and compatibility policy](docs/wiki/Stability.md).
+
 ## Compatibility
 
 | Component | Version / requirement |
@@ -61,7 +63,7 @@ the visible text and author name. Choose either format or disable output in Pyth
 | Frontend | Django templates, optional progressive JavaScript |
 | License | [MIT](https://github.com/hardcodd/Commentail/blob/main/LICENSE) |
 
-This table describes the 0.2.0 Beta release. CI defines all five framework
+This table describes the 1.0.0 release. CI defines all five framework
 pairs on Python 3.12, 3.13 and 3.14 with both databases (30 combinations).
 Package bounds are `Wagtail>=7.4.3,<8.1` and `Django>=5.2,<6.2`; only the pairs
 listed above are supported. Wagtail 7.4 with Django 6.1 is outside this matrix.
@@ -88,15 +90,15 @@ Documentation remains in English and Russian.
 In your site's virtual environment, install the release:
 
 ```sh
-python -m pip install commentail==0.2.0
+python -m pip install commentail==1.0.0
 ```
 
 For the optional PostgreSQL driver, use
-`python -m pip install 'commentail[postgres]==0.2.0'`.
+`python -m pip install 'commentail[postgres]==1.0.0'`.
 You can also extract the source distribution and run `python -m pip install .` in its root.
-When upgrading from 0.1.1, review the
-[upgrade notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.2.0.md),
-including migration `0014_reading_indexes` and email overrides. For older
+When upgrading, review the
+[upgrade notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.0.0.md),
+including the 0.2.0 index migration and email overrides when coming from 0.1.1. For older
 installations, also review the [0.1.1 notes](docs/releases/0.1.1.md). The 0.1.0 package retains
 its original Wagtail 7.4 and Django 5.2 limits.
 
@@ -196,7 +198,7 @@ cover the same topics. Start with the task you need:
 
 ## Release scope and verification
 
-[0.2.0 Beta release notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.2.0.md) describe the changes and upgrade steps;
+[1.0.0 release notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.0.0.md) describe the changes and upgrade steps;
 [0.1.0 release notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.1.0.md) preserve the initial release contract.
 The source distribution includes the runnable Wagtail example, tests and
 guides; the wheel includes the runtime, translations, templates and static assets.
@@ -204,11 +206,12 @@ guides; the wheel includes the runtime, translations, templates and static asset
 The CI workflow defines 30 framework/Python/database combinations, JavaScript, lint, migration drift,
 translations and source/wheel installation. Browser checks covered installed Safari,
 Chrome, Yandex Browser and Firefox with and without JS, plus selected VoiceOver
-scenarios and a phone. Previous major browser versions remain unverified; this is
-not an exhaustive accessibility or device certification.
+scenarios and a phone. Historical checks also covered Chrome 142 on macOS and Windows ARM64 and Firefox
+140 ESR on Windows ARM64; Chrome x64 used Windows emulation. This is not an
+exhaustive accessibility or device certification.
 
 There is no separate REST API, rich-text editor, uploads, likes, reports or live
-updates in 0.2.0. SMTP retries can duplicate mail after an uncertain delivery result.
+updates in 1.0.0. SMTP retries can duplicate mail after an uncertain delivery result.
 Host-specific themes, access rules and email delivery need their own acceptance checks.
 
 ## Support Commentail

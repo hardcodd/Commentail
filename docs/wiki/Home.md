@@ -3,7 +3,7 @@
 **Self-hosted comments for Wagtail CMS.** Add moderated discussions to Wagtail
 Pages and registered Django models using your site's accounts, templates and styles.
 
-> **0.2.0 Beta:** Wagtail 7.4.3+ / Django 5.2 or 6.0; Wagtail 8.0 / Django 5.2, 6.0 or 6.1; Python 3.12–3.14; file SQLite and PostgreSQL 16.
+> **1.0.0 Stable:** Wagtail 7.4.3+ / Django 5.2 or 6.0; Wagtail 8.0 / Django 5.2, 6.0 or 6.1; Python 3.12–3.14; file SQLite and PostgreSQL 16.
 > Published 0.1.0 retains Wagtail >=7.4.3,<7.5 and Django 5.2 support.
 
 ## Find your guide
@@ -28,7 +28,8 @@ Pages and registered Django models using your site's accounts, templates and sty
 | Understand query costs and run load checks | [Performance](Performance.md) |
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md) |
 | Run the example and tests | [Example and testing](Example-and-testing.md) |
-| Read the current release scope | [Release 0.2.0](Release-0.2.0.md) |
+| Read the current release scope | [Release 1.0.0](Release-1.0.0.md) |
+| Understand the stable contract | [Stability](Stability.md) |
 | Compare versions | [Changelog](Changelog.md) |
 | See planned work | [Roadmap](Roadmap.md) |
 | Read the initial release scope | [Release 0.1.0](Release-0.1.0.md) |

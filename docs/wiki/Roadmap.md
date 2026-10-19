@@ -3,6 +3,12 @@
 This page records planned directions. A target release or delivery date is only
 listed once agreed. Planned work is not part of the published package.
 
+## Released in 1.0.0
+
+Version 1.0.0 establishes the [stable API and compatibility policy](Stability.md)
+with the 0.2.0 feature set. It adds no runtime changes, dependencies or migrations.
+See [1.0.0 release and upgrade notes](Release-1.0.0.md).
+
 ## Released in 0.2.0 Beta
 
 Version 0.2.0 contains recent comments with filters and host-owned markup,

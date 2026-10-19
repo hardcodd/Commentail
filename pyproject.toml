@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "commentail"
-version = "0.2.0"
+version = "1.0.0"
 description = "Self-hosted Wagtail comments with moderation, verified guests and threaded replies"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -12,7 +12,7 @@ license = "MIT"
 dependencies = ["Django>=5.2,<6.2", "Wagtail>=7.4.3,<8.1", "regex>=2026.9.29"]
 license-files = ["LICENSE"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Framework :: Django :: 5.2",
     "Framework :: Django :: 6.0",
     "Framework :: Django :: 6.1",

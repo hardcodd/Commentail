@@ -6,7 +6,7 @@
 
 Модерация обсуждений, подтверждённые гости и ответы рядом с комментарием — в стиле вашего сайта.
 
-**Текущая версия: [0.2.0 Beta](https://github.com/hardcodd/Commentail/releases/tag/v0.2.0)** · [PyPI](https://pypi.org/project/commentail/0.2.0/)
+**Текущая версия: [1.0.0](https://github.com/hardcodd/Commentail/releases/tag/v1.0.0)** · [PyPI](https://pypi.org/project/commentail/1.0.0/)
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -27,10 +27,10 @@ Commentail — библиотека комментариев Django для **Wag
 Python callbacks позволяют адаптировать его без фронтенд-фреймворка или
 внешней платформы комментариев.
 
-> **0.2.0 Beta:** последние комментарии,
-> шесть языков, HTML-письма и оптимизация запросов с новыми индексами.
+> **1.0.0:** стабильный контракт API и правила совместимости с составом
+> 0.2.0 Beta: последние комментарии, шесть языков и HTML-письма.
 > [Изменения между версиями](https://github.com/hardcodd/Commentail/blob/main/CHANGELOG.md) · [Планы развития](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Roadmap.md).
-> [Изменения и обновление](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.2.0.md).
+> [Изменения и обновление](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.0.0.md).
 
 ## Зачем Commentail?
 
@@ -52,6 +52,8 @@ Python callbacks позволяют адаптировать его без фр�
 отключить вывод.
 [Руководство по структурированным данным →](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Structured-data.md)
 
+Начиная с **1.0.0**, документированные контракты интеграции подчиняются [правилам стабильного API и совместимости](docs/wiki/Stability.md).
+
 ## Совместимость
 
 | Компонент | Версия / требование |
@@ -63,7 +65,7 @@ Python callbacks позволяют адаптировать его без фр�
 | Фронтенд | Шаблоны Django, необязательный JavaScript для постепенного улучшения интерфейса |
 | Лицензия | [MIT](https://github.com/hardcodd/Commentail/blob/main/LICENSE) |
 
-Таблица описывает выпуск 0.2.0 Beta. CI определяет все пять пар фреймворков
+Таблица описывает выпуск 1.0.0. CI определяет все пять пар фреймворков
 на Python 3.12, 3.13 и 3.14 с обеими базами данных — всего 30 сочетаний.
 Границы зависимостей пакета: `Wagtail>=7.4.3,<8.1` и `Django>=5.2,<6.2`;
 поддерживаются только перечисленные пары. Wagtail 7.4 с Django 6.1 не входит
@@ -91,15 +93,15 @@ Python callbacks позволяют адаптировать его без фр�
 В виртуальном окружении сайта установите выпуск:
 
 ```sh
-python -m pip install commentail==0.2.0
+python -m pip install commentail==1.0.0
 ```
 
 Для необязательного драйвера PostgreSQL используйте
-`python -m pip install 'commentail[postgres]==0.2.0'`.
+`python -m pip install 'commentail[postgres]==1.0.0'`.
 Также можно распаковать исходный архив и выполнить `python -m pip install .` в его корне.
-При обновлении с 0.1.1 прочитайте
-[инструкцию по обновлению](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.2.0.md),
-включая миграцию `0014_reading_indexes` и переопределения писем. Для более старых
+При обновлении прочитайте
+[инструкцию по обновлению](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.0.0.md),
+включая миграцию индексов 0.2.0 и переопределения писем при переходе с 0.1.1. Для более старых
 установок также прочитайте [примечания к 0.1.1](docs/releases/0.1.1.md). Пакет 0.1.0 сохраняет
 исходные ограничения Wagtail 7.4 и Django 5.2.
 
@@ -204,7 +206,7 @@ Django через `OBJECT_ADAPTERS`. Технические настройки �
 
 ## Границы выпуска и проверок
 
-[Примечания к выпуску 0.2.0 Beta](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.2.0.md)
+[Примечания к выпуску 1.0.0](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.0.0.md)
 описывают изменения и обновление;
 [примечания к 0.1.0](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.1.0.md)
 сохраняют исходный контракт выпуска. Архив исходников включает запускаемый
@@ -215,10 +217,11 @@ CI определяет 30 сочетаний фреймворков, Python и 
 линтеров, изменений моделей без миграций, переводов и установки из исходников/wheel.
 Браузерные проверки охватили установленные Safari, Chrome, Яндекс Браузер и
 Firefox с JavaScript и без него, отдельные сценарии VoiceOver и телефон.
-Предыдущие основные версии браузеров не проверены; это не исчерпывающая
+Дополнительно проверены Chrome 142 на macOS и Windows ARM64 и Firefox 140 ESR
+на Windows ARM64; Chrome x64 работал через эмуляцию Windows. Это не исчерпывающая
 сертификация доступности или устройств.
 
-В 0.2.0 нет отдельного REST API, редактора форматированного текста, загрузки
+В 1.0.0 нет отдельного REST API, редактора форматированного текста, загрузки
 файлов, лайков, жалоб и обновлений в реальном времени. Повторные попытки SMTP
 могут дублировать письма после неопределённого результата доставки. Темы сайта,
 правила доступа и доставка почты требуют собственной приёмки.
