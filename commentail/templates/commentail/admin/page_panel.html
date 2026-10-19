@@ -1,1 +1,28 @@
-{% load i18n %}<p>{% trans "These settings apply immediately to this site. Empty values inherit the site setting." %}</p><input type="hidden" name="commentail-enabled" value="1">{{ commentail_form.as_p }}
+{% load i18n %}
+<div class="commentail-page-settings">
+  <p class="commentail-page-settings-intro">{% trans "Settings take effect when you save the page. Use the site setting to inherit its current value." %}</p>
+  <input type="hidden" name="commentail-enabled" value="1">
+  {{ commentail_form.non_field_errors }}
+  <fieldset class="commentail-settings-group">
+    <legend>{% trans "Discussion and access" %}</legend>
+    <div class="commentail-settings-fields">
+      {% include "wagtailadmin/shared/field.html" with field=commentail_form.mode only %}
+      {% include "wagtailadmin/shared/field.html" with field=commentail_form.access only %}
+      {% include "wagtailadmin/shared/field.html" with field=commentail_form.moderation only %}
+    </div>
+  </fieldset>
+  <fieldset class="commentail-settings-group">
+    <legend>{% trans "Comment content" %}</legend>
+    <div class="commentail-settings-fields">
+      {% include "wagtailadmin/shared/field.html" with field=commentail_form.max_length only %}
+      {% include "wagtailadmin/shared/field.html" with field=commentail_form.clickable_links only %}
+    </div>
+  </fieldset>
+  <fieldset class="commentail-settings-group">
+    <legend>{% trans "Notifications" %}</legend>
+    <div class="commentail-settings-fields">
+      {% include "wagtailadmin/shared/field.html" with field=commentail_form.notify_publication only %}
+      {% include "wagtailadmin/shared/field.html" with field=commentail_form.notify_rejection only %}
+    </div>
+  </fieldset>
+</div>

@@ -830,3 +830,15 @@ msgstr "Имя: до 40 символов."
 
 msgid "Use at most 40 characters for your name."
 msgstr "В имени должно быть не более 40 символов."
+
+msgid "Settings take effect when you save the page. Use the site setting to inherit its current value."
+msgstr "Настройки применяются при сохранении страницы. Выберите «Использовать настройку сайта», чтобы наследовать её текущее значение."
+
+msgid "Discussion and access"
+msgstr "Обсуждение и доступ"
+
+msgid "Comment content"
+msgstr "Содержимое комментариев"
+
+msgid "Notifications"
+msgstr "Уведомления"

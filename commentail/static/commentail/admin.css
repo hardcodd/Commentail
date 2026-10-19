@@ -60,3 +60,20 @@
 }
 
 .commentail-object-label { overflow-wrap: anywhere; }
+
+/* Page-editor overrides use native fields without changing other admin forms. */
+.commentail-page-settings { max-width: 56rem; padding-block: .5rem 2rem; }
+.commentail-page-settings-intro { max-width: 48rem; margin: 0 0 2rem; color: var(--w-color-text-context); line-height: 1.6; }
+.commentail-page-settings .commentail-settings-group { min-width: 0; margin: 0 0 1.75rem; padding: 1.25rem 1.5rem 1.5rem; border: 1px solid var(--w-color-border-furniture); border-radius: .5rem; }
+.commentail-settings-group legend { width: auto; padding-inline: .5rem; font-size: 1rem; font-weight: 700; color: var(--w-color-text-label); }
+.commentail-settings-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1.5rem; align-items: end; }
+.commentail-page-settings .w-field__wrapper { margin: 0; min-width: 0; }
+.commentail-page-settings .w-field__label { display: block; margin-bottom: .5rem; }
+.commentail-page-settings .w-field__input { display: block; }
+.commentail-page-settings .w-field { width: 100%; }
+.commentail-page-settings select,
+.commentail-page-settings input[type=number] { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; font-size: 1rem; }
+@media (max-width: 700px) {
+  .commentail-settings-fields { grid-template-columns: minmax(0, 1fr); }
+  .commentail-page-settings .commentail-settings-group { padding: 1rem; }
+}
