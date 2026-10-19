@@ -232,6 +232,13 @@ def _present(
 ) -> dict[str, object]:
     name = author_name(comment, request)
     initials, gradient = default_avatar(name)
+    options = options if options is not None else editorial_settings(comment.discussion)
+    user = comment.user
+    staff = bool(
+        options.highlight_staff and not comment.account_deleted and user
+        and user.is_active
+        and (getattr(user, "is_staff", False) or getattr(user, "is_superuser", False))
+    )
     if comment.status == "deleted":
         label = _("Comment deleted")
     elif comment.status == "hidden":
@@ -246,6 +253,8 @@ def _present(
     return {
         "id": comment.pk,
         "display_name": name,
+        "highlight_staff": staff,
+        "show_crown": staff and bool(getattr(user, "is_superuser", False)),
         "initials": initials,
         "gradient": gradient,
         "avatar_url": avatar_url(comment, request, name),

@@ -20,6 +20,7 @@ Translated values may be strings or Django lazy strings; exact wording is not AP
 `options` exposes `mode` (`open/read_only/hidden`), `moderation`
 (`all/guests/none/rules`), `access` (`all/registered/guests/none`), `max_length`
 (integer), `clickable_links`, `notify_publication` and `notify_rejection` (booleans).
+`highlight_staff` (boolean, from 1.1.0) controls Site-wide staff decorations.
 These fields are public; the internal Python class is not.
 
 Only when `hidden=False`, the following fields are available:
@@ -51,6 +52,14 @@ Public/private cards expose `id` (integer), `display_name`, `initials`, `gradien
 permitted links/line breaks), `published_at` and `edited_at` (aware datetime or None),
 `status`, `status_label`, `reason`, `resend_url`, `edit_url`, `permalink`, `reply_url`,
 `reply_to_id` (integer or None), `reply_to_name` (string) and `schema` (metadata or None).
+From 1.1.0, `highlight_staff` and `show_crown` are additional boolean card fields.
+They already account for the Site switch and the current active author's flags.
+Built-in templates share `commentail/author.html` for the name badge and
+`commentail/avatar.html` for the avatar and crown, including private pending cards.
+The crown sits outside the decorative, clipped avatar with an accessible label;
+author text and schema metadata are unchanged. Custom author markup must render these
+fields to adopt highlighting; existing overrides remain valid.
+
 Statuses are `awaiting_email/pending/published/rejected/hidden/deleted`;
 status_label is translated and must not be parsed. reason is populated only for
 rejection. Optional action URLs may be empty. A reply URL alone does not authorize replying.

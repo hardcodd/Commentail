@@ -5,6 +5,12 @@ describe changes that an existing installation needs to review.
 
 ## Unreleased
 
+- Highlight staff author names with a colored badge and add a golden crown on
+  super administrators’ avatars, with a distinct golden name badge. Enabled by
+  default; a per-Site switch disables both.
+  Apply migration `0015_sitecommentsettings_highlight_staff` and refresh static
+  assets. Existing template overrides need the new author decorations to show them.
+
 - Require confirmation before single or bulk text erasure, showing the comment
   count and irreversible-erasure warning, with cancellation that leaves data intact.
 

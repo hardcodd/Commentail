@@ -12,6 +12,7 @@
 | Publication emails | Off | Yes |
 | Rejection emails | Off | Yes |
 | Send emails | On | No, Site only |
+| Highlight staff names | On | No, Site only |
 
 The Page editor groups Comments controls by discussion behavior, content and
 notifications. Page settings still save with the standard Page action and apply
@@ -26,6 +27,22 @@ immediately, independently of publication. Each Page/object field can
 
 Moderation remains available in closed modes. Hiding defers eligible mail and does
 not erase data. Target access still governs visibility; each Site has its own discussion.
+
+## Staff name highlighting
+
+From 1.1.0, staff names have a colored background, without a role caption.
+Super administrators also have a small golden crown on the upper-right edge of
+their avatar and a golden name badge with dark amber text.
+**Highlight staff names** in
+Comments → Site settings disables both decorations for that Site. It is enabled
+by default, including existing Sites after migration `0015`.
+
+Highlighting uses the author's current active account: `is_staff` or
+`is_superuser`; only `is_superuser` adds the crown. It applies to root comments,
+replies and the visitor's own pending cards. Guests and deleted/inactive accounts
+are not highlighted. Revoking the flags removes decorations on the next render;
+this is a visual indicator and grants no commenting or moderation permissions.
+Names and structured author metadata retain their original text.
 
 ## Languages
 

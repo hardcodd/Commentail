@@ -38,6 +38,35 @@
 .commentail-avatar { flex: 0 0 var(--commentail-avatar-size, 2.5rem); width: var(--commentail-avatar-size, 2.5rem); height: var(--commentail-avatar-size, 2.5rem); display: grid; place-items: center; border-radius: 50%; background: linear-gradient(130deg, hsl(var(--commentail-avatar-hue) 55% 42%), hsl(calc(var(--commentail-avatar-hue) + 50) 60% 32%)); color: white; font-size: .8em; font-weight: 650; }
 .commentail-content { min-width: 0; flex: 1; }
 .commentail-content header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem .75rem; }
+.commentail .commentail-staff-name {
+  display: inline-block; max-width: 100%; min-width: 0; padding: .1em .5em;
+  border-radius: .4em;
+  color: var(--commentail-color-staff-text, #244fa6);
+  background: var(--commentail-color-staff-surface, #e8efff);
+}
+.commentail-avatar-wrap {
+  position: relative; display: inline-block; vertical-align: middle;
+  flex: 0 0 var(--commentail-avatar-size, 2.5rem);
+  width: var(--commentail-avatar-size, 2.5rem); height: var(--commentail-avatar-size, 2.5rem);
+}
+.commentail-crown {
+  position: absolute; z-index: 1; top: -18%; right: -10%; width: 52%; height: 52%;
+  transform: rotate(15deg); fill: #e7b94c;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 25%));
+}
+.commentail-crown-band { fill: none; stroke: #b88426; stroke-width: 1.2; }
+.commentail-pending-author { display: flex; align-items: center; gap: .75rem; }
+.commentail-pending-author > div { min-width: 0; }
+@supports (color: color-mix(in srgb, currentColor, transparent)) {
+  .commentail .commentail-staff-name {
+    color: var(--commentail-color-staff-text, var(--commentail-color-accent, inherit));
+    background: var(--commentail-color-staff-surface, color-mix(in srgb, currentColor 12%, transparent));
+  }
+}
+.commentail .commentail-staff-name.commentail-superuser-name {
+  color: var(--commentail-color-superuser-text, #795400);
+  background: var(--commentail-color-superuser-surface, #ffedb5);
+}
 .commentail .commentail-date, .commentail-muted { color: var(--commentail-color-muted, inherit); font-size: .85em; }
 .commentail-text { white-space: pre-wrap; margin: .5rem 0; }
 .commentail-content footer { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .65rem; font-size: .85em; }

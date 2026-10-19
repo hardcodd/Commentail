@@ -30,9 +30,18 @@ package stylesheet. For example, map the site's own accent token explicitly:
 | `color-button-surface`, `color-button-hover` | 8% / 15% button-text tint |
 | `color-control-surface`, `color-control-hover` | Quiet actions: transparent / 8% text-color tint |
 | `color-menu-surface`, `color-menu-text` | Action popup: browser canvas with a subtle tint / canvas text |
+| `color-staff-text`, `color-staff-surface` | Staff name: accent/inherited text and a 12% tint; blue foreground/pale blue background without `color-mix()` |
+| `color-superuser-text`, `color-superuser-surface` | Super administrator name: dark amber (`#795400`) / pale gold (`#ffedb5`) |
 | `border-radius`, `avatar-size` | `.75rem` / `2.5rem` |
 | `spacing`, `max-width` | `1rem` form spacing unit / `48rem` widget limit |
 | `input-min-height`, `input-max-height` | `6rem` / `24rem` |
+
+The `.commentail-staff-name` class styles the name badge, with
+`.commentail-superuser-name` adding the distinct gold palette for super
+administrators. The `.commentail-crown` class positions the golden SVG on the upper-right edge of the avatar.
+The `.commentail-avatar-wrap` wrapper keeps the crown outside the clipped
+`.commentail-avatar`, so uploaded photos stay circular. The name badge and crown
+are controlled by the Site setting described in [Configuration](Configuration.md#staff-name-highlighting).
 
 The host must provide readable foreground/background contrast. A busy photograph
 or conflicting global `!important` rules can require explicit overrides; the

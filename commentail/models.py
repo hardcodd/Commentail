@@ -32,6 +32,7 @@ class Access(models.TextChoices):
 
 class SiteCommentSettings(BaseSiteSetting):
     email_enabled = models.BooleanField(default=True)
+    highlight_staff = models.BooleanField(default=True)
     mode = models.CharField(max_length=16, choices=Mode.choices, default=Mode.OPEN)
     moderation = models.CharField(
         max_length=16, choices=Policy.choices, default=Policy.ALL

@@ -931,3 +931,12 @@ msgstr "El texto y las revisiones de los comentarios seleccionados se borrarán 
 
 msgid "This cannot be undone. Replies will be preserved."
 msgstr "Esta acción no se puede deshacer. Las respuestas se conservarán."
+
+msgid "Highlight staff names"
+msgstr "Resaltar los nombres del personal"
+
+msgid "Adds a colored background to staff names and a golden crown for super administrators."
+msgstr "Añade un fondo de color a los nombres del personal y una corona dorada para los superadministradores."
+
+msgid "Super administrator"
+msgstr "Superadministrador"

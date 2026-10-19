@@ -20,6 +20,7 @@ class EditorialSettings:
     clickable_links: bool
     notify_publication: bool
     notify_rejection: bool
+    highlight_staff: bool = True
 
 
 def editorial_settings(discussion: Discussion) -> EditorialSettings:
@@ -41,6 +42,7 @@ def editorial_settings(discussion: Discussion) -> EditorialSettings:
         notify_rejection=defaults.notify_rejection
         if discussion.notify_rejection is None
         else discussion.notify_rejection,
+        highlight_staff=defaults.highlight_staff,
     )
 
 

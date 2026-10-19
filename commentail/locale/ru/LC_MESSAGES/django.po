@@ -931,3 +931,12 @@ msgstr "Текст выбранных комментариев и их прав�
 
 msgid "This cannot be undone. Replies will be preserved."
 msgstr "Это действие необратимо. Ответы сохранятся."
+
+msgid "Highlight staff names"
+msgstr "Выделять имена сотрудников"
+
+msgid "Adds a colored background to staff names and a golden crown for super administrators."
+msgstr "Выделяет имена сотрудников цветной плашкой и добавляет золотую корону суперадминистраторам."
+
+msgid "Super administrator"
+msgstr "Суперадминистратор"
