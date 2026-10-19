@@ -69,6 +69,10 @@ because of upstream security fixes; the test pin and installed environments use
 
 ## Acceptance boundaries
 
+[Performance](Performance.md) describes query regressions, the synthetic load
+benchmark and its migration/traffic checks. Functional matrix success alone does
+not establish the capacity of a deployed site.
+
 The suite covers server contracts and JavaScript behavior. The workflow covers
 the 30 combinations above, quality and distributions. Local matrix results are
 separate from hosted CI status; inspect the workflow run for the revision in use.

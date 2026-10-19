@@ -131,6 +131,23 @@ Page получает вкладку Comments. Настройте парамет
 или переопределите их на отдельных Pages. Начальная политика модерации —
 **Review all**: проверять все комментарии.
 
+### Последние комментарии в других местах сайта
+
+В текущих исходниках добавлен тег последних комментариев (в опубликованной 0.1.1 его ещё нет):
+
+```django
+{% load commentail_tags %}
+{% commentail_recent limit=5 as recent_comments %}
+{% for comment in recent_comments %}
+  <a href="{{ comment.url }}">{{ comment.author_name }}: {{ comment.text|truncatechars:120 }}</a>
+{% endfor %}
+```
+
+Добавьте `page=page` для одной Page и `include_replies=False`, чтобы исключить
+ответы. Список учитывает доступ текущего посетителя и Site, требует `request`
+в контексте и не должен попадать в общий кеш. CSS и JavaScript виджета не нужны.
+[Поля, фильтры и кеширование →](docs/wiki/Recent-comments.md)
+
 ### 4. Почта и очистка
 
 В текущих исходниках также добавлено минимальное HTML-оформление писем:
@@ -181,7 +198,7 @@ Django через `OBJECT_ADAPTERS`. Технические настройки �
 | Поведение для читателей | [Гости](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Guest-comments.md) · [Ответы и редактирование](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Replies-and-editing.md) |
 | Адаптация | [CSS и темы](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Styling.md) · [Шаблоны и письма](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Templates.md) · [Python callbacks](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Callbacks.md) · [Адаптеры моделей Django](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Object-adapters.md) |
 | Эксплуатация | [SMTP и обработчик](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Email-and-worker.md) · [Развёртывание](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Deployment.md) · [Безопасность и приватность](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Security-and-privacy.md) |
-| Диагностика | [Решение проблем / FAQ](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Troubleshooting.md) · [Пример и тестирование](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Example-and-testing.md) |
+| Диагностика | [Решение проблем / FAQ](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Troubleshooting.md) · [Пример и тестирование](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Example-and-testing.md) · [Производительность и нагрузочные проверки](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Performance.md) |
 
 ## Границы выпуска и проверок
 

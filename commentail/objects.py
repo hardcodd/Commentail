@@ -170,8 +170,12 @@ def get_object_discussion(request: HttpRequest, obj: models.Model) -> Discussion
 
 def target_url(discussion: Discussion) -> str:
     """Host target URL for mail; reject executable and network-relative URLs."""
+    return _target_url(discussion, target_for(discussion))
+
+
+def _target_url(discussion: Discussion, obj: models.Model) -> str:
+    """Validate a URL from an already resolved target within one rendering call."""
     try:
-        obj = target_for(discussion)
         url = (
             (obj.get_url(current_site=discussion.site) or "/")
             if isinstance(obj, Page)
@@ -225,6 +229,16 @@ def comment_url(
         destination = target_url(discussion)
     except ObjectAccessError:
         destination = discussion_url(discussion)
+    return _comment_url(destination, identifier, navigation=navigation)
+
+
+def _comment_url(
+    destination: str,
+    identifier: int | None = None,
+    *,
+    navigation: Mapping[str, str] | None = None,
+) -> str:
+    """Compose reading state from a validated host URL or service fallback."""
     parts = urlsplit(destination)
     values: dict[str, str | list[str]] = dict(parse_qsl(parts.query, keep_blank_values=True))
     for key in ("thread", "window", "replies", "reply_to", "target", "edit_comment"):

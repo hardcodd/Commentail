@@ -1,5 +1,8 @@
 # Template and email customization
 
+For lists outside the discussion widget, use
+[`commentail_recent` with your own markup](Recent-comments.md).
+
 ## Override paths
 
 Put matching relative paths in your project templates directory ahead of app

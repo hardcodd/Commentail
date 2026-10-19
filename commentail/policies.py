@@ -1,7 +1,7 @@
 """Whole-word moderation matching; display text is never normalized."""
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .models import (
     Discussion,
@@ -58,23 +58,52 @@ def words(text: str) -> tuple[str, ...]:
     )
 
 
+@dataclass(slots=True)
+class _RuleNode:
+    children: dict[str, "_RuleNode"] = field(default_factory=dict)
+    action: str = ""
+
+
+def _matching_rule(tokens: tuple[str, ...]) -> str:
+    """Match whole-word phrases without comparing every rule at every position.
+
+    A call-local trie shares rule prefixes and avoids caching stale moderation
+    decisions between submissions. Rejection wins over review, including duplicate
+    phrases. Only phrases beginning with a word in this text need trie entries.
+    """
+    root = _RuleNode()
+    initial_words = set(tokens)
+    for text, action in ModerationRule.objects.filter(enabled=True).values_list(
+        "phrase", "action",
+    ).iterator(chunk_size=1000):
+        phrase = words(text)
+        if not phrase or phrase[0] not in initial_words:
+            continue
+        node = root
+        for word in phrase:
+            if word not in node.children:
+                node.children[word] = _RuleNode()
+            node = node.children[word]
+        if node.action != ModerationRule.Action.REJECT:
+            node.action = action
+    review = False
+    for start in range(len(tokens)):
+        node = root
+        for position in range(start, len(tokens)):
+            node = node.children.get(tokens[position])
+            if node is None:
+                break
+            if node.action == ModerationRule.Action.REJECT:
+                return "rejected"
+            review |= node.action == ModerationRule.Action.REVIEW
+    return "pending" if review else ""
+
+
 def policy_result(text: str, policy: str, *, guest: bool, suspicious: bool) -> str:
     if policy not in Policy.values:
         raise ValueError("Unknown moderation policy")
-    if policy == Policy.RULES:
-        tokens = words(text)
-        review = False
-        for rule in ModerationRule.objects.filter(enabled=True):
-            phrase = words(rule.phrase)
-            if phrase and any(
-                tokens[i : i + len(phrase)] == phrase
-                for i in range(len(tokens) - len(phrase) + 1)
-            ):
-                if rule.action == ModerationRule.Action.REJECT:
-                    return "rejected"
-                review = True
-        if review:
-            return "pending"
+    if policy == Policy.RULES and (result := _matching_rule(words(text))):
+        return result
     if suspicious or policy == Policy.ALL or (policy == Policy.GUESTS and guest):
         return "pending"
     return "published"

@@ -126,6 +126,23 @@ The template controls where Page comments are available; the corresponding Page
 editor receives a Comments tab. Configure site defaults, then inherit or override
 on individual Pages. **Review all** is the initial moderation policy.
 
+### Recent comments elsewhere
+
+Current source adds a recent-comments tag (not included in published 0.1.1):
+
+```django
+{% load commentail_tags %}
+{% commentail_recent limit=5 as recent_comments %}
+{% for comment in recent_comments %}
+  <a href="{{ comment.url }}">{{ comment.author_name }}: {{ comment.text|truncatechars:120 }}</a>
+{% endfor %}
+```
+
+Use `page=page` for one Page and `include_replies=False` for roots only. The list
+respects the current visitor's access and Site, requires a request context and
+must not be shared-cached. It needs no widget CSS or JavaScript.
+[Fields, filters and caching →](docs/wiki/Recent-comments.md)
+
 ### 4. Enable email and cleanup
 
 Current source also includes minimal HTML emails with the site name, clear action
@@ -172,7 +189,7 @@ cover the same topics. Start with the task you need:
 | Reader behavior | [Guests](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Guest-comments.md) · [Replies and editing](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Replies-and-editing.md) |
 | Customize | [CSS and themes](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Styling.md) · [Templates and email](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Templates.md) · [Python callbacks](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Callbacks.md) · [Django model adapters](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Object-adapters.md) |
 | Operate | [SMTP and worker](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Email-and-worker.md) · [Deployment](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Deployment.md) · [Security and privacy](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Security-and-privacy.md) |
-| Diagnose | [Troubleshooting / FAQ](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Troubleshooting.md) · [Example and testing](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Example-and-testing.md) |
+| Diagnose | [Troubleshooting / FAQ](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Troubleshooting.md) · [Example and testing](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Example-and-testing.md) · [Performance and load checks](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Performance.md) |
 
 ## Release scope and verification
 

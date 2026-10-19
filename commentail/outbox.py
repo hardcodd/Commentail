@@ -389,6 +389,8 @@ def claim_job(identifier: int) -> MailJob | None:
     ):
         return None
     job = MailJob.objects.select_related(
+        "comment__user",
+        "revision",
         "comment__discussion__site",
         "comment__discussion__page",
         "recipient__discussion__page",

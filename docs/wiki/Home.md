@@ -19,11 +19,13 @@ Pages and registered Django models using your site's accounts, templates and sty
 | Deliver email and schedule cleanup | [Email and worker](Email-and-worker.md) |
 | Match the host theme | [Styling](Styling.md) |
 | Replace markup and email layouts | [Templates](Templates.md) |
+| Show recent comments with custom markup | [Recent comments](Recent-comments.md) |
 | Describe published comments to search engines | [Structured data](Structured-data.md) |
 | Supply avatars, names or CAPTCHA | [Callbacks](Callbacks.md) |
 | Add comments to other Django models | [Object adapters](Object-adapters.md) |
 | Understand access and stored data | [Security and privacy](Security-and-privacy.md) |
 | Prepare a deployment | [Deployment](Deployment.md) |
+| Understand query costs and run load checks | [Performance](Performance.md) |
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md) |
 | Run the example and tests | [Example and testing](Example-and-testing.md) |
 | Read the current release scope | [Release 0.1.1](Release-0.1.1.md) |

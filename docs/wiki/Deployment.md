@@ -9,6 +9,8 @@
 - Schedule process_commentail once per minute against the site's database.
 - Assign moderator rights per Site; begin with Review all.
 - Keep personalized widget/action responses out of shared caches.
+- Check [database/query costs and load-test guidance](Performance.md) against your
+  expected traffic; account for index-building time when upgrading large tables.
 
 ## Host acceptance
 

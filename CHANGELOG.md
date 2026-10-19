@@ -7,6 +7,11 @@ describe changes that an existing installation needs to review.
 
 ### Added
 
+- `commentail_recent` template tag for latest published comments with a limit,
+  exact Page filter, optional replies and host-owned markup. Selection enforces
+  visitor access, Site isolation and hidden-discussion settings; results contain
+  plain presentation fields and comment permalinks without private model data.
+
 - Minimal HTML emails for all five notification types, with host Site names,
   explanatory copy, labelled action links and equivalent plain text in all six
   supported languages. Revision decisions have distinct subjects and explanations.
@@ -18,6 +23,14 @@ describe changes that an existing installation needs to review.
   regression checks for recipient-language mail delivery and English fallback.
 
 ### Fixed
+
+- Bounded and indexed recent-comment reads, batched Page access checks and reused
+  target URLs. Discussion rendering groups reply counts and avoids per-comment
+  target/settings/revision queries; moderation totals use a shared aggregate.
+- Whole-word rule matching avoids a rule-by-text-position scan. Cleanup locks
+  only expired unconfirmed candidates; worker claims preload authors/revisions.
+- The moderation Page filter uses Wagtail's searchable chooser instead of loading
+  every discussion Page into its HTML. Added reproducible synthetic load checks.
 
 - Email copy distinguishes revision approval from public visibility, explains
   editing cutoff for replies awaiting moderation, and uses contextual action
@@ -33,7 +46,10 @@ describe changes that an existing installation needs to review.
   both MIME alternatives and any custom subject/body wording when upgrading.
 - Enable the desired language through the host site's Django language settings;
   use `pt-br` for Brazilian Portuguese. Commentail's gettext directory is `pt_BR`.
-- Documentation remains in English and Russian. No new database migrations.
+- Documentation remains in English and Russian.
+- Run migration `0014_reading_indexes` for publication/thread, active CAPTCHA and
+  rate-cleanup indexes, then recollect static files. Index builds may block writes
+  on large tables; see [performance and migration guidance](docs/wiki/Performance.md).
 
 ## [0.1.1] — 2026-10-19 · Beta
 

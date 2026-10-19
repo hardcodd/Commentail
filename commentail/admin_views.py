@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Exists, F, OuterRef, Q, QuerySet
+from django.db.models import Count, Exists, F, OuterRef, Q, QuerySet
 from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -17,6 +17,7 @@ from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from wagtail.admin import messages
+from wagtail.admin.widgets import AdminPageChooser
 from wagtail.models import Page, Site
 
 from .forms import (
@@ -43,7 +44,7 @@ from .services import DomainError, hide, moderate, moderate_revision, remove, re
 def _comments(request: HttpRequest) -> QuerySet[Comment]:
     return Comment.objects.filter(
         discussion__site__in=sites_for(request.user, "view")
-    ).select_related("discussion__site", "discussion__page", "user")
+    ).select_related("discussion__site", "discussion__page", "discussion__content_type", "user")
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -96,37 +97,42 @@ def index(request: HttpRequest) -> HttpResponse:
                 day = None
             query = query.filter(**{lookup: day}) if day else query.none()
     status_tabs: list[dict[str, object]] = []
+    # An IN subquery can be hashed once by PostgreSQL; an EXISTS in this aggregate
+    # would otherwise probe the revision index for every historical comment.
+    pending = Q(status="pending") | Q(pk__in=CommentRevision.objects.filter(
+        status="pending",
+    ).values("comment_id"))
+    totals = query.aggregate(
+        pending=Count("pk", filter=pending),
+        published=Count("pk", filter=Q(status="published")),
+        rejected=Count("pk", filter=Q(status="rejected")),
+        total=Count("pk"),
+    )
     for value, label in [
         ("pending", _("Pending")),
         ("published", _("Published")),
         ("rejected", _("Rejected")),
         ("", _("All statuses")),
     ]:
-        subset = (
-            query.filter(Q(status="pending") | Q(pending_revision=True))
-            if value == "pending"
-            else query.filter(status=value)
-            if value
-            else query
-        )
         parameters = request.GET.copy()
         parameters["status"] = value
         parameters.pop("p", None)
         status_tabs.append(
             {
                 "label": label,
-                "count": subset.count(),
+                "count": totals[value or "total"],
                 "query": parameters.urlencode(),
                 "active": active_status == value,
             }
         )
     if active_status == "pending":
-        query = query.filter(Q(status="pending") | Q(pending_revision=True))
+        query = query.filter(pending)
     elif active_status:
         query = query.filter(status=active_status)
-    page = Paginator(query.order_by("-created_at", "-pk"), 30).get_page(
-        request.GET.get("p")
-    )
+    paginator = Paginator(query.order_by("-created_at", "-pk"), 30)
+    if active_status in {"pending", "published", "rejected", ""}:
+        paginator.count = totals[active_status or "total"]
+    page = paginator.get_page(request.GET.get("p"))
     moderate_sites = set(
         sites_for(request.user, "moderate").values_list("pk", flat=True)
     )
@@ -138,6 +144,12 @@ def index(request: HttpRequest) -> HttpResponse:
     previous["p"] = str(max(1, page.number - 1))
     following = request.GET.copy()
     following["p"] = str(page.number + 1)
+    selected_page = None
+    if (identifier := request.GET.get("page", "")).isdecimal():
+        selected_page = Page.objects.filter(
+            pk=identifier, discussion__site__in=sites,
+        ).first()
+    page_chooser = AdminPageChooser()
     return TemplateResponse(
         request,
         "commentail/admin/list.html",
@@ -148,9 +160,10 @@ def index(request: HttpRequest) -> HttpResponse:
             "statuses": Comment.Status.choices,
             "active_status": active_status,
             "status_tabs": status_tabs,
-            "pages": Page.objects.filter(discussion__site__in=sites)
-            .distinct()
-            .order_by("title"),
+            "page_chooser": page_chooser.render(
+                "page", selected_page, attrs={"id": "commentail-page-filter"},
+            ),
+            "page_chooser_media": page_chooser.media,
             "mail_allowed": sites.exists(),
             "rules_allowed": sites_for(request.user, "rules").exists(),
             "access_allowed": request.user.is_superuser,

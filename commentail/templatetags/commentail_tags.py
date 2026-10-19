@@ -4,6 +4,7 @@ from collections.abc import Iterable
 
 from django import template
 from django.db.models import Model
+from django.http import HttpRequest
 from django.template import Context, Node, TemplateSyntaxError
 from django.template.base import FilterExpression, Parser, Token
 from django.template.loader import render_to_string
@@ -11,9 +12,32 @@ from django.utils.html import format_html
 from wagtail.models import Page
 
 from commentail.assets import Asset, asset_url
+from commentail.recent import RecentComment
 from commentail.structured import CommentMarkup, render_json_ld
 
 register = template.Library()
+
+
+@register.simple_tag(takes_context=True)
+def commentail_recent(
+    context: Context, limit: int = 5, *, page: Page | None = None,
+    include_replies: bool = True,
+) -> list[RecentComment]:
+    """Select recent accessible comments for host markup using `as variable`."""
+    from commentail.recent import recent_comments
+
+    if type(limit) is not int or limit < 0:
+        raise TemplateSyntaxError("commentail_recent limit must be a nonnegative integer")
+    if type(include_replies) is not bool:
+        raise TemplateSyntaxError("commentail_recent include_replies must be a boolean")
+    request = context.get("request")
+    if not isinstance(request, HttpRequest):
+        return []
+    if page is not None and (
+        not isinstance(page, Page) or page.pk is None or page._state.adding
+    ):
+        return []
+    return recent_comments(request, limit=limit, page=page, include_replies=include_replies)
 
 
 class CommentailNode(Node):

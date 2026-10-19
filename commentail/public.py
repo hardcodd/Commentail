@@ -5,7 +5,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from django.core import signing
 from django.db import transaction
-from django.db.models import Exists, F, OuterRef, Prefetch, Q
+from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q
 from django.http import Http404, HttpRequest, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -24,10 +24,24 @@ from .config import technical_settings
 from .detection import DetectionError, has_comments
 from .drafts import clear_drafts, is_document, load_draft, save_draft
 from .limits import client_ip, consume
-from .models import Access, Comment, Discussion, MailJob, Mode, ReplySubscription
-from .objects import ObjectAccessError, comment_url, discussion_url, target_url
+from .models import (
+    Access,
+    Comment,
+    CommentRevision,
+    Discussion,
+    MailJob,
+    Mode,
+    ReplySubscription,
+)
+from .objects import (
+    ObjectAccessError,
+    _comment_url,
+    comment_url,
+    discussion_url,
+    target_url,
+)
 from .outbox import resend_confirmation
-from .policies import editorial_settings, email_enabled
+from .policies import EditorialSettings, editorial_settings, email_enabled
 from .security import create_captcha, remembered_guest, verify_token
 from .services import DomainError, edit_block_reason, revise
 from .structured import CommentMarkup, comment_markup
@@ -213,7 +227,8 @@ def _edit_owner(request: HttpRequest, comment: Comment) -> bool:
 
 
 def _present(
-    comment: Comment, request: HttpRequest, clickable: bool, structured_target: str = ""
+    comment: Comment, request: HttpRequest, clickable: bool, structured_target: str = "",
+    *, destination: str | None = None, options: EditorialSettings | None = None,
 ) -> dict[str, object]:
     name = author_name(comment, request)
     initials, gradient = default_avatar(name)
@@ -223,8 +238,11 @@ def _present(
         label = _("Comment hidden")
     else:
         label = comment.text
-    editable = _edit_owner(request, comment) and not edit_block_reason(comment)
-    permalink = comment_url(comment.discussion, comment.pk)
+    editable = _edit_owner(request, comment) and not edit_block_reason(
+        comment, options=options, pending_revision=getattr(comment, "pending_revision", None),
+    )
+    destination = destination if destination is not None else _destination(comment.discussion)[0]
+    permalink = _comment_url(destination, comment.pk)
     return {
         "id": comment.pk,
         "display_name": name,
@@ -249,18 +267,36 @@ def _present(
             comment, name, structured_target, request.build_absolute_uri(permalink),
         ) if structured_target else None,
         "reply_url": _url(request, reply_to=comment.pk, target=comment.pk),
-        "edit_url": comment_url(
-            comment.discussion, comment.pk,
+        "edit_url": _comment_url(
+            destination, comment.pk,
             navigation={"edit_comment": str(comment.pk)},
         ) if editable else "",
     }
 
 
+def _destination(discussion: Discussion) -> tuple[str, bool]:
+    """Resolve the host once per render; retain service recovery on URL failure."""
+    try:
+        return target_url(discussion), True
+    except ObjectAccessError:
+        return discussion_url(discussion), False
+
+
 def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, object]:
     request.META["COMMENTAIL_PRIVATE"] = True
     # Fragment responses must keep every reading control on the host document.
-    request.META["COMMENTAIL_WIDGET_PATH"] = comment_url(discussion)
+    destination, host_available = _destination(discussion)
+    request.META["COMMENTAIL_WIDGET_PATH"] = _comment_url(destination)
     options = editorial_settings(discussion)
+
+    def present(comment: Comment, clickable: bool, structured_target: str = "") -> dict[str, object]:
+        comment.discussion = discussion
+        if comment.reply_to_id and comment.reply_to.discussion_id == discussion.pk:
+            comment.reply_to.discussion = discussion
+        return _present(
+            comment, request, clickable, structured_target,
+            destination=destination, options=options,
+        )
     restored, draft_error = load_draft(request, discussion)
     form_values = request.POST if request.method == "POST" else restored
     edit_identifier = form_values.get("edit_comment") or request.GET.get("edit_comment", "")
@@ -299,8 +335,10 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
         request.session.pop("commentail_mail_notice")
         base["mail_notice"] = _("We’ll email you about replies.")
     snapshot, limit = _window(request, discussion, "window")
-    comments = discussion.comments.select_related(
-        "user", "discussion__site", "reply_to__user"
+    comments = discussion.comments.select_related("user", "reply_to__user").annotate(
+        pending_revision=Exists(CommentRevision.objects.filter(
+            comment_id=OuterRef("pk"), status="pending",
+        )),
     )
     visible = comments.filter(status="published")
     surviving = Comment.objects.filter(root_id=OuterRef("pk"), status="published")
@@ -313,7 +351,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
         .order_by("-published_at", "-pk")
     )
     rows = list(roots[:limit])
-    total = roots.count()
+    more_roots = roots[limit:limit + 1].exists()
     reply_identifier = (
         request.GET.get("reply_to", form_values.get("reply_to", ""))
         if request.method == "GET"
@@ -346,23 +384,22 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
                     rows.insert(0, root)
     structured_mode = technical_settings(discussion.site)["STRUCTURED_DATA"]
     structured_target = ""
-    if structured_mode != "off":
-        try:
-            absolute = urlsplit(request.build_absolute_uri(target_url(discussion)))
-            structured_target = urlunsplit(absolute._replace(fragment=""))
-        except ObjectAccessError:
-            # A broken adapter must not create indexed service-page URLs.
-            pass
+    if structured_mode != "off" and host_available:
+        absolute = urlsplit(request.build_absolute_uri(destination))
+        structured_target = urlunsplit(absolute._replace(fragment=""))
+    reply_counts = dict(visible.filter(
+        root_id__in=[row.pk for row in rows], published_at__lte=snapshot,
+    ).values("root_id").annotate(total=Count("pk")).values_list("root_id", "total"))
     structured_comments: list[CommentMarkup] = []
     presented = []
     for row in rows:
-        data = _present(row, request, options.clickable_links, structured_target)
+        data = present(row, options.clickable_links, structured_target)
         if isinstance(data["schema"], CommentMarkup):
             structured_comments.append(data["schema"])
         replies = visible.filter(root=row, published_at__lte=snapshot).order_by(
             "published_at", "pk"
         )
-        count = replies.count()
+        count = reply_counts.get(row.pk, 0)
         data["reply_count"] = count
         opened = str(row.pk) in request.GET.getlist("thread") or (
             target is not None and target.root_id == row.pk
@@ -382,7 +419,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             # snapshot. Its thread still needs to render when that count is zero.
             data["reply_count"] = max(count, len(reply_rows))
             reply_data = [
-                _present(reply, request, options.clickable_links, structured_target)
+                present(reply, options.clickable_links, structured_target)
                 for reply in reply_rows
             ]
             data["replies"] = reply_data
@@ -422,7 +459,9 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             | Q(revisions__status="pending")
         )
         .distinct()
-        .prefetch_related("revisions")
+        .prefetch_related(Prefetch(
+            "revisions", queryset=CommentRevision.objects.filter(status="pending"),
+        ))
         .prefetch_related(
             Prefetch(
                 "mail_events",
@@ -434,7 +473,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
     )
     private_rows: list[dict[str, object]] = []
     for item in own:
-        data = _present(item, request, False)
+        data = present(item, False)
         if item.status == "awaiting_email":
             jobs = item.confirmation_jobs
             job = jobs[0] if jobs else None
@@ -528,7 +567,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             "own": private_rows,
             "count": visible.count(),
             "more_url": _url(request, window=_next(discussion, snapshot, limit))
-            if total > limit
+            if more_roots
             else "",
             "can_post": can_post,
             "form_key": form_key,
@@ -538,7 +577,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             "captcha": task,
             "remembered_email": grant.email if grant else "",
             "guest_email_confirmed": email_confirmed,
-            "reply_to": _present(reply_to, request, False) if reply_to else None,
+            "reply_to": present(reply_to, False) if reply_to else None,
             "cancel_reply_url": _url(request, reply_to="", target=None),
             "submit_url": discussion_url(discussion, submit=True),
         }

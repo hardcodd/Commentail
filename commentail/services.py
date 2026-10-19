@@ -57,9 +57,11 @@ def _comment(identifier: int) -> tuple[Comment, Discussion]:
     comment = Comment.objects.filter(pk=identifier).first()
     if comment is None:
         raise DomainError("Comment does not exist")
-    return comment, Discussion.objects.select_related("site", "page").get(
+    discussion = Discussion.objects.select_related("site", "page").get(
         pk=comment.discussion_id
     )
+    comment.discussion = discussion
+    return comment, discussion
 
 
 def _text(text: str, options: EditorialSettings) -> None:
@@ -200,10 +202,13 @@ def confirm_email(comment_id: int) -> Comment:
     return comment
 
 
-def edit_block_reason(comment: Comment) -> str:
+def edit_block_reason(
+    comment: Comment, *, options: EditorialSettings | None = None,
+    pending_revision: bool | None = None,
+) -> str:
     """Read-only eligibility shared by forms and the locked author-write service."""
     discussion = comment.discussion
-    options = editorial_settings(discussion)
+    options = options or editorial_settings(discussion)
     if (
         options.mode != Mode.OPEN
         or comment.status != Comment.Status.PUBLISHED
@@ -217,7 +222,9 @@ def edit_block_reason(comment: Comment) -> str:
         + timedelta(seconds=technical_settings(discussion.site)["EDIT_WINDOW_SECONDS"])
     ):
         return "Editing window expired"
-    if comment.revisions.filter(status=CommentRevision.Status.PENDING).exists():
+    if pending_revision is None:
+        pending_revision = comment.revisions.filter(status=CommentRevision.Status.PENDING).exists()
+    if pending_revision:
         return "A revision already awaits moderation"
     return ""
 
@@ -417,27 +424,37 @@ def restore(comment_id: int, *, actor: AbstractBaseUser) -> Comment:
 
 
 def cleanup_unconfirmed() -> int:
-    """Erase expired unverified messages, rechecking under the discussion lock."""
+    """Select expired messages by Site deadline before locking each discussion.
+
+    Keyset batches avoid holding a read cursor while deleting on SQLite. The
+    locked recheck still protects concurrent confirmation and policy changes.
+    """
     count = 0
-    for identifier in (
-        Comment.objects.filter(status=Comment.Status.AWAITING_EMAIL)
-        .values_list("pk", flat=True)
-        .iterator()
-    ):
-        with transaction.atomic():
-            try:
-                comment, discussion = _comment(identifier)
-            except DomainError:
-                continue
-            deadline = comment.created_at + timedelta(
-                seconds=technical_settings(discussion.site)["EMAIL_CONFIRM_SECONDS"]
-            )
-            if (
-                comment.status == Comment.Status.AWAITING_EMAIL
-                and timezone.now() >= deadline
-            ):
-                comment.delete()
-                count += 1
+    now = timezone.now()
+    sites = Site.objects.filter(pk__in=Discussion.objects.filter(
+        comments__status=Comment.Status.AWAITING_EMAIL,
+    ).values("site_id"))
+    for site in sites:
+        cutoff = now - timedelta(seconds=technical_settings(site)["EMAIL_CONFIRM_SECONDS"])
+        expired = Comment.objects.filter(
+            discussion__site=site, status=Comment.Status.AWAITING_EMAIL,
+            created_at__lte=cutoff,
+        ).order_by("pk")
+        cursor = 0
+        while identifiers := list(expired.filter(pk__gt=cursor).values_list("pk", flat=True)[:100]):
+            for identifier in identifiers:
+                with transaction.atomic():
+                    try:
+                        comment, discussion = _comment(identifier)
+                    except DomainError:
+                        continue
+                    deadline = comment.created_at + timedelta(
+                        seconds=technical_settings(discussion.site)["EMAIL_CONFIRM_SECONDS"]
+                    )
+                    if comment.status == Comment.Status.AWAITING_EMAIL and timezone.now() >= deadline:
+                        comment.delete()
+                        count += 1
+            cursor = identifiers[-1]
     return count
 
 

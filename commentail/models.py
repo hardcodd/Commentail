@@ -145,6 +145,12 @@ class Comment(models.Model):
         indexes: ClassVar[list[models.Index]] = [
             models.Index(fields=["discussion", "status", "published_at", "id"]),
             models.Index(fields=["status", "created_at"]),
+            models.Index(fields=["status", "published_at", "id"], name="commentail_publication_order"),
+            models.Index(fields=["root", "status", "published_at", "id"], name="commentail_reply_order"),
+            models.Index(
+                fields=["discussion", "published_at", "id"],
+                condition=models.Q(root__isnull=True), name="commentail_root_order",
+            ),
         ]
         constraints: ClassVar[list[models.BaseConstraint]] = [
             models.CheckConstraint(
@@ -270,6 +276,14 @@ class CaptchaChallenge(models.Model):
     attempts = models.PositiveIntegerField(default=0)
     used = models.BooleanField(default=False)
 
+    class Meta:
+        indexes: ClassVar[list[models.Index]] = [
+            models.Index(
+                fields=["site", "session_digest"], condition=models.Q(used=False),
+                name="commentail_active_captcha",
+            ),
+        ]
+
 
 class SubmissionRecord(models.Model):
     discussion = models.ForeignKey(Discussion, on_delete=models.CASCADE)
@@ -292,7 +306,7 @@ class RateEvent(models.Model):
     site = models.ForeignKey("wagtailcore.Site", on_delete=models.CASCADE)
     kind = models.CharField(max_length=16)
     subject_digest = models.CharField(max_length=64)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         indexes: ClassVar[list[models.Index]] = [

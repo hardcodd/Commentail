@@ -12,6 +12,7 @@
 .commentail-admin-tabs span { margin-inline-start: .4rem; font-variant-numeric: tabular-nums; }
 .commentail-admin-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); align-items: end; gap: 1rem; padding: 1.25rem; border: 1px solid var(--commentail-admin-border); border-radius: .75rem; margin: 1.5rem 0; }
 .commentail-admin-filters label, .commentail-admin-reason { display: grid; gap: .5rem; }
+.commentail-page-filter { display: grid; gap: .5rem; min-width: 0; }
 .commentail-admin-filters input, .commentail-admin-filters select { box-sizing: border-box; width: 100%; min-width: 0; height: 2.75rem; font-size: 1rem; }
 .commentail-admin-reason { max-width: 42rem; margin-bottom: 1rem; }
 .commentail-admin-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }

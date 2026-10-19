@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 from django.urls import reverse
-from wagtail.models import Site
+from wagtail.models import Page, Site
 
 from commentail.models import Discussion, SiteGroupPermission
 from commentail.services import moderate, revise, submit
@@ -63,6 +63,32 @@ class AdminInterfaceTests(TestCase):
         self.assertEqual(tabs[0]["count"], 1)
         self.assertIn("q=Visible", tabs[0]["query"])
         self.assertTrue(tabs[0]["active"])
+
+    def test_page_filter_uses_chooser_without_loading_all_discussion_pages(self):
+        page = self.site.root_page.add_child(instance=Page(title="Unselected page", slug="unselected"))
+        discussion = Discussion.objects.create(site=self.site, page=page)
+        submit(discussion.pk, text="Other page comment", user=self.admin)
+        response = self.client.get(reverse("commentail_admin:list"))
+        self.assertContains(response, "page-chooser-modal.js")
+        self.assertNotContains(response, '<select name="page">')
+        self.assertNotContains(response, '<option value="' + str(page.pk) + '"')
+        response = self.client.get(reverse("commentail_admin:list"), {"page": page.pk})
+        self.assertContains(response, 'name="page" value="' + str(page.pk) + '"')
+        self.assertContains(response, "Other page comment")
+        self.assertNotContains(response, "Visible queue text")
+
+    def test_page_filter_does_not_resolve_an_unpermitted_page_title(self):
+        page = self.site.root_page.add_child(instance=Page(title="Unpermitted target title", slug="foreign-page"))
+        Discussion.objects.create(site=self.other, page=page)
+        response = self.client.get(reverse("commentail_admin:list"), {"page": page.pk})
+        self.assertNotContains(response, "Unpermitted target title")
+
+    def test_tab_counts_include_pending_revisions_without_counting_comment_twice(self):
+        moderate(self.comment.pk, "approve", actor=self.admin)
+        revise(self.comment.pk, "Pending edit", user=self.admin)
+        response = self.client.get(reverse("commentail_admin:list"))
+        self.assertEqual([tab["count"] for tab in response.context["status_tabs"]], [1, 1, 0, 1])
+        self.assertEqual(response.context["comments"].paginator.count, 1)
 
     def test_selection_requires_moderation_right_on_each_site(self):
         self.permission.moderate = False
