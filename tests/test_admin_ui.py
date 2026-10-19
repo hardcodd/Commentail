@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 from wagtail.models import Page, Site
 
-from commentail.models import Discussion, SiteGroupPermission
+from commentail.models import Comment, Discussion, SiteGroupPermission
 from commentail.services import moderate, revise, submit
 
 
@@ -95,6 +95,133 @@ class AdminInterfaceTests(TestCase):
         self.permission.save()
         response = self.client.get(reverse("commentail_admin:list"))
         self.assertNotContains(response, 'name="ids"')
+
+    def test_all_statuses_exposes_actions_for_each_state(self):
+        self.client.force_login(self.admin)
+        for status in Comment.Status.values:
+            with self.subTest(status=status):
+                Comment.objects.filter(pk=self.comment.pk).update(status=status)
+                response = self.client.get(reverse("commentail_admin:list"), {"status": ""})
+                row = next(c for c in response.context["comments"] if c.pk == self.comment.pk)
+                expected = {
+                    "pending": "approve reject delete",
+                    "published": "hide delete",
+                    "hidden": "restore delete",
+                    "rejected": "delete",
+                    "awaiting_email": "delete",
+                    "deleted": "",
+                }[status]
+                self.assertEqual(row.bulk_actions, expected)
+                checkbox = f'name="ids" value="{self.comment.pk}"'
+                if expected:
+                    self.assertContains(response, checkbox + f' data-actions="{expected}"')
+                else:
+                    self.assertNotContains(response, checkbox)
+
+    def test_bulk_buttons_respect_independent_capabilities(self):
+        for capability, status, expected in [
+            ("moderate", "pending", "approve reject"),
+            ("hide", "published", "hide"),
+            ("hide", "hidden", "restore"),
+            ("delete", "rejected", "delete"),
+        ]:
+            with self.subTest(capability=capability, status=status):
+                for field in ("moderate", "hide", "delete"):
+                    setattr(self.permission, field, field == capability)
+                self.permission.save()
+                Comment.objects.filter(pk=self.comment.pk).update(status=status)
+                response = self.client.get(reverse("commentail_admin:list"), {"status": ""})
+                row = next(iter(response.context["comments"]))
+                self.assertEqual(row.bulk_actions, expected)
+                self.assertEqual([a["value"] for a in response.context["bulk_actions"]], expected.split())
+
+    def test_bulk_hide_restore_and_delete_keep_replies(self):
+        self.client.force_login(self.admin)
+        moderate(self.comment.pk, "approve", actor=self.admin)
+        reply = submit(self.discussion.pk, text="Reply", user=self.admin, reply_to=self.comment.pk)
+        for action, status in [("hide", "hidden"), ("restore", "published"), ("delete", "deleted")]:
+            with self.subTest(action=action):
+                response = self.client.post(reverse("commentail_admin:bulk"), {
+                    "action": action, "ids": [self.comment.pk], "return_query": "status=&q=Visible",
+                })
+                self.assertRedirects(response, reverse("commentail_admin:list") + "?status=&q=Visible")
+                self.comment.refresh_from_db()
+                self.assertEqual(self.comment.status, status)
+                self.assertTrue(Comment.objects.filter(pk=reply.pk).exists())
+        self.assertEqual(self.comment.text, "")
+
+    def test_bulk_delete_mixed_statuses_and_duplicate_ids(self):
+        self.client.force_login(self.admin)
+        moderate(self.foreign.pk, "approve", actor=self.admin)
+        response = self.client.post(reverse("commentail_admin:bulk"), {
+            "action": "delete", "ids": [self.comment.pk, self.foreign.pk, self.comment.pk],
+        }, follow=True)
+        self.assertContains(response, "Deleted: 2")
+        self.assertEqual(Comment.objects.filter(status="deleted", text="").count(), 2)
+
+    def test_bulk_invalid_status_rolls_back_every_comment(self):
+        self.client.force_login(self.admin)
+        moderate(self.comment.pk, "approve", actor=self.admin)
+        event_count = self.comment.events.count()
+        response = self.client.post(reverse("commentail_admin:bulk"), {
+            "action": "hide", "ids": [self.comment.pk, self.foreign.pk],
+        })
+        self.assertEqual(response.status_code, 400)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.status, "published")
+        self.assertEqual(self.comment.events.count(), event_count)
+
+    def test_new_bulk_actions_require_their_own_permission(self):
+        for action, status in [("hide", "published"), ("restore", "hidden"), ("delete", "pending")]:
+            with self.subTest(action=action):
+                Comment.objects.filter(pk=self.comment.pk).update(status=status)
+                response = self.client.post(reverse("commentail_admin:bulk"), {
+                    "action": action, "ids": [self.comment.pk],
+                })
+                self.assertEqual(response.status_code, 403)
+                self.comment.refresh_from_db()
+                self.assertEqual(self.comment.status, status)
+
+    def test_bulk_delete_rolls_back_for_visible_site_without_delete_permission(self):
+        self.permission.delete = True
+        self.permission.save()
+        SiteGroupPermission.objects.create(group=self.permission.group, site=self.other, view=True)
+        response = self.client.post(reverse("commentail_admin:bulk"), {
+            "action": "delete", "ids": [self.comment.pk, self.foreign.pk],
+        })
+        self.assertEqual(response.status_code, 403)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.text, "Visible queue text")
+
+    def test_bulk_deleted_or_unconfirmed_cannot_be_restored_or_approved(self):
+        self.client.force_login(self.admin)
+        for status in ("deleted", "awaiting_email"):
+            for action in ("approve", "reject", "hide", "restore"):
+                with self.subTest(status=status, action=action):
+                    Comment.objects.filter(pk=self.comment.pk).update(status=status)
+                    response = self.client.post(reverse("commentail_admin:bulk"), {
+                        "action": action, "ids": [self.comment.pk],
+                    })
+                    self.assertEqual(response.status_code, 400)
+
+    def test_bulk_validates_request_boundary_without_mutation(self):
+        for data in [
+            {"action": "delete"},
+            {"action": "unknown", "ids": [self.comment.pk]},
+            {"action": "delete", "ids": ["bad"]},
+            {"action": "delete", "ids": [self.comment.pk] * 101},
+        ]:
+            with self.subTest(data=data):
+                self.assertEqual(self.client.post(reverse("commentail_admin:bulk"), data).status_code, 400)
+        self.assertEqual(self.client.get(reverse("commentail_admin:bulk")).status_code, 405)
+        csrf_client = Client(enforce_csrf_checks=True)
+        csrf_client.force_login(self.admin)
+        response = csrf_client.post(reverse("commentail_admin:bulk"), {
+            "action": "delete", "ids": [self.comment.pk],
+        })
+        self.assertEqual(response.status_code, 403)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.text, "Visible queue text")
 
     def test_settings_uses_accessible_wagtail_field_errors(self):
         self.client.force_login(self.admin)

@@ -7,9 +7,10 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count, Exists, F, OuterRef, Q, QuerySet
-from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
+from django.http import HttpRequest, HttpResponse, QueryDict, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.utils.html import format_html, format_html_join
@@ -39,6 +40,16 @@ from .outbox import requeue
 from .permissions import Capability, can, sites_for
 from .rules_csv import export_rules, import_rules
 from .services import DomainError, hide, moderate, moderate_revision, remove, restore
+
+_ACTION_CAPABILITIES: dict[str, Capability] = {
+    "approve": "moderate", "reject": "moderate", "hide": "hide",
+    "restore": "hide", "delete": "delete",
+}
+_BULK_STATUSES = {
+    "approve": {"pending"}, "reject": {"pending"},
+    "hide": {"published"}, "restore": {"hidden"},
+    "delete": set(Comment.Status.values) - {"deleted"},
+}
 
 
 def _comments(request: HttpRequest) -> QuerySet[Comment]:
@@ -133,13 +144,24 @@ def index(request: HttpRequest) -> HttpResponse:
     if active_status in {"pending", "published", "rejected", ""}:
         paginator.count = totals[active_status or "total"]
     page = paginator.get_page(request.GET.get("p"))
-    moderate_sites = set(
-        sites_for(request.user, "moderate").values_list("pk", flat=True)
-    )
+    action_sites = {
+        capability: set(sites_for(request.user, capability).values_list("pk", flat=True))
+        for capability in ("moderate", "hide", "delete")
+    }
+    available_actions: set[str] = set()
     for comment in page:
-        comment.can_select = (
-            comment.status == "pending" and comment.discussion.site_id in moderate_sites
-        )
+        actions = [
+            action for action, capability in _ACTION_CAPABILITIES.items()
+            if comment.status in _BULK_STATUSES[action]
+            and comment.discussion.site_id in action_sites[capability]
+        ]
+        comment.bulk_actions = " ".join(actions)
+        available_actions.update(actions)
+    action_labels = {
+        "approve": _("Approve selected"), "reject": _("Reject selected"),
+        "hide": _("Hide"), "restore": _("Restore"),
+        "delete": _("Erase text permanently"),
+    }
     previous = request.GET.copy()
     previous["p"] = str(max(1, page.number - 1))
     following = request.GET.copy()
@@ -167,7 +189,11 @@ def index(request: HttpRequest) -> HttpResponse:
             "mail_allowed": sites.exists(),
             "rules_allowed": sites_for(request.user, "rules").exists(),
             "access_allowed": request.user.is_superuser,
-            "can_bulk": sites_for(request.user, "moderate").exists(),
+            "bulk_actions": [
+                {"value": action, "label": label}
+                for action, label in action_labels.items() if action in available_actions
+            ],
+            "return_query": request.GET.urlencode(),
             "previous_query": previous.urlencode(),
             "next_query": following.urlencode(),
         },
@@ -245,14 +271,7 @@ def detail(request: HttpRequest, identifier: int) -> HttpResponse:
 
 def _mutate(request: HttpRequest, comment: Comment) -> None:
     action = request.POST.get("action", "")
-    capabilities: dict[str, Capability] = {
-        "approve": "moderate",
-        "reject": "moderate",
-        "hide": "hide",
-        "restore": "hide",
-        "delete": "delete",
-    }
-    capability = capabilities.get(action)
+    capability = _ACTION_CAPABILITIES.get(action)
     if capability is None:
         raise DomainError("Unknown action")
     if not can(request.user, comment.discussion.site_id, capability):
@@ -296,7 +315,7 @@ def bulk(request: HttpRequest) -> HttpResponse:
         not identifiers
         or len(identifiers) > 100
         or not all(value.isdecimal() for value in identifiers)
-        or request.POST.get("action") not in {"approve", "reject"}
+        or request.POST.get("action") not in _BULK_STATUSES
     ):
         return HttpResponse("Invalid selection", status=400)
     try:
@@ -304,19 +323,26 @@ def bulk(request: HttpRequest) -> HttpResponse:
         Comment.objects.filter(pk__in=identifiers).update(edit_locked=F("edit_locked"))
         for identifier in sorted(set(identifiers), key=int):
             comment = get_object_or_404(_comments(request), pk=identifier)
+            if comment.status not in _BULK_STATUSES[request.POST["action"]]:
+                transaction.set_rollback(True)
+                return HttpResponse("Invalid selection", status=400)
             _mutate(request, comment)
     except (DomainError, PermissionDenied) as exc:
         transaction.set_rollback(True)
         return HttpResponse(
             str(exc), status=403 if isinstance(exc, PermissionDenied) else 400
         )
-    outcome = _("Approved") if request.POST["action"] == "approve" else _("Rejected")
+    outcome = {
+        "approve": _("Approved"), "reject": _("Rejected"),
+        "hide": _("Hidden"), "restore": _("Published"), "delete": _("Deleted"),
+    }[request.POST["action"]]
     messages.success(
         request,
         f"{outcome}: {len(set(identifiers))}",
         extra_tags="commentail-action-result",
     )
-    return redirect("commentail_admin:list")
+    query = QueryDict(request.POST.get("return_query", "")).urlencode()
+    return redirect(reverse("commentail_admin:list") + (f"?{query}" if query else ""))
 
 
 @require_POST

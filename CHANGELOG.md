@@ -3,6 +3,12 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## Unreleased
+
+- Add bulk hide, restore and permanent text erasure to the comment list,
+  including All statuses, with per-Site permissions and status-aware selection.
+  Invalid batches roll back entirely; successful actions retain list filters.
+
 ## [1.0.0] — 2026-10-19 · Stable
 
 The feature set is frozen at 0.2.0 Beta. This release introduces the documented

@@ -9,13 +9,17 @@
   }
   const master = document.querySelector("[data-select-all]");
   if (!master) return;
-  const rows = [...document.querySelectorAll('input[name="ids"]')];
+  const form = master.form;
+  const rows = [...form.querySelectorAll('input[name="ids"]')];
   const update = () => {
-    const count = rows.filter((row) => row.checked).length;
+    const selected = rows.filter((row) => row.checked);
+    const count = selected.length;
     master.checked = rows.length > 0 && count === rows.length;
     master.indeterminate = count > 0 && count < rows.length;
-    document.querySelectorAll('button[name="action"]').forEach((button) => {
-      button.disabled = count === 0;
+    form.querySelectorAll('button[name="action"]').forEach((button) => {
+      button.disabled = count === 0 || selected.some(
+        (row) => !row.dataset.actions.split(" ").includes(button.value),
+      );
     });
   };
   master.addEventListener("change", () => {

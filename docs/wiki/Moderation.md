@@ -34,7 +34,15 @@ bound the resulting queue.
 | Erase text | Permanently remove text, retaining replies and a deleted placeholder |
 
 Moderators cannot change another author's text or propose replacement text.
-Bulk decisions apply to pending comments; author revisions are decided individually.
+The list, including **All statuses**, supports bulk approve/reject for pending
+comments, hide for published comments, restore for hidden comments, and permanent
+text erasure for any non-deleted comment. Checkboxes and buttons respect each
+comment's status and your Site permissions. A button is enabled only when every
+selected comment supports that action; **Select all** selects eligible rows on
+the current page. The server rechecks the entire selection and rolls back all
+changes if any row is no longer eligible or permitted. A batch accepts at most
+100 identifiers. Successful actions preserve the list filters and pagination.
+Author revisions are decided individually.
 Pending revisions keep the old published text visible. Closing a discussion does
 not remove its moderation queue. Logs record actions without copies of comment text.
 
