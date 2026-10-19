@@ -23,6 +23,11 @@ message. Configure correct Wagtail Site host/port and HTTPS/proxy settings for l
 Email action and status links use the named `commentail:action` route, including
 the prefix where your project includes `commentail.urls`.
 
+Subjects and bodies use the recipient's saved comment language, independently
+of the worker's active language. Reply notifications use the original recipient's
+language. User-entered rejection reasons remain unchanged. See
+[available languages](Configuration.md#languages).
+
 ## Schedule once per minute
 
 Run `python manage.py process_commentail` once per minute. It processes the

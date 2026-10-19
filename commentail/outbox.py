@@ -329,20 +329,21 @@ def deliver(job: MailJob) -> None:
     reason = ""
     if job.kind == "rejected":
         reason = job.revision.reason if job.revision_id else job.comment.reason
-    # No models/request/context processors: overrides cannot traverse to user text.
-    context: MailTemplateContext = {
-        "kind": job.kind,
-        "author_name": job.comment.display_name,
-        "site_name": site.site_name or site.hostname,
-        "site_url": site.root_url,
-        "target_url": target_url,
-        "action_url": action_url,
-        "view_url": view_url,
-        "reason": reason,
-        "is_revision": job.revision_id is not None,
-        "expires_at": job.expires_at,
-    }
+    # Generated author labels must use the recipient locale, just like templates.
     with translation.override(job.language):
+        # No models/request/context processors: overrides cannot traverse to user text.
+        context: MailTemplateContext = {
+            "kind": job.kind,
+            "author_name": job.comment.display_name,
+            "site_name": site.site_name or site.hostname,
+            "site_url": site.root_url,
+            "target_url": target_url,
+            "action_url": action_url,
+            "view_url": view_url,
+            "reason": reason,
+            "is_revision": job.revision_id is not None,
+            "expires_at": job.expires_at,
+        }
         prefix = f"commentail/emails/{job.kind}"
         subject = render_to_string(prefix + "_subject.txt", context).strip()
         if not subject or "\n" in subject or "\r" in subject:

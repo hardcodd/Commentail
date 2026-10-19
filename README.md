@@ -54,7 +54,7 @@ the visible text and author name. Choose either format or disable output in Pyth
 | Python | 3.12–3.14 |
 | Wagtail / Django | 7.4.3+ in 7.4 / Django 5.2 or 6.0; 8.0.x / Django 5.2, 6.0 or 6.1 |
 | Database | File SQLite or PostgreSQL 16 |
-| UI languages | English and Russian |
+| UI languages (0.1.1) | English and Russian |
 | Frontend | Django templates, optional progressive JavaScript |
 | License | [MIT](https://github.com/hardcodd/Commentail/blob/main/LICENSE) |
 
@@ -67,6 +67,16 @@ Wagtail 8.1 and later require separate verification before support is declared.
 Guest comments require configured SMTP and the scheduled worker. Registered
 users can comment without an email address, but receive no mail. Your site
 provides login and registration. No required external CDN or CAPTCHA service.
+
+### Additional locales in unreleased source
+
+The current source also includes German (`de`), French (`fr`), Spanish (`es`)
+and Brazilian Portuguese (`pt-br`) for the public UI, moderation/settings and
+all notification emails. Published 0.1.1 includes English and Russian only.
+The host site selects the active Django language; queued emails retain the
+recipient's saved language. User comments and rejection reasons are not translated.
+Documentation remains in English and Russian.
+[Language configuration →](docs/wiki/Configuration.md#languages)
 
 ## Quick start
 

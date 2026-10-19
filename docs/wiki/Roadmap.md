@@ -3,19 +3,20 @@
 This page records planned directions. A target release or delivery date is only
 listed once it has been agreed. Planned work is not part of the current package.
 
-## Planned: more languages and locales
+## In unreleased source: four additional languages
 
-Expand UI and email translations beyond the English and Russian catalogs shipped
-in 0.1.1. The work should cover reader-facing forms, validation and action pages,
-moderation/admin screens, and all notification email types.
+German (`de`), French (`fr`), Spanish (`es`) and Brazilian Portuguese (`pt-br`)
+cover reader-facing forms, validation and action pages, moderation/settings,
+delivery screens and all five notification email types, including revision decisions.
+English and Russian remain available; documentation remains in those two languages.
 
-Locale selection, translation review, plural forms, date formatting and fallback
-behavior need to be checked together so an added locale works across the full
-guest/author/moderator workflow. Publish the verified locale list in each release's
-documentation and changelog.
+Catalog coverage, interpolation, compiled files, plural metadata and saved-recipient
+mail language are checked automatically. Host projects continue to choose the
+active language. Native-speaker review remains a separate quality step.
 
-**Status:** planned. Additional languages, regional variants, target version and
-dates have not been selected. No new locale is included in 0.1.1.
+**Status:** implemented in source, not released. Published 0.1.1 contains English
+and Russian only. A release version/date and any further locales are not selected.
 
-See the [current version history](Changelog.md),
-[0.1.1 release notes](Release-0.1.1.md) and [documentation home](Home.md).
+See [language configuration](Configuration.md#languages),
+[current version history](Changelog.md), [0.1.1 release notes](Release-0.1.1.md)
+and [documentation home](Home.md).

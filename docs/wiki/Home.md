@@ -41,7 +41,9 @@ Pages and registered Django models using your site's accounts, templates and sty
 5. Adapt the theme and assign site-scoped moderator rights.
 
 Plain text, server-rendered HTML and progressive JavaScript keep integration
-independent of a frontend framework. English and Russian UI are included.
+independent of a frontend framework. Published 0.1.1 includes English and Russian
+UI and emails. Unreleased source adds German, French, Spanish and Brazilian
+Portuguese across the UI, moderation and emails; see [Languages](Configuration.md#languages).
 No external comments platform, Redis, Celery or CDN is required.
 
 ---

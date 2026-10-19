@@ -3,6 +3,28 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## Unreleased
+
+### Added
+
+- German (`de`), French (`fr`), Spanish (`es`) and Brazilian Portuguese (`pt-br`)
+  translations for public forms, validation/action messages, moderation/settings,
+  delivery screens and all five notification email types, including revision decisions.
+- Source-coverage and compiled-catalog checks for every shipped locale, plus
+  regression checks for recipient-language mail delivery and English fallback.
+
+### Fixed
+
+- Generated author labels in reply emails use the recipient's saved language,
+  including the generic account name, instead of the mail worker's language.
+
+### Upgrade notes
+
+- These locales are in the source tree and are not included in published 0.1.1.
+- Enable the desired language through the host site's Django language settings;
+  use `pt-br` for Brazilian Portuguese. Commentail's gettext directory is `pt_BR`.
+- Documentation remains in English and Russian. No new database migrations.
+
 ## [0.1.1] — 2026-10-19 · Beta
 
 Changes from **0.1.0 → 0.1.1**.

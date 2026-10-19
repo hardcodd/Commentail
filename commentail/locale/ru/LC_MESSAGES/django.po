@@ -842,3 +842,6 @@ msgstr "Содержимое комментариев"
 
 msgid "Notifications"
 msgstr "Уведомления"
+
+msgid "Delete"
+msgstr "Удалить"

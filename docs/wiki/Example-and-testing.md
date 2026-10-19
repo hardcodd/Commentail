@@ -37,6 +37,8 @@ Keep the framework pair within the [support matrix](Installation.md).
 
 ```sh
 python -m django test tests --settings=tests.settings
+# Requires GNU gettext tools on PATH; checks every catalog against current sources:
+python tools/check_translations.py
 # Optional development check with Node.js (no npm dependencies):
 node --test tests/test_*.js
 ```

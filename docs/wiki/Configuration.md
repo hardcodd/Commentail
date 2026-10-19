@@ -25,6 +25,27 @@ editing defaults. Policy changes do not automatically decide existing queue item
 Moderation remains available in closed modes. Hiding defers eligible mail and does
 not erase data. Target access still governs visibility; each Site has its own discussion.
 
+## Languages
+
+Published 0.1.1 includes English (`en`) and Russian (`ru`). Unreleased source also
+includes German (`de`), French (`fr`), Spanish (`es`) and Brazilian Portuguese
+(`pt-br`) for the public UI, moderation/admin screens and all notification emails.
+The compiled catalogs are included in the package; no runtime translation service
+is required. Documentation stays in English and Russian.
+
+Commentail follows the active Django language selected by your host project.
+Include the desired codes in your project's `LANGUAGES` and use its existing
+language-selection mechanism (for example Django's `LocaleMiddleware`). If you
+restrict `WAGTAILADMIN_PERMITTED_LANGUAGES`, also allow the desired moderator
+languages there. Use `pt-br` in Django settings; its gettext directory is `pt_BR`.
+See [Django translation](https://docs.djangoproject.com/en/5.2/topics/i18n/translation/).
+
+Comments and moderator-entered rejection reasons retain their original text.
+The outbox saves the recipient's comment language and uses it for subjects and
+bodies even when the worker runs under a different language. A reply notification
+uses the original recipient's language, not the responder's. Host template
+replacements need their own translated strings.
+
 ## Technical settings in Python
 
 ```python

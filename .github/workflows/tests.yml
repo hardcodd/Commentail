@@ -82,10 +82,8 @@ jobs:
       - run: node --test tests/test_*.js
       - run: python -m django makemigrations --check --dry-run --settings=tests.settings
       - run: sudo apt-get update && sudo apt-get install -y gettext
-      - name: Check shipped translation catalog
-        run: |
-          msgfmt --check commentail/locale/ru/LC_MESSAGES/django.po -o /tmp/commentail.mo
-          cmp /tmp/commentail.mo commentail/locale/ru/LC_MESSAGES/django.mo
+      - name: Check all shipped translation catalogs and source coverage
+        run: python tools/check_translations.py
 
   distributions:
     runs-on: ubuntu-24.04

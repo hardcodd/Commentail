@@ -1,0 +1,847 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Commentail\n"
+"PO-Revision-Date: 2026-10-19 00:00+0000\n"
+"Last-Translator: Commentail contributors\n"
+"Language-Team: French\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "A revision is already pending"
+msgstr "Une modification est déjà en attente"
+
+msgid "Account cannot comment"
+msgstr "Ce compte ne peut pas commenter"
+
+msgid "Activity"
+msgstr "Activité"
+
+msgid "All comments"
+msgstr "Tous les commentaires"
+
+msgid "All pages"
+msgstr "Toutes les pages"
+
+msgid "All permitted sites"
+msgstr "Tous les sites autorisés"
+
+msgid "All statuses"
+msgstr "Tous les statuts"
+
+msgid "Apply rules"
+msgstr "Appliquer les règles"
+
+msgid "Approve"
+msgstr "Approuver"
+
+msgid "Approve revision"
+msgstr "Approuver la modification"
+
+msgid "Approve selected"
+msgstr "Approuver la sélection"
+
+msgid "Approved"
+msgstr "Approuvé"
+
+msgid "Author"
+msgstr "Auteur"
+
+msgid "Author cannot comment"
+msgstr "Cet auteur ne peut pas commenter"
+
+msgid "Author limit exceeded"
+msgstr "Limite de l’auteur dépassée"
+
+msgid "Author revision"
+msgstr "Modification de l’auteur"
+
+msgid "Awaiting email"
+msgstr "En attente de confirmation de l’adresse e-mail"
+
+msgid "Awaiting moderation"
+msgstr "En attente de modération"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Captcha limit exceeded"
+msgstr "Limite de CAPTCHA dépassée"
+
+msgid "Clickable links"
+msgstr "Liens cliquables"
+
+msgid "Comment"
+msgstr "Commentaire"
+
+msgid "Comment action"
+msgstr "Action sur le commentaire"
+
+msgid "Comment cannot be edited"
+msgstr "Ce commentaire ne peut pas être modifié"
+
+msgid "Comment deleted"
+msgstr "Commentaire supprimé"
+
+msgid "Comment does not exist"
+msgstr "Ce commentaire n’existe pas"
+
+msgid "Comment hidden"
+msgstr "Commentaire masqué"
+
+msgid "Comment is empty or too long"
+msgstr "Le commentaire est vide ou trop long"
+
+msgid "Comment published"
+msgstr "Commentaire publié"
+
+msgid "Comment rejected"
+msgstr "Commentaire rejeté"
+
+msgid "Comment templates could not be resolved."
+msgstr "Les modèles de commentaires n’ont pas pu être déterminés."
+
+msgid "Comments"
+msgstr "Commentaires"
+
+msgid "Comments settings"
+msgstr "Paramètres des commentaires"
+
+msgid "Confirm email"
+msgstr "Confirmer l’adresse e-mail"
+
+msgid "Confirm your email"
+msgstr "Confirmez votre adresse e-mail"
+
+msgid "Confirm your email before moderation and publication."
+msgstr "Confirmez votre adresse e-mail avant la modération et la publication."
+
+msgid "Deleted"
+msgstr "Supprimé"
+
+msgid "Deleted user"
+msgstr "Utilisateur supprimé"
+
+msgid "Disable notifications"
+msgstr "Désactiver les notifications"
+
+msgid "Discussion does not exist"
+msgstr "Cette discussion n’existe pas"
+
+msgid "Discussion is closed"
+msgstr "Cette discussion est fermée"
+
+msgid "Discussion mode"
+msgstr "Mode de discussion"
+
+msgid "Discussion settings"
+msgstr "Paramètres de discussion"
+
+msgid "Edit"
+msgstr "Modifier"
+
+msgid "Edit comment"
+msgstr "Modifier le commentaire"
+
+msgid "Edited"
+msgstr "Modifié"
+
+msgid "Editing window has expired"
+msgstr "Le délai de modification a expiré"
+
+msgid "Email (private)"
+msgstr "Adresse e-mail (privée)"
+
+msgid "Email confirmation has expired"
+msgstr "Le délai de confirmation de l’adresse e-mail a expiré"
+
+msgid "Email confirmed. Your comment follows the site's moderation policy."
+msgstr "Adresse e-mail confirmée. Votre commentaire est soumis aux règles de modération du site."
+
+msgid "Email me about direct replies"
+msgstr "M’avertir par e-mail des réponses directes"
+
+msgid "Erase text permanently"
+msgstr "Effacer définitivement le texte"
+
+msgid "Filter"
+msgstr "Filtrer"
+
+msgid "From"
+msgstr "Du"
+
+msgid "Group access"
+msgstr "Accès du groupe"
+
+msgid "Group access by site"
+msgstr "Accès du groupe par site"
+
+msgid "Guest comments require configured SMTP"
+msgstr "Les commentaires des visiteurs nécessitent une configuration SMTP"
+
+msgid "Guest email is required"
+msgstr "L’adresse e-mail du visiteur est obligatoire"
+
+msgid "Guest name is required and must be at most 40 characters"
+msgstr "Le nom du visiteur est obligatoire et ne doit pas dépasser 40 caractères"
+
+msgid "Guests"
+msgstr "Visiteurs"
+
+msgid "Guests and registered users"
+msgstr "Visiteurs et utilisateurs inscrits"
+
+msgid "Hidden"
+msgstr "Masqué"
+
+msgid "Hide"
+msgstr "Masquer"
+
+msgid "IP limit exceeded"
+msgstr "Limite par adresse IP dépassée"
+
+msgid "Incorrect or expired CAPTCHA"
+msgstr "CAPTCHA incorrect ou expiré"
+
+msgid "Invalid guest email"
+msgstr "Adresse e-mail du visiteur invalide"
+
+msgid "Invalid or expired form"
+msgstr "Formulaire invalide ou expiré"
+
+msgid "Invalid or expired link"
+msgstr "Lien invalide ou expiré"
+
+msgid "Invalid reply target"
+msgstr "Commentaire cible de la réponse invalide"
+
+msgid "Invalid selection"
+msgstr "Sélection invalide"
+
+msgid "Length must be positive"
+msgstr "La longueur doit être supérieure à zéro"
+
+msgid "Maximum %(limit)s characters."
+msgstr "%(limit)s caractères maximum."
+
+msgid "Maximum comment length"
+msgstr "Longueur maximale des commentaires"
+
+msgid "Moderation policy"
+msgstr "Politique de modération"
+
+msgid "Moderation rules"
+msgstr "Règles de modération"
+
+msgctxt "comment author"
+msgid "Name"
+msgstr "Nom"
+
+msgid "New comments are unavailable."
+msgstr "Les nouveaux commentaires ne sont pas disponibles."
+
+msgid "New reply to your comment"
+msgstr "Nouvelle réponse à votre commentaire"
+
+msgid "Next"
+msgstr "Suivant"
+
+msgid "No actions"
+msgstr "Aucune action"
+
+msgid "No comments"
+msgstr "Aucun commentaire"
+
+msgid "No published comments yet."
+msgstr "Aucun commentaire publié pour le moment."
+
+msgid "Nobody"
+msgstr "Personne"
+
+msgid "Notifications disabled."
+msgstr "Notifications désactivées."
+
+msgid "Notifications were already disabled."
+msgstr "Les notifications étaient déjà désactivées."
+
+msgid "Only the author may edit"
+msgstr "Seul l’auteur peut modifier le commentaire"
+
+msgid "Open"
+msgstr "Ouverte"
+
+msgid "Optional rejection reason"
+msgstr "Motif de rejet (facultatif)"
+
+msgid "Page"
+msgstr "Page"
+
+msgid "Page access is required"
+msgstr "L’accès à la page est nécessaire"
+
+msgid "Permission denied"
+msgstr "Accès refusé"
+
+msgid "Previous"
+msgstr "Précédent"
+
+msgid "Project-wide moderation rules"
+msgstr "Règles de modération du projet"
+
+msgid "Proposed"
+msgstr "Proposé"
+
+msgid "Publication emails"
+msgstr "E-mails de publication"
+
+msgid "Publish immediately"
+msgstr "Publier immédiatement"
+
+msgid "Published"
+msgstr "Publié"
+
+msgid "Read only"
+msgstr "Lecture seule"
+
+msgid "Refresh task"
+msgstr "Renouveler le défi"
+
+msgid "Registered users"
+msgstr "Utilisateurs inscrits"
+
+msgid "Reject"
+msgstr "Rejeter"
+
+msgid "Reject revision"
+msgstr "Rejeter la modification"
+
+msgid "Reject selected"
+msgstr "Rejeter la sélection"
+
+msgid "Rejected"
+msgstr "Rejeté"
+
+msgid "Rejection emails"
+msgstr "E-mails de rejet"
+
+msgid "Reply"
+msgstr "Répondre"
+
+msgid "Reply from %(name)s"
+msgstr "Réponse de %(name)s"
+
+msgid "Reply target is unavailable"
+msgstr "Le commentaire auquel vous répondez est indisponible"
+
+msgid "Reply to"
+msgstr "En réponse à"
+
+msgid "Restore"
+msgstr "Restaurer"
+
+msgid "Retry delivery"
+msgstr "Réessayer l’envoi"
+
+msgid "Review"
+msgstr "Examiner"
+
+msgid "Review all"
+msgstr "Tout examiner"
+
+msgid "Review guests"
+msgstr "Examiner les commentaires des visiteurs"
+
+msgid "Revision submitted."
+msgstr "Modification envoyée."
+
+msgid "Save"
+msgstr "Enregistrer"
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "Select"
+msgstr "Sélectionner"
+
+msgid "Send comment"
+msgstr "Envoyer le commentaire"
+
+msgid "Show more"
+msgstr "Afficher plus"
+
+msgid "Show more replies"
+msgstr "Afficher plus de réponses"
+
+msgid "Show replies"
+msgstr "Afficher les réponses"
+
+msgid "Site"
+msgstr "Site"
+
+msgid "Site / Page"
+msgstr "Site / Page"
+
+msgid "Site cannot be determined"
+msgstr "Le site ne peut pas être déterminé"
+
+msgid "Site settings"
+msgstr "Paramètres du site"
+
+msgid "Solve the task"
+msgstr "Résolvez le défi"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Submission was not accepted"
+msgstr "L’envoi n’a pas été accepté"
+
+msgid "Submit revision"
+msgstr "Envoyer la modification"
+
+msgid "These settings apply immediately to this site. Empty values inherit the site setting."
+msgstr "Ces paramètres s’appliquent immédiatement à ce site. Les valeurs vides héritent du paramètre du site."
+
+msgid "This message cannot be resent"
+msgstr "Ce message ne peut pas être renvoyé"
+
+msgid "To"
+msgstr "Au"
+
+msgid "Too many tasks requested. Please try again later."
+msgstr "Trop de défis demandés. Veuillez réessayer plus tard."
+
+msgid "Unknown action"
+msgstr "Action inconnue"
+
+msgid "Unknown moderation action"
+msgstr "Action de modération inconnue"
+
+msgid "Unsubscribe:"
+msgstr "Se désabonner :"
+
+msgid "Use site setting"
+msgstr "Utiliser le paramètre du site"
+
+msgid "User"
+msgstr "Utilisateur"
+
+msgid "Who can comment"
+msgstr "Qui peut commenter"
+
+msgid "Your comment"
+msgstr "Votre commentaire"
+
+msgid "Your comment is published"
+msgstr "Votre commentaire est publié"
+
+msgid "A revision already awaits moderation"
+msgstr "Une modification attend déjà la modération"
+
+msgid "Action"
+msgstr "Action"
+
+msgid "Cannot determine client address"
+msgstr "Impossible de déterminer l’adresse du client"
+
+msgid "Confirmation expired"
+msgstr "Délai de confirmation expiré"
+
+msgid "Content"
+msgstr "Contenu"
+
+msgid "Editing window expired"
+msgstr "Délai de modification expiré"
+
+msgid "Enabled"
+msgstr "Activé"
+
+msgid "Erase comment text"
+msgstr "Effacer le texte du commentaire"
+
+msgid "Group"
+msgstr "Groupe"
+
+msgid "Guest editing requires an edit link"
+msgstr "Les visiteurs ont besoin d’un lien de modification"
+
+msgid "Guest mail access handler failed"
+msgstr "Échec du contrôle d’accès aux e-mails des visiteurs"
+
+msgid "Hide and restore comments"
+msgstr "Masquer et restaurer les commentaires"
+
+msgid "Invalid submission key"
+msgstr "Clé d’envoi invalide"
+
+msgid "Mail job does not exist"
+msgstr "Cette tâche d’envoi n’existe pas"
+
+msgid "Manage project-wide rules"
+msgstr "Gérer les règles du projet"
+
+msgid "Manage settings"
+msgstr "Gérer les paramètres"
+
+msgid "Moderate comments"
+msgstr "Modérer les commentaires"
+
+msgid "No"
+msgstr "Non"
+
+msgid "Only a visible published comment in this discussion accepts replies"
+msgstr "Seul un commentaire publié et visible dans cette discussion peut recevoir des réponses"
+
+msgid "Only hidden comments can be restored"
+msgstr "Seuls les commentaires masqués peuvent être restaurés"
+
+msgid "Only pending comments can be decided"
+msgstr "Seuls les commentaires en attente peuvent être approuvés ou rejetés"
+
+msgid "Only published comments can be hidden"
+msgstr "Seuls les commentaires publiés peuvent être masqués"
+
+msgid "Only the author can edit"
+msgstr "Seul l’auteur peut modifier le commentaire"
+
+msgid "Revision cannot be decided"
+msgstr "Cette modification ne peut pas être approuvée ou rejetée"
+
+msgid "Revision does not exist"
+msgstr "Cette modification n’existe pas"
+
+msgid "Site does not exist"
+msgstr "Ce site n’existe pas"
+
+msgid "Submission key was already used with different content"
+msgstr "Cette clé d’envoi a déjà été utilisée avec un contenu différent"
+
+msgid "This link cannot edit that comment"
+msgstr "Ce lien ne permet pas de modifier ce commentaire"
+
+msgid "Unknown rate limit"
+msgstr "Limite de fréquence inconnue"
+
+msgid "Unknown revision action"
+msgstr "Action de modification inconnue"
+
+msgid "Unknown token purpose"
+msgstr "Usage du jeton inconnu"
+
+msgid "View comments"
+msgstr "Voir les commentaires"
+
+msgid "Word or phrase"
+msgstr "Mot ou expression"
+
+msgid "Yes"
+msgstr "Oui"
+
+msgid "Resend confirmation email"
+msgstr "Renvoyer l’e-mail de confirmation"
+
+msgid "Comment settings"
+msgstr "Paramètres des commentaires"
+
+msgid "Revision awaiting moderation"
+msgstr "Modification en attente de modération"
+
+msgid "The form could not be verified. Your draft is preserved; review it and send again."
+msgstr "Le formulaire n’a pas pu être vérifié. Votre brouillon est conservé ; vérifiez-le et renvoyez-le."
+
+msgid "Pending"
+msgstr "En attente"
+
+msgid "Select all"
+msgstr "Tout sélectionner"
+
+msgid "Disabled"
+msgstr "Désactivé"
+
+msgid "No rules yet"
+msgstr "Aucune règle pour le moment"
+
+msgid "Add rule"
+msgstr "Ajouter une règle"
+
+msgid "No group permissions yet"
+msgstr "Aucune autorisation de groupe pour le moment"
+
+msgid "Add group access"
+msgstr "Ajouter un accès de groupe"
+
+msgid "Connection failed. Your draft is kept. Please try again."
+msgstr "La connexion a échoué. Votre brouillon est conservé. Veuillez réessayer."
+
+msgid "Comment permissions by site"
+msgstr "Autorisations des commentaires par site"
+
+msgid "Choose the sites and actions this group may access. Comment text can only be edited by its author."
+msgstr "Choisissez les sites et les actions accessibles à ce groupe. Seul l’auteur d’un commentaire peut en modifier le texte."
+
+msgid "Add site access"
+msgstr "Ajouter un accès à un site"
+
+msgid "Remove site access"
+msgstr "Supprimer l’accès au site"
+
+msgid "Each site may appear only once."
+msgstr "Chaque site ne peut apparaître qu’une seule fois."
+
+msgid "View"
+msgstr "Voir"
+
+msgid "Moderate"
+msgstr "Modérer"
+
+msgid "Settings"
+msgstr "Paramètres"
+
+msgid "Rules"
+msgstr "Règles"
+
+msgid "Edit rule"
+msgstr "Modifier la règle"
+
+msgid "All actions"
+msgstr "Toutes les actions"
+
+msgid "Reset filters"
+msgstr "Réinitialiser les filtres"
+
+msgid "No matching rules"
+msgstr "Aucune règle correspondante"
+
+msgid "Pagination"
+msgstr "Pagination"
+
+msgid "The CSV file must use UTF-8 encoding."
+msgstr "Le fichier CSV doit être encodé en UTF-8."
+
+msgid "The CSV file is empty."
+msgstr "Le fichier CSV est vide."
+
+msgid "CSV headers must be phrase, action, enabled."
+msgstr "Les en-têtes CSV doivent être phrase, action, enabled."
+
+#, python-format
+msgid "The CSV file exceeds the limit of %(limit)s rules."
+msgstr "Le fichier CSV dépasse la limite de %(limit)s règles."
+
+#, python-format
+msgid "Row %(line)s: expected three columns."
+msgstr "Ligne %(line)s : trois colonnes attendues."
+
+#, python-format
+msgid "Row %(line)s: phrase must contain 1–255 characters without null bytes."
+msgstr "Ligne %(line)s : l’expression doit contenir de 1 à 255 caractères sans octets nuls."
+
+#, python-format
+msgid "Row %(line)s: duplicate phrase in the file."
+msgstr "Ligne %(line)s : expression en double dans le fichier."
+
+#, python-format
+msgid "Row %(line)s: action must be review or reject."
+msgstr "Ligne %(line)s : action doit être review ou reject."
+
+#, python-format
+msgid "Row %(line)s: enabled must be 1, 0, true or false."
+msgstr "Ligne %(line)s : enabled doit être 1, 0, true ou false."
+
+msgid "Invalid CSV structure: check the delimiter and quoting."
+msgstr "Structure CSV invalide : vérifiez le séparateur et les guillemets."
+
+msgid "The CSV file contains no rules."
+msgstr "Le fichier CSV ne contient aucune règle."
+
+#, python-format
+msgid "Row %(line)s: multiple existing rules have this phrase; resolve them before importing."
+msgstr "Ligne %(line)s : plusieurs règles existantes contiennent cette expression ; résolvez ce conflit avant l’importation."
+
+msgid "CSV file"
+msgstr "Fichier CSV"
+
+#, python-format
+msgid "The CSV file exceeds the limit of %(limit)s bytes."
+msgstr "Le fichier CSV dépasse la limite de %(limit)s octets."
+
+#, python-format
+msgid "CSV imported: %(added)s added, %(updated)s updated, %(unchanged)s unchanged."
+msgstr "CSV importé : %(added)s ajoutées, %(updated)s mises à jour, %(unchanged)s inchangées."
+
+msgid "Import CSV"
+msgstr "Importer un CSV"
+
+msgid "Export CSV"
+msgstr "Exporter un CSV"
+
+msgid "Use UTF-8 CSV with comma or semicolon separators and the headers phrase, action, enabled."
+msgstr "Utilisez un fichier CSV en UTF-8 avec des virgules ou des points-virgules comme séparateurs et les en-têtes phrase, action, enabled."
+
+msgid "Actions: review or reject. Enabled: 1/0 or true/false."
+msgstr "Actions : review (examiner) ou reject (rejeter). Activation : 1/0 ou true/false."
+
+msgid "New phrases are added; exact existing phrases update their action and enabled state. Other rules remain unchanged. If any row is invalid, nothing is saved."
+msgstr "Les nouvelles expressions sont ajoutées ; pour les expressions existantes identiques, l’action et l’état d’activation sont mis à jour. Les autres règles restent inchangées. Si une ligne est invalide, rien n’est enregistré."
+
+msgid "Export includes all project rules. Formula-like phrases are prefixed with an apostrophe for spreadsheets; importing restores the original text."
+msgstr "L’exportation comprend toutes les règles du projet. Les expressions ressemblant à des formules sont précédées d’une apostrophe pour les tableurs ; l’importation restaure le texte d’origine."
+
+msgid "CAPTCHA is unavailable. Please try again later."
+msgstr "Le CAPTCHA est indisponible. Veuillez réessayer plus tard."
+
+msgid "Email delivery"
+msgstr "Envoi des e-mails"
+
+msgid "Failed"
+msgstr "Échec"
+
+msgid "Pending delivery"
+msgstr "En attente d’envoi"
+
+msgid "Sending"
+msgstr "En cours d’envoi"
+
+msgid "Sent"
+msgstr "Envoyé"
+
+msgid "Cancelled"
+msgstr "Annulé"
+
+msgid "Email confirmation"
+msgstr "Confirmation de l’adresse e-mail"
+
+msgid "Guest edit link"
+msgstr "Lien de modification pour le visiteur"
+
+msgid "Reply notification"
+msgstr "Notification de réponse"
+
+msgid "Publication notification"
+msgstr "Notification de publication"
+
+msgid "Rejection notification"
+msgstr "Notification de rejet"
+
+#, python-format
+msgid "Delivery jobs: %(count)s."
+msgstr "Tâches d’envoi : %(count)s."
+
+msgid "Message"
+msgstr "Message"
+
+msgid "Recipient"
+msgstr "Destinataire"
+
+msgid "Delivery details"
+msgstr "Détails de l’envoi"
+
+msgid "Attempts"
+msgstr "Tentatives"
+
+msgid "Next attempt"
+msgstr "Prochaine tentative"
+
+msgid "Expires"
+msgstr "Expiration"
+
+msgid "No delivery jobs"
+msgstr "Aucune tâche d’envoi"
+
+msgid "Back to comments"
+msgstr "Retour aux commentaires"
+
+msgid "Comments are unavailable."
+msgstr "Les commentaires sont indisponibles."
+
+msgid "Object discussions"
+msgstr "Discussions des objets"
+
+msgid "No object discussions yet."
+msgstr "Aucune discussion d’objet pour le moment."
+
+msgid "Object mail access handler failed"
+msgstr "Échec du contrôle d’accès à l’objet pour l’envoi d’e-mails"
+
+msgid "Object URL handler failed"
+msgstr "Échec de la détermination de l’URL de l’objet"
+
+msgid "Confirmation email is queued."
+msgstr "L’e-mail de confirmation est en attente d’envoi."
+
+msgid "Confirmation email is being sent."
+msgstr "L’e-mail de confirmation est en cours d’envoi."
+
+msgid "There was a problem sending the confirmation email. We will retry automatically."
+msgstr "Un problème est survenu lors de l’envoi de l’e-mail de confirmation. Nous réessaierons automatiquement."
+
+msgid "There was a problem sending the confirmation email. You can request it again."
+msgstr "Un problème est survenu lors de l’envoi de l’e-mail de confirmation. Vous pouvez le demander à nouveau."
+
+msgid "Confirmation email was sent. Check your inbox and spam folder."
+msgstr "L’e-mail de confirmation a été envoyé. Vérifiez votre boîte de réception et votre dossier de courriers indésirables."
+
+msgid "Confirmation email is unavailable."
+msgstr "L’e-mail de confirmation est indisponible."
+
+msgid "The email confirmation deadline has passed."
+msgstr "Le délai de confirmation de l’adresse e-mail est dépassé."
+
+msgid "Confirm before:"
+msgstr "À confirmer avant le :"
+
+msgid "This email is confirmed in this browser. A different email needs confirmation."
+msgstr "Cette adresse e-mail est confirmée dans ce navigateur. Une autre adresse devra être confirmée."
+
+msgid "Reply notifications"
+msgstr "Notifications de réponse"
+
+msgid "Comment status"
+msgstr "Statut du commentaire"
+
+msgid "Back to site"
+msgstr "Retour au site"
+
+msgid "Confirm your email to continue with your comment. The site's moderation policy will apply."
+msgstr "Confirmez votre adresse e-mail pour poursuivre l’envoi de votre commentaire. Les règles de modération du site s’appliqueront."
+
+msgid "You will stop receiving notifications about direct replies to this comment."
+msgstr "Vous ne recevrez plus de notifications concernant les réponses directes à ce commentaire."
+
+msgid "Your changes follow the site's moderation policy. The current text remains visible while a revision awaits review."
+msgstr "Vos modifications sont soumises aux règles de modération du site. Le texte actuel reste visible pendant l’examen d’une modification."
+
+msgid "Send emails"
+msgstr "Envoyer des e-mails"
+
+msgid "Disables all comment emails, including guest verification. Guests cannot comment while email is disabled."
+msgstr "Désactive tous les e-mails liés aux commentaires, y compris la vérification des visiteurs. Les visiteurs ne peuvent pas commenter tant que les e-mails sont désactivés."
+
+msgid "We’ll email you about replies."
+msgstr "Nous vous avertirons des réponses par e-mail."
+
+msgid "Comment actions"
+msgstr "Actions sur le commentaire"
+
+msgid "Name: up to 40 characters."
+msgstr "Nom : 40 caractères maximum."
+
+msgid "Use at most 40 characters for your name."
+msgstr "Utilisez au maximum 40 caractères pour votre nom."
+
+msgid "Settings take effect when you save the page. Use the site setting to inherit its current value."
+msgstr "Les paramètres prennent effet lorsque vous enregistrez la page. Utilisez le paramètre du site pour hériter de sa valeur actuelle."
+
+msgid "Discussion and access"
+msgstr "Discussion et accès"
+
+msgid "Comment content"
+msgstr "Contenu des commentaires"
+
+msgid "Notifications"
+msgstr "Notifications"
+
+msgid "Delete"
+msgstr "Supprimer"
