@@ -330,7 +330,7 @@ msgid "Reply"
 msgstr "Répondre"
 
 msgid "Reply from %(name)s"
-msgstr "Réponse de %(name)s"
+msgstr "Auteur de la réponse : %(name)s"
 
 msgid "Reply target is unavailable"
 msgstr "Le commentaire auquel vous répondez est indisponible"
@@ -845,3 +845,76 @@ msgstr "Notifications"
 
 msgid "Delete"
 msgstr "Supprimer"
+
+msgid "Comment changes rejected"
+msgstr "Modifications du commentaire rejetées"
+
+msgid "If the button does not work, copy this address into your browser:"
+msgstr "Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :"
+
+msgid "If you did not leave a comment, ignore this email. Your address will not be confirmed."
+msgstr "Si vous n’avez pas laissé de commentaire, ignorez cet e-mail. Votre adresse ne sera pas confirmée."
+
+msgid "Keep this link private; it gives access to your comment."
+msgstr "Ne partagez pas ce lien : il donne accès à votre commentaire."
+
+msgid "Moderator's note:"
+msgstr "Note de la modération :"
+
+msgid "Open discussion"
+msgstr "Ouvrir la discussion"
+
+msgid "View comment"
+msgstr "Voir le commentaire"
+
+msgid "View comment status"
+msgstr "Voir le statut du commentaire"
+
+msgid "View reply"
+msgstr "Lire la réponse"
+
+msgid "You left a comment. To continue, open the confirmation page and confirm your email address there."
+msgstr "Vous avez laissé un commentaire. Pour continuer, ouvrez la page de confirmation et confirmez-y votre adresse e-mail."
+
+msgid "You receive notifications about direct replies to this comment. You can turn them off on the unsubscribe page."
+msgstr "Vous recevez des notifications pour les réponses directes à ce commentaire. Vous pouvez les désactiver sur la page de désabonnement."
+
+msgid "Your changes were not approved. The previous version of your comment remains unchanged."
+msgstr "Vos modifications n’ont pas été approuvées. La version précédente de votre commentaire reste inchangée."
+
+msgid "Your comment was not approved for publication."
+msgstr "Votre commentaire n’a pas été approuvé pour publication."
+
+#, python-format
+msgid "This is an automatic comment notification from %(site)s."
+msgstr "Ceci est une notification automatique concernant les commentaires sur %(site)s."
+
+msgid "Comment changes approved"
+msgstr "Modifications du commentaire approuvées"
+
+msgid "Your changes have been approved. You can open the discussion on the site."
+msgstr "Vos modifications ont été approuvées. Vous pouvez ouvrir la discussion sur le site."
+
+msgid "Open the discussion on the site to read the reply."
+msgstr "Ouvrez la discussion sur le site pour lire la réponse."
+
+msgid "Editing is available for a limited time. It also ends as soon as a reply is submitted, even if that reply is awaiting moderation."
+msgstr "La modification est possible pendant une durée limitée. Elle cesse également dès qu’une réponse est envoyée, même si celle-ci est encore en attente de modération."
+
+msgctxt "email action"
+msgid "Edit comment"
+msgstr "Modifier le commentaire"
+
+msgctxt "email action"
+msgid "Unsubscribe"
+msgstr "Se désabonner"
+
+msgid "Your comment has been published. Below is your private editing link."
+msgstr "Votre commentaire a été publié. Vous trouverez ci-dessous votre lien privé de modification."
+
+msgid "Your comment has been published. You can open the discussion on the site."
+msgstr "Votre commentaire a été publié. Vous pouvez ouvrir la discussion sur le site."
+
+#, python-format
+msgid "%(label)s:"
+msgstr "%(label)s :"

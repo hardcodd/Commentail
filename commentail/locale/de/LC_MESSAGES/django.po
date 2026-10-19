@@ -845,3 +845,76 @@ msgstr "Benachrichtigungen"
 
 msgid "Delete"
 msgstr "Löschen"
+
+msgid "Comment changes rejected"
+msgstr "Kommentaränderungen abgelehnt"
+
+msgid "If the button does not work, copy this address into your browser:"
+msgstr "Falls die Schaltfläche nicht funktioniert, kopieren Sie diese Adresse in Ihren Browser:"
+
+msgid "If you did not leave a comment, ignore this email. Your address will not be confirmed."
+msgstr "Wenn Sie keinen Kommentar hinterlassen haben, ignorieren Sie diese E-Mail. Ihre Adresse wird nicht bestätigt."
+
+msgid "Keep this link private; it gives access to your comment."
+msgstr "Geben Sie diesen Link nicht weiter: Er ermöglicht den Zugriff auf Ihren Kommentar."
+
+msgid "Moderator's note:"
+msgstr "Hinweis der Moderation:"
+
+msgid "Open discussion"
+msgstr "Diskussion öffnen"
+
+msgid "View comment"
+msgstr "Kommentar ansehen"
+
+msgid "View comment status"
+msgstr "Kommentarstatus ansehen"
+
+msgid "View reply"
+msgstr "Antwort lesen"
+
+msgid "You left a comment. To continue, open the confirmation page and confirm your email address there."
+msgstr "Sie haben einen Kommentar hinterlassen. Öffnen Sie die Bestätigungsseite und bestätigen Sie dort Ihre E-Mail-Adresse, um fortzufahren."
+
+msgid "You receive notifications about direct replies to this comment. You can turn them off on the unsubscribe page."
+msgstr "Sie erhalten Benachrichtigungen über direkte Antworten auf diesen Kommentar. Auf der Abmeldeseite können Sie diese deaktivieren."
+
+msgid "Your changes were not approved. The previous version of your comment remains unchanged."
+msgstr "Ihre Änderungen wurden nicht freigegeben. Die vorherige Version Ihres Kommentars bleibt unverändert."
+
+msgid "Your comment was not approved for publication."
+msgstr "Ihr Kommentar wurde nicht zur Veröffentlichung freigegeben."
+
+#, python-format
+msgid "This is an automatic comment notification from %(site)s."
+msgstr "Dies ist eine automatische Kommentarbenachrichtigung von %(site)s."
+
+msgid "Comment changes approved"
+msgstr "Kommentaränderungen freigegeben"
+
+msgid "Your changes have been approved. You can open the discussion on the site."
+msgstr "Ihre Änderungen wurden freigegeben. Sie können die Diskussion auf der Website öffnen."
+
+msgid "Open the discussion on the site to read the reply."
+msgstr "Öffnen Sie die Diskussion auf der Website, um die Antwort zu lesen."
+
+msgid "Editing is available for a limited time. It also ends as soon as a reply is submitted, even if that reply is awaiting moderation."
+msgstr "Die Bearbeitung ist nur für begrenzte Zeit möglich. Sie endet auch, sobald eine Antwort eingereicht wird, selbst wenn diese noch auf Moderation wartet."
+
+msgctxt "email action"
+msgid "Edit comment"
+msgstr "Kommentar bearbeiten"
+
+msgctxt "email action"
+msgid "Unsubscribe"
+msgstr "Benachrichtigungen abbestellen"
+
+msgid "Your comment has been published. Below is your private editing link."
+msgstr "Ihr Kommentar wurde veröffentlicht. Unten finden Sie Ihren persönlichen Bearbeitungslink."
+
+msgid "Your comment has been published. You can open the discussion on the site."
+msgstr "Ihr Kommentar wurde veröffentlicht. Sie können die Diskussion auf der Website öffnen."
+
+#, python-format
+msgid "%(label)s:"
+msgstr "%(label)s:"

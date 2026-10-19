@@ -1,5 +1,5 @@
 from django.http import HttpRequest
-from django.urls import include, path, reverse
+from django.urls import URLResolver, include, path, reverse
 from django.utils.translation import gettext_lazy as _
 from wagtail import hooks
 from wagtail.admin.menu import MenuItem
@@ -25,7 +25,7 @@ class CommentsMenuItem(MenuItem):
 
 
 @hooks.register("register_admin_urls")
-def register_urls():
+def register_urls() -> list[URLResolver]:
     return [path("commentail/", include("commentail.admin_urls"))]
 
 

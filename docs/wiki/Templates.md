@@ -46,7 +46,20 @@ Django's template loader order. For each kind (`confirm`, `edit`, `published`,
 - `commentail/emails/<kind>_subject.txt`: required nonempty, single-line subject
   (surrounding whitespace is stripped).
 - `commentail/emails/<kind>.txt`: required plain-text body.
-- `commentail/emails/<kind>.html`: optional HTML alternative; absent by default.
+- `commentail/emails/<kind>.html`: HTML alternative, included in current source
+  (published 0.1.1 has plain text only).
+
+Current-source defaults use a neutral card, the host Site name, one primary link
+styled as a button, descriptive secondary links and a copyable action URL. Both
+alternatives explain confirmation, editing, moderation and per-comment unsubscribe.
+Revision decisions have distinct subjects and body text. There are no remote
+images, fonts or tracking assets. Existing per-kind host overrides still win.
+
+The new `commentail/emails/base.html` and `button.html` are shared presentation
+helpers, not additions to the stable context or per-kind path contract. Override
+all five HTML bodies if you need fully independent markup. Keep plain-text and
+HTML copy/actions consistent when overriding either. An empty per-kind HTML
+override produces an empty HTML part; it does not disable multipart mail.
 
 Templates render under the job's saved language, without request context
 processors. The public context contains only `kind`, `author_name`, `site_name`,

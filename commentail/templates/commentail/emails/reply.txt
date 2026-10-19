@@ -1,6 +1,17 @@
-{% load i18n %}{% autoescape off %}{% blocktrans with name=author_name %}Reply from {{ name }}{% endblocktrans %}
+{% load i18n %}{% autoescape off %}{% translate "New reply to your comment" %}
 
+{{ site_name }}
+
+{% translate "Open the discussion on the site to read the reply." %}
+
+{% blocktranslate with name=author_name %}Reply from {{ name }}{% endblocktranslate %}
+
+{% translate "View reply" as action_label %}{% blocktranslate with label=action_label %}{{ label }}:{% endblocktranslate %}
 {{ target_url }}
 
-{% trans "Unsubscribe:" %}
-{{ action_url }}{% endautoescape %}
+{% translate "You receive notifications about direct replies to this comment. You can turn them off on the unsubscribe page." %}
+
+{% translate "Unsubscribe:" %}
+{{ action_url }}
+
+{% blocktranslate with site=site_name %}This is an automatic comment notification from {{ site }}.{% endblocktranslate %}{% endautoescape %}

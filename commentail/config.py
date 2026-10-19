@@ -76,6 +76,11 @@ DEFAULTS: TechnicalSettings = {
 
 
 def configuration_errors() -> list[str]:
+    """Validate all configured sections without substituting defaults for errors.
+
+    Check key scope, values and importable extension contracts. An empty list
+    means the configuration is valid; Django system checks report these errors.
+    """
     config = getattr(settings, "COMMENTAIL", {})
     if not isinstance(config, dict):
         return ["COMMENTAIL must be a dictionary"]
@@ -182,6 +187,11 @@ def configuration_errors() -> list[str]:
 
 
 def technical_settings(site: Site | None) -> TechnicalSettings:
+    """Merge library, project and hostname settings after validating every section.
+
+    Without a Site, apply only library and project defaults. Raise
+    ImproperlyConfigured on invalid configuration, including other hostnames.
+    """
     errors = configuration_errors()
     if errors:
         raise ImproperlyConfigured("; ".join(errors))

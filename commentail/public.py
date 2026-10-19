@@ -217,13 +217,12 @@ def _present(
 ) -> dict[str, object]:
     name = author_name(comment, request)
     initials, gradient = default_avatar(name)
-    label = (
-        _("Comment deleted")
-        if comment.status == "deleted"
-        else _("Comment hidden")
-        if comment.status == "hidden"
-        else comment.text
-    )
+    if comment.status == "deleted":
+        label = _("Comment deleted")
+    elif comment.status == "hidden":
+        label = _("Comment hidden")
+    else:
+        label = comment.text
     editable = _edit_owner(request, comment) and not edit_block_reason(comment)
     permalink = comment_url(comment.discussion, comment.pk)
     return {

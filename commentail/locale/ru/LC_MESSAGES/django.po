@@ -330,7 +330,7 @@ msgid "Reply"
 msgstr "Ответить"
 
 msgid "Reply from %(name)s"
-msgstr "Ответ от %(name)s"
+msgstr "Автор ответа: %(name)s"
 
 msgid "Reply target is unavailable"
 msgstr "Адресат ответа недоступен"
@@ -845,3 +845,76 @@ msgstr "Уведомления"
 
 msgid "Delete"
 msgstr "Удалить"
+
+msgid "Comment changes rejected"
+msgstr "Правки комментария отклонены"
+
+msgid "If the button does not work, copy this address into your browser:"
+msgstr "Если кнопка не работает, скопируйте этот адрес в браузер:"
+
+msgid "If you did not leave a comment, ignore this email. Your address will not be confirmed."
+msgstr "Если вы не оставляли комментарий, просто проигнорируйте письмо. Ваш адрес не будет подтверждён."
+
+msgid "Keep this link private; it gives access to your comment."
+msgstr "Не передавайте эту ссылку другим: она даёт доступ к вашему комментарию."
+
+msgid "Moderator's note:"
+msgstr "Пояснение модератора:"
+
+msgid "Open discussion"
+msgstr "Открыть обсуждение"
+
+msgid "View comment"
+msgstr "Посмотреть комментарий"
+
+msgid "View comment status"
+msgstr "Посмотреть статус комментария"
+
+msgid "View reply"
+msgstr "Прочитать ответ"
+
+msgid "You left a comment. To continue, open the confirmation page and confirm your email address there."
+msgstr "Вы оставили комментарий. Чтобы продолжить, откройте страницу подтверждения и подтвердите на ней свой email."
+
+msgid "You receive notifications about direct replies to this comment. You can turn them off on the unsubscribe page."
+msgstr "Вы получаете уведомления о прямых ответах на этот комментарий. Их можно отключить на странице отписки."
+
+msgid "Your changes were not approved. The previous version of your comment remains unchanged."
+msgstr "Ваши правки отклонены. Предыдущая версия комментария осталась без изменений."
+
+msgid "Your comment was not approved for publication."
+msgstr "Ваш комментарий отклонён и не опубликован."
+
+#, python-format
+msgid "This is an automatic comment notification from %(site)s."
+msgstr "Это автоматическое уведомление о комментариях на сайте %(site)s."
+
+msgid "Comment changes approved"
+msgstr "Правки комментария одобрены"
+
+msgid "Your changes have been approved. You can open the discussion on the site."
+msgstr "Ваши правки одобрены. Вы можете открыть обсуждение на сайте."
+
+msgid "Open the discussion on the site to read the reply."
+msgstr "Откройте обсуждение на сайте, чтобы прочитать ответ."
+
+msgid "Editing is available for a limited time. It also ends as soon as a reply is submitted, even if that reply is awaiting moderation."
+msgstr "Редактировать комментарий можно в течение ограниченного времени. Редактирование также прекращается сразу после отправки ответа на него, даже если он ещё ожидает модерации."
+
+msgctxt "email action"
+msgid "Edit comment"
+msgstr "Редактировать комментарий"
+
+msgctxt "email action"
+msgid "Unsubscribe"
+msgstr "Отписаться"
+
+msgid "Your comment has been published. Below is your private editing link."
+msgstr "Ваш комментарий опубликован. Ниже — ваша личная ссылка для редактирования."
+
+msgid "Your comment has been published. You can open the discussion on the site."
+msgstr "Ваш комментарий опубликован. Вы можете открыть обсуждение на сайте."
+
+#, python-format
+msgid "%(label)s:"
+msgstr "%(label)s:"

@@ -1,5 +1,13 @@
-{% load i18n %}{% autoescape off %}{% trans "Comment rejected" %}
+{% load i18n %}{% autoescape off %}{% if is_revision %}{% translate "Comment changes rejected" %}{% else %}{% translate "Comment rejected" %}{% endif %}
 
+{{ site_name }}
+
+{% if is_revision %}{% translate "Your changes were not approved. The previous version of your comment remains unchanged." %}{% else %}{% translate "Your comment was not approved for publication." %}{% endif %}
+
+{% if reason %}{% translate "Moderator's note:" %}
+{{ reason }}
+{% endif %}
+{% translate "Open discussion" as action_label %}{% blocktranslate with label=action_label %}{{ label }}:{% endblocktranslate %}
 {{ target_url }}
-{% if reason %}
-{{ reason }}{% endif %}{% endautoescape %}
+
+{% blocktranslate with site=site_name %}This is an automatic comment notification from {{ site }}.{% endblocktranslate %}{% endautoescape %}

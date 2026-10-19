@@ -281,6 +281,12 @@ def moderate(
     actor: AbstractBaseUser,
     reason: str = "",
 ) -> Comment:
+    """Approve or reject a pending comment with site-scoped moderator permission.
+
+    Log the decision and enqueue configured mail in the same transaction.
+    Repeating the resulting status creates no new event or mail; other states
+    or actions raise DomainError. Closed modes do not block moderation.
+    """
     comment, discussion = _comment(comment_id)
     _permission(actor, discussion, "moderate")
     if action not in {"approve", "reject"}:
@@ -313,6 +319,13 @@ def moderate_revision(
     actor: AbstractBaseUser,
     reason: str = "",
 ) -> CommentRevision:
+    """Decide a pending revision of a published or hidden comment atomically.
+
+    Require site-scoped moderation permission. Approval replaces the current
+    text; either decision erases revision text, records an event and enqueues
+    configured mail. Repeating the resulting status creates no new event or mail;
+    invalid actions or states raise DomainError. Approval preserves hidden status.
+    """
     if not Discussion.objects.filter(comments__revisions__pk=revision_id).update(
         version=F("version") + 1
     ):
@@ -347,6 +360,11 @@ def moderate_revision(
 
 @transaction.atomic
 def remove(comment_id: int, *, actor: AbstractBaseUser) -> Comment:
+    """Erase text, rejection reason and revisions with site-scoped delete permission.
+
+    Preserve the comment row and its replies as a deleted placeholder. Repeated
+    deletion creates no new event; permission failures raise DomainError.
+    """
     comment, discussion = _comment(comment_id)
     _permission(actor, discussion, "delete")
     if comment.status != Comment.Status.DELETED:
@@ -361,6 +379,11 @@ def remove(comment_id: int, *, actor: AbstractBaseUser) -> Comment:
 
 @transaction.atomic
 def hide(comment_id: int, *, actor: AbstractBaseUser) -> Comment:
+    """Hide a published comment with site-scoped hide permission, retaining its text.
+
+    Record one event; an already hidden comment creates no new event. Permission
+    failures and other states raise DomainError.
+    """
     comment, discussion = _comment(comment_id)
     _permission(actor, discussion, "hide")
     if comment.status == Comment.Status.HIDDEN:
@@ -375,6 +398,12 @@ def hide(comment_id: int, *, actor: AbstractBaseUser) -> Comment:
 
 @transaction.atomic
 def restore(comment_id: int, *, actor: AbstractBaseUser) -> Comment:
+    """Restore a hidden comment with site-scoped hide permission and record an event.
+
+    Preserve text and publication time; an already published comment creates no
+    new event. Permission failures and other states, including deletion, raise
+    DomainError.
+    """
     comment, discussion = _comment(comment_id)
     _permission(actor, discussion, "hide")
     if comment.status == Comment.Status.PUBLISHED:

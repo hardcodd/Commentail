@@ -1,0 +1,8 @@
+{% extends "commentail/emails/base.html" %}{% load i18n %}
+{% block title %}{% translate "New reply to your comment" %}{% endblock %}
+{% block heading %}{% translate "New reply to your comment" %}{% endblock %}
+{% block content %}<p style="margin:0 0 12px;">{% blocktranslate with name=author_name %}Reply from {{ name }}{% endblocktranslate %}</p>
+<p style="margin:0 0 20px;">{% translate "Open the discussion on the site to read the reply." %}</p>
+{% translate "View reply" as primary_label %}{% include "commentail/emails/button.html" with url=target_url label=primary_label only %}
+<p style="margin:24px 0 8px;font-size:13px;line-height:21px;color:#596b7b;">{% translate "You receive notifications about direct replies to this comment. You can turn them off on the unsubscribe page." %}</p>{% if action_url %}<p style="margin:0;"><a href="{{ action_url }}" style="color:#176b65;text-decoration:underline;">{% translate "Unsubscribe" context "email action" %}</a></p>{% endif %}
+{% endblock %}

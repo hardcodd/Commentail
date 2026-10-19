@@ -1,1 +1,1 @@
-{% load i18n %}{% autoescape off %}{% trans "Comment rejected" %}{% endautoescape %}
+{% load i18n %}{% autoescape off %}{% if is_revision %}{% translate "Comment changes rejected" %}{% else %}{% translate "Comment rejected" %}{% endif %}{% endautoescape %}

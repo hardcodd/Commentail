@@ -1,0 +1,7 @@
+{% extends "commentail/emails/base.html" %}{% load i18n %}
+{% block title %}{% if is_revision %}{% translate "Comment changes rejected" %}{% else %}{% translate "Comment rejected" %}{% endif %}{% endblock %}
+{% block heading %}{% if is_revision %}{% translate "Comment changes rejected" %}{% else %}{% translate "Comment rejected" %}{% endif %}{% endblock %}
+{% block content %}<p style="margin:0 0 20px;">{% if is_revision %}{% translate "Your changes were not approved. The previous version of your comment remains unchanged." %}{% else %}{% translate "Your comment was not approved for publication." %}{% endif %}</p>
+{% if reason %}<p style="margin:20px 0;padding:16px;background-color:#f3f5f7;border-left:3px solid #a8b7c4;"><strong>{% translate "Moderator's note:" %}</strong><br>{{ reason|linebreaksbr }}</p>{% endif %}
+{% translate "Open discussion" as primary_label %}{% include "commentail/emails/button.html" with url=target_url label=primary_label only %}
+{% endblock %}

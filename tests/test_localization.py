@@ -38,8 +38,47 @@ COPY = {
               "Seu comentário foi publicado", "Nova resposta ao seu comentário"),
 }
 
+REVISION_SUBJECTS = {
+    "de": ("Kommentaränderungen freigegeben", "Kommentaränderungen abgelehnt"),
+    "fr": ("Modifications du commentaire approuvées", "Modifications du commentaire rejetées"),
+    "es": ("Cambios del comentario aprobados", "Cambios del comentario rechazados"),
+    "pt-br": ("Alterações do comentário aprovadas", "Alterações do comentário rejeitadas"),
+}
+
 
 class LocalizationTests(TestCase):
+    def test_hidden_revision_approval_does_not_promise_publication(self) -> None:
+        from commentail.services import hide
+
+        expected = {
+            "en": ("Comment changes approved", "Your changes have been approved."),
+            "ru": ("Правки комментария одобрены", "Ваши правки одобрены."),
+            "de": (REVISION_SUBJECTS["de"][0], "Ihre Änderungen wurden freigegeben."),
+            "fr": (REVISION_SUBJECTS["fr"][0], "Vos modifications ont été approuvées."),
+            "es": (REVISION_SUBJECTS["es"][0], "Sus cambios se han aprobado."),
+            "pt-br": (REVISION_SUBJECTS["pt-br"][0], "Suas alterações foram aprovadas."),
+        }
+        for language, (subject, explanation) in expected.items():
+            with self.subTest(language=language):
+                comment = submit(
+                    self.discussion.pk, text="PRIVATE ORIGINAL", user=self.admin,
+                    language=language,
+                )
+                moderate(comment.pk, "approve", actor=self.admin)
+                process_mail()
+                revision = revise(comment.pk, "PRIVATE REVISION", user=self.admin)
+                hide(comment.pk, actor=self.admin)
+                moderate_revision(revision.pk, "approve", actor=self.admin)
+                with override("ru"):
+                    self.assertEqual(process_mail(), 1)
+                message = mail.outbox[-1]
+                self.assertEqual(message.subject, subject)
+                for content in (message.body, message.alternatives[0].content):
+                    self.assertIn(explanation, content)
+                    self.assertNotIn("PRIVATE", content)
+                comment.refresh_from_db()
+                self.assertEqual(comment.status, "hidden")
+
     def setUp(self) -> None:
         self.site = Site.objects.get(is_default_site=True)
         self.discussion = Discussion.objects.create(
@@ -152,9 +191,17 @@ class LocalizationTests(TestCase):
         by_id = {message.extra_headers["Message-ID"]: message for message in messages}
         for expected_kind, expected_subject in [(kind, subject), *([also] if also else [])]:
             expected = jobs[expected_kind]
+            if expected.revision_id:
+                expected_subject = REVISION_SUBJECTS[expected.language][
+                    0 if expected_kind == "published" else 1
+                ]
             message = by_id[f"<commentail-{expected.pk}@{self.site.hostname}>"]
             self.assertEqual(message.subject, expected_subject)
-            self.assertNotIn("PRIVATE", message.body)
+            html = message.alternatives[0].content
+            self.assertEqual(message.alternatives[0].mimetype, "text/html")
+            self.assertNotIn("PRIVATE", message.body + html)
+            self.assertIn(f'lang="{expected.language}"', html)
+            self.assertIn(expected_subject, html)
             if expected_kind != "reply":
                 self.assertIn(expected_subject, message.body)
             if body:

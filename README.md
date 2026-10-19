@@ -128,6 +128,10 @@ on individual Pages. **Review all** is the initial moderation policy.
 
 ### 4. Enable email and cleanup
 
+Current source also includes minimal HTML emails with the site name, clear action
+links and equivalent plain text. Existing host email overrides take precedence;
+this presentation is not included in published 0.1.1.
+
 Configure Django's SMTP settings and schedule this once per minute:
 
 ```sh

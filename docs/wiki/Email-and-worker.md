@@ -28,6 +28,21 @@ of the worker's active language. Reply notifications use the original recipient'
 language. User-entered rejection reasons remain unchanged. See
 [available languages](Configuration.md#languages).
 
+## Default presentation (current source)
+
+All five notification types include minimal HTML and a plain-text alternative.
+The header uses the Wagtail Site name; the main action is a link styled as a button,
+with a copyable URL and descriptive secondary links. Confirmation still requires
+an explicit action on the confirmation page; unsubscribe still requires an
+explicit action on its page. Editing ends as soon as a direct reply is submitted, even before moderation.
+Revision approval/rejection is worded separately from comment approval/rejection.
+Approval of changes does not imply that a hidden comment becomes visible.
+No comment text, external images, fonts or tracking assets are added.
+
+Published 0.1.1 has the earlier plain-text defaults. Existing host overrides take
+precedence over package templates, including the shared HTML shell. Review both
+MIME alternatives together; see [Templates](Templates.md).
+
 ## Schedule once per minute
 
 Run `python manage.py process_commentail` once per minute. It processes the

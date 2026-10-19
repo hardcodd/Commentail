@@ -1,5 +1,17 @@
-{% load i18n %}{% autoescape off %}{% trans "Your comment is published" %}
+{% load i18n %}{% autoescape off %}{% translate "Your comment is published" %}
 
+{{ site_name }}
+
+{% translate "Your comment has been published. Below is your private editing link." %}
+
+{% translate "Edit comment" context "email action" as action_label %}{% blocktranslate with label=action_label %}{{ label }}:{% endblocktranslate %}
+{{ action_url }}
+
+{% translate "Keep this link private; it gives access to your comment." %}
+
+{% translate "Editing is available for a limited time. It also ends as soon as a reply is submitted, even if that reply is awaiting moderation." %}
+
+{% translate "Open discussion" as action_label %}{% blocktranslate with label=action_label %}{{ label }}:{% endblocktranslate %}
 {{ target_url }}
 
-{{ action_url }}{% endautoescape %}
+{% blocktranslate with site=site_name %}This is an automatic comment notification from {{ site }}.{% endblocktranslate %}{% endautoescape %}

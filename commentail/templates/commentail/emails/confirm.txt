@@ -1,7 +1,18 @@
-{% load i18n %}{% autoescape off %}{% trans "Confirm your email" %}
+{% load i18n %}{% autoescape off %}{% translate "Confirm your email" %}
 
+{{ site_name }}
+
+{% translate "You left a comment. To continue, open the confirmation page and confirm your email address there." %}
+
+{% translate "Confirm email" as action_label %}{% blocktranslate with label=action_label %}{{ label }}:{% endblocktranslate %}
+{{ action_url }}
+
+{% translate "Keep this link private; it gives access to your comment." %}
+
+{% if view_url %}{% translate "View comment status" as action_label %}{% blocktranslate with label=action_label %}{{ label }}:{% endblocktranslate %}
+{{ view_url }}
+{% endif %}
+{% translate "Open discussion" as action_label %}{% blocktranslate with label=action_label %}{{ label }}:{% endblocktranslate %}
 {{ target_url }}
 
-{{ action_url }}
-{% if view_url %}
-{{ view_url }}{% endif %}{% endautoescape %}
+{% translate "If you did not leave a comment, ignore this email. Your address will not be confirmed." %}{% endautoescape %}

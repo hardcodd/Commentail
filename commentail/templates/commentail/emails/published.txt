@@ -1,3 +1,10 @@
-{% load i18n %}{% autoescape off %}{% trans "Comment published" %}
+{% load i18n %}{% autoescape off %}{% if is_revision %}{% translate "Comment changes approved" %}{% else %}{% translate "Comment published" %}{% endif %}
 
-{{ target_url }}{% endautoescape %}
+{{ site_name }}
+
+{% if is_revision %}{% translate "Your changes have been approved. You can open the discussion on the site." %}{% else %}{% translate "Your comment has been published. You can open the discussion on the site." %}{% endif %}
+
+{% if is_revision %}{% translate "Open discussion" as action_label %}{% else %}{% translate "View comment" as action_label %}{% endif %}{% blocktranslate with label=action_label %}{{ label }}:{% endblocktranslate %}
+{{ target_url }}
+
+{% blocktranslate with site=site_name %}This is an automatic comment notification from {{ site }}.{% endblocktranslate %}{% endautoescape %}

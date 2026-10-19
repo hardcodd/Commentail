@@ -17,6 +17,7 @@ from wagtail.models import Site
 from commentail.models import CaptchaChallenge, Discussion, MailJob, ReplySubscription
 from commentail.outbox import process_mail
 from commentail.services import moderate, moderate_revision, submit
+from tests.test_email_presentation import LinkParser
 
 
 @contextmanager
@@ -106,7 +107,7 @@ class SMTPGuestChainTests(TestCase):
             )
 
         def mail_link(message: EmailMessage, purpose: str) -> str:
-            body = message.get_content()
+            body = message.get_body(preferencelist=("plain",)).get_content()
             matches = re.findall(
                 r"http[^\s]+/actions/" + purpose + r"/\?token=[^\s]+", body
             )
@@ -184,7 +185,8 @@ class SMTPGuestChainTests(TestCase):
             self.assertContains(locked, "Comment cannot be edited")
             notification = messages[-1]
             self.assertIn(
-                f"?target={reply.pk}#commentail-{reply.pk}", notification.get_content()
+                f"?target={reply.pk}#commentail-{reply.pk}",
+                notification.get_body(preferencelist=("plain",)).get_content(),
             )
             unsubscribe_url = mail_link(notification, "unsubscribe")
             browser.get(unsubscribe_url)
@@ -199,7 +201,15 @@ class SMTPGuestChainTests(TestCase):
             self.assertEqual(len(messages), 3)
             self.assertFalse(MailJob.objects.exclude(status="sent").exists())
             for message in messages:
-                for text in (comment.text, revision.text, reply.text, another.text):
-                    self.assertNotIn(
-                        text, str(message["Subject"]) + message.get_content()
-                    )
+                self.assertEqual(message.get_content_type(), "multipart/alternative")
+                plain = message.get_body(preferencelist=("plain",))
+                html = message.get_body(preferencelist=("html",))
+                self.assertIsNotNone(plain)
+                self.assertIsNotNone(html)
+                parser = LinkParser()
+                parser.feed(html.get_content())
+                for link in re.findall(r"https?://[^\s]+", plain.get_content()):
+                    self.assertIn(link, parser.urls)
+                for part in (plain, html):
+                    for text in (comment.text, revision.text, reply.text, another.text):
+                        self.assertNotIn(text, str(message["Subject"]) + part.get_content())

@@ -7,6 +7,10 @@ describe changes that an existing installation needs to review.
 
 ### Added
 
+- Minimal HTML emails for all five notification types, with host Site names,
+  explanatory copy, labelled action links and equivalent plain text in all six
+  supported languages. Revision decisions have distinct subjects and explanations.
+
 - German (`de`), French (`fr`), Spanish (`es`) and Brazilian Portuguese (`pt-br`)
   translations for public forms, validation/action messages, moderation/settings,
   delivery screens and all five notification email types, including revision decisions.
@@ -15,12 +19,18 @@ describe changes that an existing installation needs to review.
 
 ### Fixed
 
+- Email copy distinguishes revision approval from public visibility, explains
+  editing cutoff for replies awaiting moderation, and uses contextual action
+  labels without promising new replies in read-only discussions.
+
 - Generated author labels in reply emails use the recipient's saved language,
   including the generic account name, instead of the mail worker's language.
 
 ### Upgrade notes
 
-- These locales are in the source tree and are not included in published 0.1.1.
+- These locales and the new email presentation are in the source tree and are
+  not included in published 0.1.1. Host email overrides keep precedence; review
+  both MIME alternatives and any custom subject/body wording when upgrading.
 - Enable the desired language through the host site's Django language settings;
   use `pt-br` for Brazilian Portuguese. Commentail's gettext directory is `pt_BR`.
 - Documentation remains in English and Russian. No new database migrations.

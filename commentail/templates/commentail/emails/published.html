@@ -1,0 +1,6 @@
+{% extends "commentail/emails/base.html" %}{% load i18n %}
+{% block title %}{% if is_revision %}{% translate "Comment changes approved" %}{% else %}{% translate "Comment published" %}{% endif %}{% endblock %}
+{% block heading %}{% if is_revision %}{% translate "Comment changes approved" %}{% else %}{% translate "Comment published" %}{% endif %}{% endblock %}
+{% block content %}<p style="margin:0 0 20px;">{% if is_revision %}{% translate "Your changes have been approved. You can open the discussion on the site." %}{% else %}{% translate "Your comment has been published. You can open the discussion on the site." %}{% endif %}</p>
+{% if is_revision %}{% translate "Open discussion" as primary_label %}{% else %}{% translate "View comment" as primary_label %}{% endif %}{% include "commentail/emails/button.html" with url=target_url label=primary_label only %}
+{% endblock %}

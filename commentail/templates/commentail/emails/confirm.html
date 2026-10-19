@@ -1,0 +1,10 @@
+{% extends "commentail/emails/base.html" %}{% load i18n %}
+{% block title %}{% translate "Confirm your email" %}{% endblock %}
+{% block heading %}{% translate "Confirm your email" %}{% endblock %}
+{% block content %}<p style="margin:0 0 20px;">{% translate "You left a comment. To continue, open the confirmation page and confirm your email address there." %}</p>
+{% translate "Confirm email" as primary_label %}{% include "commentail/emails/button.html" with url=action_url label=primary_label only %}
+<p style="margin:20px 0;">{% translate "Keep this link private; it gives access to your comment." %}</p>
+{% if view_url %}<p style="margin:20px 0;"><a href="{{ view_url }}" style="color:#176b65;text-decoration:underline;">{% translate "View comment status" %}</a></p>{% endif %}
+<p style="margin:20px 0 0;"><a href="{{ target_url }}" style="color:#176b65;text-decoration:underline;">{% translate "Open discussion" %}</a></p>
+{% endblock %}
+{% block footer %}{% translate "If you did not leave a comment, ignore this email. Your address will not be confirmed." %}{% endblock %}

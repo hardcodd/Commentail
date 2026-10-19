@@ -26,14 +26,18 @@ class CommentContext:
 
 
 def default_avatar(name: str) -> tuple[str, str]:
+    """Return uppercase initials and their deterministic CSS gradient.
+
+    Use two characters for one word, or the first and last word's initials.
+    Empty names share a neutral fallback; no external avatar service is used.
+    """
     words = name.strip().split()
-    initials = (
-        (words[0][:2] if len(words) == 1 else words[0][0] + words[-1][0]).upper()
-        if words
-        else ""
-    )
-    if not initials:
+    if not words:
         return "?", "linear-gradient(135deg, hsl(220 85% 56%), hsl(265 85% 60%))"
+    if len(words) == 1:
+        initials = words[0][:2].upper()
+    else:
+        initials = (words[0][0] + words[-1][0]).upper()
     hashed = 2166136261
     for letter in initials:
         hashed = ((hashed ^ ord(letter)) * 16777619) & 0xFFFFFFFF
@@ -44,6 +48,11 @@ def default_avatar(name: str) -> tuple[str, str]:
 
 
 def author_name(comment: Comment, request: HttpRequest) -> str:
+    """Resolve an account's name hook, falling back on empty/invalid output or error.
+
+    Guests retain their stored name. Hook failures log only the exception type.
+    The result is plain text; the rendering boundary must escape it.
+    """
     path = technical_settings(comment.discussion.site)["GET_AUTHOR_NAME"]
     if path and comment.user_id:
         try:
@@ -58,6 +67,11 @@ def author_name(comment: Comment, request: HttpRequest) -> str:
 
 
 def avatar_url(comment: Comment, request: HttpRequest, name: str) -> str | None:
+    """Call the avatar hook with a restricted context, or return None for fallback.
+
+    The hook receives no guest email or comment text. Empty/invalid output and
+    hook failures select the default avatar; errors log only their type.
+    """
     path = technical_settings(comment.discussion.site)["GET_AVATAR"]
     if not path:
         return None

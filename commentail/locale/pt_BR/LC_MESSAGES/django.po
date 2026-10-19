@@ -845,3 +845,76 @@ msgstr "Notificações"
 
 msgid "Delete"
 msgstr "Excluir"
+
+msgid "Comment changes rejected"
+msgstr "Alterações do comentário rejeitadas"
+
+msgid "If the button does not work, copy this address into your browser:"
+msgstr "Se o botão não funcionar, copie este endereço no navegador:"
+
+msgid "If you did not leave a comment, ignore this email. Your address will not be confirmed."
+msgstr "Se você não deixou um comentário, ignore este e-mail. Seu endereço não será confirmado."
+
+msgid "Keep this link private; it gives access to your comment."
+msgstr "Não compartilhe este link: ele dá acesso ao seu comentário."
+
+msgid "Moderator's note:"
+msgstr "Observação da moderação:"
+
+msgid "Open discussion"
+msgstr "Abrir discussão"
+
+msgid "View comment"
+msgstr "Ver comentário"
+
+msgid "View comment status"
+msgstr "Ver status do comentário"
+
+msgid "View reply"
+msgstr "Ler resposta"
+
+msgid "You left a comment. To continue, open the confirmation page and confirm your email address there."
+msgstr "Você deixou um comentário. Para continuar, abra a página de confirmação e confirme seu endereço de e-mail nela."
+
+msgid "You receive notifications about direct replies to this comment. You can turn them off on the unsubscribe page."
+msgstr "Você recebe notificações sobre respostas diretas a este comentário. Você pode desativá-las na página de cancelamento da inscrição."
+
+msgid "Your changes were not approved. The previous version of your comment remains unchanged."
+msgstr "Suas alterações não foram aprovadas. A versão anterior do comentário permanece inalterada."
+
+msgid "Your comment was not approved for publication."
+msgstr "Seu comentário não foi aprovado para publicação."
+
+#, python-format
+msgid "This is an automatic comment notification from %(site)s."
+msgstr "Esta é uma notificação automática sobre comentários de %(site)s."
+
+msgid "Comment changes approved"
+msgstr "Alterações do comentário aprovadas"
+
+msgid "Your changes have been approved. You can open the discussion on the site."
+msgstr "Suas alterações foram aprovadas. Você pode abrir a discussão no site."
+
+msgid "Open the discussion on the site to read the reply."
+msgstr "Abra a discussão no site para ler a resposta."
+
+msgid "Editing is available for a limited time. It also ends as soon as a reply is submitted, even if that reply is awaiting moderation."
+msgstr "Você pode editar o comentário por um tempo limitado. A edição também é encerrada assim que uma resposta é enviada, mesmo que ela ainda esteja aguardando moderação."
+
+msgctxt "email action"
+msgid "Edit comment"
+msgstr "Editar comentário"
+
+msgctxt "email action"
+msgid "Unsubscribe"
+msgstr "Cancelar inscrição"
+
+msgid "Your comment has been published. Below is your private editing link."
+msgstr "Seu comentário foi publicado. Abaixo está seu link privado para edição."
+
+msgid "Your comment has been published. You can open the discussion on the site."
+msgstr "Seu comentário foi publicado. Você pode abrir a discussão no site."
+
+#, python-format
+msgid "%(label)s:"
+msgstr "%(label)s:"

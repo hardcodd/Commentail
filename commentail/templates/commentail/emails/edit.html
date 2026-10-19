@@ -1,0 +1,9 @@
+{% extends "commentail/emails/base.html" %}{% load i18n %}
+{% block title %}{% translate "Your comment is published" %}{% endblock %}
+{% block heading %}{% translate "Your comment is published" %}{% endblock %}
+{% block content %}<p style="margin:0 0 20px;">{% translate "Your comment has been published. Below is your private editing link." %}</p>
+{% translate "Edit comment" context "email action" as primary_label %}{% include "commentail/emails/button.html" with url=action_url label=primary_label only %}
+<p style="margin:20px 0;">{% translate "Keep this link private; it gives access to your comment." %}</p>
+<p style="margin:20px 0;">{% translate "Editing is available for a limited time. It also ends as soon as a reply is submitted, even if that reply is awaiting moderation." %}</p>
+<p style="margin:20px 0 0;"><a href="{{ target_url }}" style="color:#176b65;text-decoration:underline;">{% translate "Open discussion" %}</a></p>
+{% endblock %}
