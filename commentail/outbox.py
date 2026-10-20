@@ -107,12 +107,17 @@ def accepted(comment: Comment) -> None:
         decided(comment)
 
 
-def decided(comment: Comment) -> None:
+def decided(comment: Comment, *, after_moderation: bool = False) -> None:
+    """Queue publication notices only for approval after a pending state.
+
+    Immediate publication still sends guest edit links and subscribed replies.
+    Rejection notifications continue to follow their separate setting.
+    """
     options = editorial_settings(comment.discussion)
     if comment.status == "published":
         if comment.user_id is None and not comment.account_deleted:
             _enqueue(comment, "edit", f"edit:{comment.pk}", purpose="edit")
-        if options.notify_publication:
+        if after_moderation and options.notify_publication:
             _enqueue(comment, "published", f"published:{comment.pk}")
         if (
             comment.reply_to_id
@@ -131,10 +136,11 @@ def decided(comment: Comment) -> None:
         _enqueue(comment, "rejected", f"rejected:{comment.pk}")
 
 
-def revision_decided(revision: CommentRevision) -> None:
+def revision_decided(revision: CommentRevision, *, after_moderation: bool = False) -> None:
+    """Skip publication mail for instant edits; retain configured rejection notices."""
     options = editorial_settings(revision.comment.discussion)
     kind = "published" if revision.status == "approved" else "rejected"
-    if (kind == "published" and options.notify_publication) or (
+    if (kind == "published" and after_moderation and options.notify_publication) or (
         kind == "rejected" and options.notify_rejection
     ):
         _enqueue(

@@ -19,6 +19,10 @@ notifications. Page settings still save with the standard Page action and apply
 immediately, independently of publication. Each Page/object field can
 **Use site setting**. Select the correct Site before editing defaults. Policy changes do not automatically decide existing queue items.
 
+**Publication emails** notify authors after a pending comment or revision is
+approved by a moderator. Immediate publication does not send this notification.
+Guest confirmation/editing-link emails and reply notifications are separate.
+
 | Mode | Existing public discussion | New comments / edits |
 | --- | --- | --- |
 | Open | Visible | Subject to access and policy |

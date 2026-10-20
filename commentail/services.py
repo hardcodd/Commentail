@@ -314,7 +314,7 @@ def moderate(
     _event(comment, actor, action)
     from .outbox import decided
 
-    decided(comment)
+    decided(comment, after_moderation=True)
     return comment
 
 
@@ -361,7 +361,7 @@ def moderate_revision(
     _event(comment, actor, "revision_" + action)
     from .outbox import revision_decided
 
-    revision_decided(revision)
+    revision_decided(revision, after_moderation=True)
     return revision
 
 

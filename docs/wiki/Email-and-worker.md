@@ -83,8 +83,12 @@ resubscribed retroactively.
 
 The Site **Send emails** switch defaults on and cannot be overridden on a Page.
 Disabling it cancels queued mail; reenabling does not replay cancelled jobs.
-Publication/rejection emails are separate switches, off by default, also applying
-to revision decisions. Guest editing-link email is separate. Deleting an account
+Publication/rejection emails are separate switches, off by default. Publication
+notices are sent only when a pending comment or author revision is approved by a
+moderator. Immediate publication sends no publication notice to its author,
+whether registered or a guest. Reply notifications and guest confirmation/editing
+links still follow their own rules. Rejection emails also apply to revision
+decisions. Guest editing-link email is separate. Deleting an account
 cancels its mail/subscriptions and removes stored comment email.
 
 ## Operate the queue

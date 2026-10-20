@@ -5,6 +5,10 @@ describe changes that an existing installation needs to review.
 
 ## Unreleased
 
+- Send optional publication notices only after moderator approval of pending
+  comments or author revisions. Immediate publication stays silent for the author;
+  guest confirmation/edit links and reply notifications remain available.
+
 - Keep the permission-aware Management menu on every Commentail admin page.
   Group settings and group access fields into compact sections with aligned
   controls, adjacent checkbox labels and inline validation errors.

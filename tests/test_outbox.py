@@ -21,7 +21,14 @@ from commentail.models import (
 )
 from commentail.outbox import claim_job, deliver, process_mail, requeue
 from commentail.security import confirm_from_token, unsubscribe
-from commentail.services import DomainError, moderate, revise, submit
+from commentail.services import (
+    DomainError,
+    confirm_email,
+    moderate,
+    moderate_revision,
+    revise,
+    submit,
+)
 
 
 class OutboxTests(TestCase):
@@ -70,6 +77,98 @@ class OutboxTests(TestCase):
         moderate(comment.pk, "approve", actor=self.admin)
         self.assertEqual(MailJob.objects.filter(kind="edit").count(), 1)
         self.assertEqual(MailJob.objects.filter(kind="published").count(), 0)
+
+    def test_immediate_registered_publication_sends_no_author_mail(self):
+        self.options.moderation = "none"
+        self.options.notify_publication = True
+        self.options.save()
+        comment = submit(self.discussion.pk, text="Immediate", user=self.author)
+        self.assertEqual(comment.status, "published")
+        self.assertFalse(MailJob.objects.filter(comment=comment).exists())
+        self.assertEqual(process_mail(), 0)
+
+    def test_immediate_guest_publication_keeps_edit_link_without_publication_notice(self):
+        self.options.moderation = "none"
+        self.options.notify_publication = True
+        self.options.save()
+        comment = self.guest()
+        confirm_email(comment.pk)
+        comment.refresh_from_db()
+        self.assertEqual(comment.status, "published")
+        self.assertCountEqual(
+            MailJob.objects.filter(comment=comment).values_list("kind", flat=True),
+            ["confirm", "edit"],
+        )
+
+    def test_moderated_publication_notifies_registered_and_guest_authors_once(self):
+        self.options.notify_publication = True
+        self.options.save()
+        registered = submit(self.discussion.pk, text="Pending", user=self.author)
+        guest = self.guest()
+        confirm_email(guest.pk)
+        for comment in (registered, guest):
+            with self.subTest(guest=comment.user_id is None):
+                self.assertFalse(MailJob.objects.filter(comment=comment, kind="published").exists())
+                moderate(comment.pk, "approve", actor=self.admin)
+                moderate(comment.pk, "approve", actor=self.admin)
+                self.assertEqual(MailJob.objects.filter(comment=comment, kind="published").count(), 1)
+
+    def test_immediate_revision_is_silent_but_moderated_revision_notifies_once(self):
+        self.options.moderation = "none"
+        self.options.notify_publication = True
+        self.options.save()
+        comment = submit(self.discussion.pk, text="Original", user=self.author)
+        immediate = revise(comment.pk, "Immediate edit", user=self.author)
+        self.assertEqual(immediate.status, "approved")
+        self.assertFalse(MailJob.objects.filter(revision=immediate).exists())
+        self.options.moderation = "all"
+        self.options.save()
+        pending = revise(comment.pk, "Moderated edit", user=self.author)
+        self.assertEqual(pending.status, "pending")
+        self.assertFalse(MailJob.objects.filter(revision=pending).exists())
+        moderate_revision(pending.pk, "approve", actor=self.admin)
+        moderate_revision(pending.pk, "approve", actor=self.admin)
+        self.assertEqual(MailJob.objects.filter(revision=pending, kind="published").count(), 1)
+
+    def test_immediate_reply_notifies_parent_but_not_reply_author(self):
+        self.options.moderation = "none"
+        self.options.notify_publication = True
+        self.options.save()
+        parent = submit(self.discussion.pk, text="Parent", user=self.author, subscribe=True)
+        reply = submit(self.discussion.pk, text="Reply", user=self.admin, reply_to=parent.pk)
+        job = MailJob.objects.get(comment=reply)
+        self.assertEqual(job.kind, "reply")
+        self.assertEqual(job.recipient, parent)
+        self.assertFalse(MailJob.objects.filter(kind="published").exists())
+
+    def test_immediate_guest_revision_does_not_send_publication_notice(self):
+        from commentail.security import token_secret
+
+        self.options.moderation = "none"
+        self.options.notify_publication = True
+        self.options.save()
+        comment = self.guest()
+        confirm_email(comment.pk)
+        secret = token_secret(MailJob.objects.get(comment=comment, kind="edit").token)
+        revision = revise(comment.pk, "Immediate guest edit", edit_token=secret, site=self.site)
+        self.assertEqual(revision.status, "approved")
+        self.assertFalse(MailJob.objects.filter(kind="published").exists())
+
+    def test_discussion_publication_switch_overrides_site_for_reviewed_decisions(self):
+        self.options.notify_publication = True
+        self.options.save()
+        self.discussion.notify_publication = False
+        self.discussion.save()
+        comment = submit(self.discussion.pk, text="Original", user=self.author)
+        moderate(comment.pk, "approve", actor=self.admin)
+        revision = revise(comment.pk, "Reviewed edit", user=self.author)
+        moderate_revision(revision.pk, "approve", actor=self.admin)
+        self.assertFalse(MailJob.objects.filter(comment=comment, kind="published").exists())
+        self.discussion.notify_publication = True
+        self.discussion.save()
+        revision = revise(comment.pk, "Another edit", user=self.author)
+        moderate_revision(revision.pk, "approve", actor=self.admin)
+        self.assertEqual(MailJob.objects.filter(revision=revision, kind="published").count(), 1)
 
     def test_reply_mail_has_no_text_and_unsubscribe(self):
         parent = submit(
