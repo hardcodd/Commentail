@@ -3,7 +3,7 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
-## Unreleased
+## [1.1.0] — 2026-10-20 · Stable
 
 - Explain failed moderation actions with a translated recovery page and a return
   link to the same list filters. Changed statuses, permissions and unavailable
@@ -163,3 +163,5 @@ See [0.1.0 release notes](docs/releases/0.1.0.md).
 
 [1.0.0]: https://github.com/hardcodd/Commentail/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/hardcodd/Commentail/compare/v0.1.1...v0.2.0
+
+[1.1.0]: https://github.com/hardcodd/Commentail/compare/v1.0.0...v1.1.0

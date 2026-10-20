@@ -3,6 +3,13 @@
 This page records planned directions. A target release or delivery date is only
 listed once agreed. Planned work is not part of the published package.
 
+## Released in 1.1.0
+
+The accepted moderation improvements include bulk actions, erasure confirmation,
+clearer selection and filters, preserved navigation and understandable errors.
+Staff highlighting, compact settings and publication notices only after moderation
+are included. See [1.1.0 scope and upgrade steps](Release-1.1.0.md).
+
 ## Released in 1.0.0
 
 Version 1.0.0 establishes the [stable API and compatibility policy](Stability.md)

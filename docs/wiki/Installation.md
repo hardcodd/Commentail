@@ -2,7 +2,7 @@
 
 ## Requirements and package
 
-| Component | 1.0.0 Stable |
+| Component | 1.1.0 Stable |
 | --- | --- |
 | Python | 3.12, 3.13, 3.14 |
 | Wagtail / Django | 7.4.3+ in 7.4 / Django 5.2 or 6.0; 8.0.x / Django 5.2, 6.0 or 6.1 |
@@ -18,16 +18,16 @@ verification. The published 0.1.0 artifact retains its original bounds:
 In a virtual environment, install the release from PyPI:
 
 ```sh
-python -m pip install commentail==1.0.0
+python -m pip install commentail==1.1.0
 ```
 
 For the PostgreSQL driver use
-`python -m pip install 'commentail[postgres]==1.0.0'`.
+`python -m pip install 'commentail[postgres]==1.1.0'`.
 Alternatively, install a downloaded wheel or extract the source archive and run
 `python -m pip install .` in its root. Your site's `DATABASES` setting still selects
 the actual database.
 For downloaded release archives, verify the supplied checksum before installation.
-See [1.0.0 changes and upgrade notes](Release-1.0.0.md) and the
+See [1.1.0 changes and upgrade notes](Release-1.1.0.md) and the
 [version-to-version changelog](Changelog.md).
 
 ## 1. Apps, middleware and templates
@@ -95,9 +95,17 @@ message before opening the integration to visitors.
 
 ## Upgrading and restoring
 
-Version 1.0.0 changes no runtime files, dependencies or migrations from 0.2.0.
-Run the normal checks and static collection after installing; the migration notes
-below apply when upgrading from earlier versions.
+Version 1.1.0 adds migration `0015_sitecommentsettings_highlight_staff` over 1.0.0.
+It adds an enabled-by-default Site setting for staff name badges and super-admin
+crowns; existing comments are retained. Disable **Highlight staff names** per Site
+if unwanted. Run `migrate`, `check` and `collectstatic --noinput`, refresh cached
+assets and restart the application and worker. Review host overrides of comment
+item/author/avatar markup and admin templates for the new UI. Publication notices
+are now queued only after moderator approval; immediate publication stays silent
+for the author. Existing queued mail is retained. See [1.1.0 notes](Release-1.1.0.md).
+
+Version 1.0.0 changes no runtime files, dependencies or migrations from 0.2.0;
+the migration notes below apply when upgrading from earlier versions.
 
 Version 0.2.0 adds migration `0014_reading_indexes` over 0.1.1. It creates
 publication/thread, active CAPTCHA and rate-cleanup indexes without changing

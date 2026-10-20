@@ -122,4 +122,4 @@ customizations and deployment policies need their own acceptance checks.
 
 ---
 
-[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 1.0.0 →](Release-1.0.0.md)
+[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 1.1.0 →](Release-1.1.0.md)
