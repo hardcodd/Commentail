@@ -1,0 +1,5 @@
+{% load wagtailadmin_tags commentail_admin %}
+<header class="nice-padding commentail-admin commentail-list-heading commentail-shared-heading">
+  <h1>{% icon name=icon|default:"comment" %}{{ title }}</h1>
+  {% commentail_management %}
+</header>

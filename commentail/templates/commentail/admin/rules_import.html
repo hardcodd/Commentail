@@ -1,8 +1,6 @@
-{% extends "wagtailadmin/base.html" %}{% load i18n static commentail_tags %}
+{% extends "commentail/admin/base.html" %}{% load i18n static commentail_tags %}
 {% block titletag %}{% trans "Import CSV" %}{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
-{% block extra_js %}{{ block.super }}<script defer src="{% commentail_asset 'admin.js' %}"></script>{% endblock %}
-{% block content %}{% trans "Import CSV" as import_title %}{% include "wagtailadmin/shared/header.html" with title=import_title icon="upload" classname="commentail-admin-heading" %}
+{% block content %}{% trans "Import CSV" as import_title %}{% include "commentail/admin/heading.html" with title=import_title icon="upload" %}
 <div class="nice-padding commentail-admin"><a class="commentail-admin-back" href="{% url 'commentail_admin:rules' %}">← {% trans "Moderation rules" %}</a>
 <section class="commentail-admin-card">
 {% if form.errors %}

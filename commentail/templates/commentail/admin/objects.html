@@ -1,7 +1,6 @@
-{% extends "wagtailadmin/base.html" %}{% load i18n commentail_tags %}
+{% extends "commentail/admin/base.html" %}{% load i18n commentail_tags %}
 {% block titletag %}{% trans "Object discussions" %}{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
-{% block content %}{% trans "Object discussions" as title %}{% include "wagtailadmin/shared/header.html" with title=title icon="comment" classname="commentail-admin-heading" %}
+{% block content %}{% trans "Object discussions" as title %}{% include "commentail/admin/heading.html" with title=title icon="comment" %}
 <div class="nice-padding commentail-admin"><a class="commentail-admin-back" href="{% url 'commentail_admin:list' %}">← {% trans "Comments" %}</a>
 <form class="commentail-admin-filters" method="get"><label>{% trans "Search" %}<input type="search" name="q" value="{{ request.GET.q }}"></label><label>{% trans "Site" %}<select name="site"><option value="">{% trans "All permitted sites" %}</option>{% for site in sites %}<option value="{{ site.pk }}"{% if site.pk|stringformat:'s' == request.GET.site %} selected{% endif %}>{{ site.hostname }}</option>{% endfor %}</select></label><button class="button">{% trans "Filter" %}</button></form>
 {% for discussion in discussions %}<section class="commentail-admin-card"><h2 class="commentail-object-label"><a href="{% url 'commentail_admin:object_settings' discussion.pk %}">{{ discussion.target_label }}</a></h2><p>{{ discussion.site.hostname }}</p></section>{% empty %}<p>{% trans "No object discussions yet." %}</p>{% endfor %}

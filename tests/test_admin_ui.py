@@ -1,3 +1,6 @@
+from html import escape
+from urllib.parse import urlencode
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
@@ -47,6 +50,168 @@ class AdminInterfaceTests(TestCase):
             reverse("commentail_admin:list"), {"site": self.other.pk, "q": "FOREIGN"}
         )
         self.assertNotContains(response, "FOREIGN PRIVATE CONTENT")
+
+    def test_list_card_action_and_back_keep_the_complete_selection(self):
+        Comment.objects.bulk_create([
+            Comment(discussion=self.discussion, user=self.admin,
+                    text="Visible queue text", status="pending")
+            for _ in range(31)
+        ])
+        day = self.comment.created_at.date().isoformat()
+        query = urlencode({"q": "Visible queue text", "site": self.site.pk,
+                           "page": self.site.root_page_id, "status": "pending",
+                           "from": day, "to": day, "p": 2})
+        list_url = reverse("commentail_admin:list") + "?" + query
+        response = self.client.get(list_url)
+        self.assertEqual(response.context["comments"].number, 2)
+        comment = response.context["comments"][-1]
+        card_url = reverse("commentail_admin:detail", args=[comment.pk])
+        card_url += "?" + urlencode({"return_query": query})
+        self.assertContains(response, f'href="{escape(card_url)}"')
+        response = self.client.get(card_url)
+        self.assertContains(response, f'href="{escape(list_url)}"')
+        self.assertContains(response, f'name="return_query" value="{escape(query)}"')
+        response = self.client.post(reverse("commentail_admin:action", args=[comment.pk]), {
+            "action": "approve", "return_query": query,
+        }, follow=True)
+        self.assertEqual(response.redirect_chain, [(card_url, 302)])
+        self.assertContains(response, f'href="{escape(list_url)}"')
+        response = self.client.get(list_url)
+        self.assertEqual(response.context["comments"].number, 2)
+        self.assertNotIn(comment.pk, [row.pk for row in response.context["comments"]])
+
+    def test_direct_card_keeps_default_list_fallback(self):
+        url = reverse("commentail_admin:detail", args=[self.comment.pk])
+        response = self.client.get(url)
+        self.assertContains(response, f'href="{reverse("commentail_admin:list")}"')
+        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
+            "action": "approve",
+        })
+        self.assertRedirects(response, url)
+
+    def test_return_to_a_removed_last_page_keeps_filters_and_clamps_page(self):
+        Comment.objects.bulk_create([
+            Comment(discussion=self.discussion, user=self.admin,
+                    text="Visible queue text", status="pending")
+            for _ in range(30)
+        ])
+        query = "q=Visible&status=pending&p=2"
+        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
+            "action": "reject", "return_query": query,
+        }, follow=True)
+        response = self.client.get(response.context["back_url"])
+        self.assertEqual(response.context["comments"].number, 1)
+        self.assertEqual(response.context["comments"].paginator.count, 30)
+        self.assertEqual(response.context["return_query"], query)
+
+    def test_single_erasure_cancel_and_confirm_keep_return_context(self):
+        self.client.force_login(self.admin)
+        query = urlencode({"q": "Имя + & # ? /", "status": "", "p": 2})
+        url = reverse("commentail_admin:action", args=[self.comment.pk])
+        card_url = reverse("commentail_admin:detail", args=[self.comment.pk])
+        card_url += "?" + urlencode({"return_query": query})
+        response = self.client.post(url, {"action": "delete", "return_query": query})
+        self.assertEqual(response.context["cancel_url"], card_url)
+        self.assertContains(response, f'name="return_query" value="{escape(query)}"')
+        self.client.get(response.context["cancel_url"])
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.status, "pending")
+        response = self.client.post(url, {
+            "action": "delete", "return_query": query, "confirm_delete": "yes",
+        })
+        self.assertRedirects(response, card_url)
+
+    def test_revision_decision_keeps_return_context(self):
+        moderate(self.comment.pk, "approve", actor=self.admin)
+        revision = revise(self.comment.pk, "New text", user=self.admin)
+        query = "status=pending&q=Visible&p=2"
+        response = self.client.get(reverse("commentail_admin:detail", args=[self.comment.pk]),
+                                   {"return_query": query})
+        self.assertContains(response, f'name="return_query" value="{escape(query)}"', count=2)
+        response = self.client.post(reverse("commentail_admin:revision", args=[self.comment.pk]), {
+            "action": "approve", "revision": revision.pk, "return_query": query,
+        })
+        expected = reverse("commentail_admin:detail", args=[self.comment.pk])
+        self.assertRedirects(response, expected + "?" + urlencode({"return_query": query}))
+
+    def test_return_context_is_tab_local_and_cannot_redirect_outside_admin(self):
+        url = reverse("commentail_admin:detail", args=[self.comment.pk])
+        first = "q=first&status=&p=2"
+        self.client.get(url, {"return_query": first})
+        self.client.get(url, {"return_query": "q=second&status=hidden"})
+        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
+            "action": "approve", "return_query": first,
+        })
+        self.assertRedirects(response, url + "?" + urlencode({"return_query": first}))
+        response = self.client.get(url, {"return_query": "//evil.invalid/path?x=1#fragment"})
+        self.assertTrue(response.context["back_url"].startswith(reverse("commentail_admin:list") + "?"))
+        self.assertNotContains(response, 'href="//evil.invalid')
+
+    def test_invalid_return_context_is_rejected_before_mutation(self):
+        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
+            "action": "approve", "return_query": "&".join("q=value" for _ in range(1001)),
+        })
+        self.assertEqual(response.status_code, 400)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.status, "pending")
+
+    def test_management_navigation_is_available_across_admin_pages(self):
+        self.client.force_login(self.admin)
+        urls = [reverse("commentail_admin:" + name) for name in
+                ("list", "objects", "mail", "rules", "rules_import", "rule_add", "access")]
+        urls += [reverse("commentail_admin:settings", args=[self.site.pk]),
+                 reverse("commentail_admin:detail", args=[self.comment.pk])]
+        for url in urls:
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertContains(response, 'aria-controls="commentail-management-panel"', count=1)
+                self.assertContains(response, 'data-management-link="comments"')
+                self.assertContains(response, 'data-management-link="access"')
+                self.assertContains(response, 'src="/static/commentail/admin.js')
+        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
+            "action": "delete",
+        })
+        self.assertContains(response, 'aria-controls="commentail-management-panel"', count=1)
+
+    def test_shared_management_navigation_limits_links_by_site_rights(self):
+        response = self.client.get(reverse("commentail_admin:detail", args=[self.comment.pk]))
+        self.assertContains(response, 'data-management-link="comments"')
+        self.assertContains(response, 'data-management-link="mail"')
+        self.assertNotContains(response, 'data-management-link="settings"')
+        self.assertNotContains(response, 'data-management-link="access"')
+        self.assertNotContains(response, 'data-management-link="rules"')
+        self.assertNotContains(response, self.other.hostname)
+        self.permission.settings = True
+        self.permission.save()
+        response = self.client.get(reverse("commentail_admin:settings", args=[self.site.pk]))
+        self.assertContains(response, 'data-management-link="settings"')
+        self.assertNotContains(response, self.other.hostname)
+
+    def test_grouped_forms_render_each_editable_field_once(self):
+        self.client.force_login(self.admin)
+        for url in (reverse("commentail_admin:settings", args=[self.site.pk]),
+                    reverse("commentail_admin:access"), reverse("commentail_admin:rule_add")):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                for field in response.context["form"]:
+                    self.assertContains(response, f'name="{field.name}"', count=1)
+                    self.assertContains(response, f'for="{field.id_for_label}"', count=1)
+                    if field.help_text:
+                        self.assertContains(response, f'id="{field.auto_id}_helptext"')
+                        self.assertContains(response, f'aria-describedby="{field.auto_id}_helptext"')
+
+    def test_settings_layout_keeps_bound_values_and_validation_errors(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse("commentail_admin:settings", args=[self.site.pk]), {
+            "mode": "open", "moderation": "all", "access": "all", "max_length": "0",
+            "email_enabled": "on", "highlight_staff": "on",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'role="alert"')
+        self.assertContains(response, 'name="max_length" value="0"')
+        self.assertTrue(response.context["form"]["highlight_staff"].value())
+        self.assertContains(response, '<legend>')
+        self.assertContains(response, 'aria-controls="commentail-management-panel"')
 
     def test_direct_mutation_cannot_cross_site(self):
         response = self.client.post(

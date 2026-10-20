@@ -1,7 +1,6 @@
-{% extends "wagtailadmin/base.html" %}{% load i18n static commentail_tags %}
+{% extends "commentail/admin/base.html" %}{% load i18n static commentail_tags %}
 {% block titletag %}{% trans "Email delivery" %}{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
-{% block content %}{% trans "Email delivery" as mail_title %}{% include "wagtailadmin/shared/header.html" with title=mail_title icon="mail" classname="commentail-admin-heading" %}
+{% block content %}{% trans "Email delivery" as mail_title %}{% include "commentail/admin/heading.html" with title=mail_title icon="mail" %}
 <div class="nice-padding commentail-admin"><a class="commentail-admin-back" href="{% url 'commentail_admin:list' %}">← {% trans "Comments" %}</a>
 <form method="get" class="commentail-admin-filters"><label>{% trans "Status" %}<select name="status"><option value="">{% trans "All statuses" %}</option>{% for value,label in statuses %}<option value="{{ value }}"{% if value == active_status %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><label>{% trans "Site" %}<select name="site"><option value="">{% trans "All permitted sites" %}</option>{% for site in sites %}<option value="{{ site.pk }}"{% if site.pk|stringformat:'s' == request.GET.site %} selected{% endif %}>{{ site.hostname }}</option>{% endfor %}</select></label><button class="button">{% trans "Filter" %}</button></form>
 <p>{% blocktrans with count=jobs.paginator.count %}Delivery jobs: {{ count }}.{% endblocktrans %}</p>

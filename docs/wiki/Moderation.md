@@ -20,12 +20,27 @@ Open **Comments** and search directly above the list. Expand **Filters** to
 choose Site, status, date or Page; applied advanced filters open automatically
 and their count remains visible when collapsed. **Reset filters** returns to the
 default pending queue. Service links, including Site settings, email delivery
-and permissions, are grouped under the cog **Management** button. Filters are
+and permissions, are grouped under the cog **Management** button. The same menu
+appears on every Commentail admin page, including settings, cards and confirmation
+pages, with destinations limited by your permissions and a link to **Comments**.
+Site and discussion settings are grouped into discussion, appearance and email
+sections. The group-access editor separates the target group/Site, moderation
+capabilities and management rights; checkbox labels sit beside their controls.
+Filters are
 grouped into Site/Page, status and date range sections. Floating menus close on
 outside click or Escape; Escape and close buttons return focus to their trigger.
 Opening and closing motion follows the reduced-motion preference. Counts
 respect permitted Sites and active filters. Open a message to see its author,
 state, text, action journal and any pending author revision.
+
+Opening a comment carries the current search, Site, Page, status, date range and
+list page into its card. **Back to results** returns to that selection, including
+after a moderation decision, author revision decision, mail retry, or cancelling
+or confirming text erasure. Successful single actions stay on the card. Direct
+card links offer **All comments** and return to the default queue. Context travels
+in links and forms, so tabs are independent and return navigation works without
+JavaScript. If moderation empties the last list page, the existing pagination
+returns to the nearest available page while preserving the filters.
 
 Since 0.2.0, the Page filter opens Wagtail's standard
 searchable chooser instead of loading every discussion Page into the list.

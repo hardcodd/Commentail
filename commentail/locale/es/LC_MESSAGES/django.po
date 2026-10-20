@@ -985,3 +985,12 @@ msgstr "Cerrar"
 
 msgid "Date range"
 msgstr "Intervalo de fechas"
+
+msgid "Back to results"
+msgstr "Volver a los resultados"
+
+msgid "Appearance"
+msgstr "Apariencia"
+
+msgid "Moderation"
+msgstr "Moderación"

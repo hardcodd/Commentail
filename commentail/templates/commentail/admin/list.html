@@ -1,29 +1,10 @@
-{% extends "wagtailadmin/base.html" %}
+{% extends "commentail/admin/base.html" %}
 {% load i18n static commentail_tags wagtailadmin_tags %}
 {% block titletag %}{% trans "Comments" %}{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
 {% block content %}
+{% trans "Comments" as title %}
+{% include "commentail/admin/heading.html" with title=title %}
 <div class="nice-padding commentail-admin commentail-list">
-  <header class="commentail-list-heading">
-    <h1>{% icon name="comment" %}{% trans "Comments" %}</h1>
-    {% if settings_sites or mail_allowed or rules_allowed or access_allowed %}
-      <div class="commentail-list-management" data-disclosure>
-        <button type="button" class="commentail-ui-button commentail-management-toggle" data-panel-toggle aria-expanded="false" aria-controls="commentail-management-panel" hidden>{% icon name="cog" %}<span>{% trans "Management" %}</span>{% icon name="arrow-down" classname="commentail-ui-chevron" %}</button>
-        <div class="commentail-ui-panel commentail-ui-floating" id="commentail-management-panel" data-panel>
-          <div class="commentail-ui-panel-clip">
-            <nav class="commentail-management-menu" aria-label="{% trans 'Comment settings' %}">
-              <div class="commentail-ui-panel-heading"><h2>{% trans "Management" %}</h2><button type="button" class="commentail-ui-close" data-panel-close aria-label="{% trans 'Close' %}" hidden>{% icon name="cross" %}</button></div>
-              {% if settings_sites %}<a href="{% url 'commentail_admin:objects' %}">{% icon name="doc-full" %}<span>{% trans "Object discussions" %}</span></a>{% endif %}
-              {% if mail_allowed %}<a href="{% url 'commentail_admin:mail' %}">{% icon name="mail" %}<span>{% trans "Email delivery" %}</span></a>{% endif %}
-              {% for site in settings_sites %}<a href="{% url 'commentail_admin:settings' site.pk %}">{% icon name="site" %}<span>{% trans "Site settings" %}<small>{{ site.hostname }}</small></span></a>{% endfor %}
-              {% if rules_allowed %}<a href="{% url 'commentail_admin:rules' %}">{% icon name="clipboard-list" %}<span>{% trans "Moderation rules" %}</span></a>{% endif %}
-              {% if access_allowed %}<a href="{% url 'commentail_admin:access' %}">{% icon name="group" %}<span>{% trans "Group access" %}</span></a>{% endif %}
-            </nav>
-          </div>
-        </div>
-      </div>
-    {% endif %}
-  </header>
   <nav class="commentail-admin-tabs" aria-label="{% trans 'Status' %}">
     {% for tab in status_tabs %}<a href="?{{ tab.query }}"{% if tab.active %} aria-current="page"{% endif %}>{{ tab.label }} <span>{{ tab.count }}</span></a>{% endfor %}
   </nav>
@@ -68,7 +49,7 @@
           {% for comment in comments %}
             <tr>
               <td>{% if comment.bulk_actions %}<input type="checkbox" name="ids" value="{{ comment.pk }}" data-actions="{{ comment.bulk_actions }}" aria-label="{% trans 'Select' %} {{ comment.pk }}">{% endif %}</td>
-              <td><a href="{% url 'commentail_admin:detail' comment.pk %}">{{ comment.text|default:comment.get_status_display|truncatechars:160 }}</a></td>
+              <td><a href="{% url 'commentail_admin:detail' comment.pk %}{% if return_query %}?return_query={{ return_query|urlencode }}{% endif %}">{{ comment.text|default:comment.get_status_display|truncatechars:160 }}</a></td>
               <td><strong>{{ comment.display_name }}</strong><small>{{ comment.created_at }}</small></td>
               <td>{{ comment.discussion.site.hostname }} / {{ comment.discussion.target_label }}</td>
               <td><span class="commentail-admin-status" data-status="{{ comment.status }}">{{ comment.get_status_display }}</span>{% if comment.pending_revision %}<br><strong>{% trans "Author revision" %}</strong>{% endif %}</td>
@@ -85,4 +66,4 @@
   </div>
 </div>
 {% endblock %}
-{% block extra_js %}{{ block.super }}{{ page_chooser_media }}<script defer src="{% commentail_asset 'admin.js' %}"></script>{% endblock %}
+{% block extra_js %}{{ block.super }}{{ page_chooser_media }}{% endblock %}

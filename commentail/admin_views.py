@@ -1,6 +1,7 @@
 """Wagtail moderation views; all object queries are bounded by Site rights."""
 
 from difflib import SequenceMatcher
+from urllib.parse import urlencode
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -245,8 +246,22 @@ def _mail_retry_allowed(job: MailJob, moderate_sites: set[int]) -> bool:
     )
 
 
+def _selection_query(request: HttpRequest) -> str:
+    """Carry list parameters as query data, never as a redirect destination."""
+    parameters = request.POST if request.method == "POST" else request.GET
+    return QueryDict(parameters.get("return_query", "")).urlencode()
+
+
+def _comment_url(identifier: int, query: str) -> str:
+    """Link to a card with its tab-local return context, or the direct-entry URL."""
+    url = reverse("commentail_admin:detail", args=[identifier])
+    return url + ("?" + urlencode({"return_query": query}) if query else "")
+
+
 def detail(request: HttpRequest, identifier: int) -> HttpResponse:
     comment = get_object_or_404(_comments(request), pk=identifier)
+    query = _selection_query(request)
+    back_url = reverse("commentail_admin:list") + (f"?{query}" if query else "")
     revision = comment.revisions.filter(status="pending").first()
     old, proposed = _diff(comment.text, revision.text) if revision else ("", "")
     site_id = comment.discussion.site_id
@@ -265,6 +280,8 @@ def detail(request: HttpRequest, identifier: int) -> HttpResponse:
         "commentail/admin/detail.html",
         {
             "comment": comment,
+            "return_query": query,
+            "back_url": back_url,
             "revision": revision,
             "old": old,
             "proposed": proposed,
@@ -308,13 +325,14 @@ def _delete_confirmation(
         "identifiers": identifiers,
         "count": len(identifiers),
         "cancel_url": cancel_url,
-        "return_query": QueryDict(request.POST.get("return_query", "")).urlencode(),
+        "return_query": _selection_query(request),
     })
 
 
 @require_POST
 def action(request: HttpRequest, identifier: int) -> HttpResponse:
     comment = get_object_or_404(_comments(request), pk=identifier)
+    card_url = _comment_url(identifier, _selection_query(request))
     if request.POST.get("action") == "delete":
         if not can(request.user, comment.discussion.site_id, "delete"):
             return HttpResponse("Permission denied", status=403)
@@ -323,7 +341,7 @@ def action(request: HttpRequest, identifier: int) -> HttpResponse:
         if request.POST.get("confirm_delete") != "yes":
             return _delete_confirmation(
                 request, [comment.pk],
-                reverse("commentail_admin:detail", args=[comment.pk]),
+                card_url,
             )
     try:
         _mutate(request, comment)
@@ -337,7 +355,7 @@ def action(request: HttpRequest, identifier: int) -> HttpResponse:
         f"{_('Comment')} #{comment.pk}: {comment.get_status_display()}",
         extra_tags="commentail-action-result",
     )
-    return redirect("commentail_admin:detail", identifier=identifier)
+    return redirect(card_url)
 
 
 @require_POST
@@ -404,6 +422,7 @@ def revision_action(request: HttpRequest, identifier: int) -> HttpResponse:
     revision = get_object_or_404(
         comment.revisions, pk=request.POST.get("revision"), status="pending"
     )
+    card_url = _comment_url(identifier, _selection_query(request))
     try:
         moderate_revision(
             revision.pk,
@@ -419,7 +438,7 @@ def revision_action(request: HttpRequest, identifier: int) -> HttpResponse:
         f"{_('Author revision')}: {revision.get_status_display()}",
         extra_tags="commentail-action-result",
     )
-    return redirect("commentail_admin:detail", identifier=identifier)
+    return redirect(card_url)
 
 
 def settings_view(
@@ -564,13 +583,14 @@ def retry_mail(request: HttpRequest, identifier: int) -> HttpResponse:
         ),
         pk=identifier,
     )
+    card_url = _comment_url(job.recipient_id, _selection_query(request))
     try:
         requeue(job.pk, actor=request.user)
     except DomainError as exc:
         return HttpResponse(str(exc), status=400)
     if request.POST.get("return_to") == "mail":
         return redirect("commentail_admin:mail")
-    return redirect("commentail_admin:detail", identifier=job.recipient_id)
+    return redirect(card_url)
 
 
 def rules_export(request: HttpRequest) -> StreamingHttpResponse:

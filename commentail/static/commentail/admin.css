@@ -81,14 +81,14 @@
 
 /* Queue controls share one visual and keyboard interaction model. */
 .commentail-list { padding-top: 1.75rem; }
-.commentail-list [hidden] { display: none !important; }
+.commentail-admin [hidden] { display: none !important; }
 .commentail-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
 .commentail-list-heading h1 { display: flex; align-items: center; gap: .6rem; margin: 0; font-size: 1.75rem; }
 .commentail-list-heading h1 .icon { width: 1.6rem; height: 1.6rem; flex-shrink: 0; }
 .commentail-ui-button { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 2.6rem; padding: .55rem .9rem; border: 1px solid var(--w-color-border-button-outline-default); border-radius: .5rem; background: var(--w-color-surface-page); color: var(--w-color-text-label); font-size: .9rem; font-weight: 600; line-height: 1.4; cursor: pointer; transition: background .16s, border-color .16s, box-shadow .16s; }
 .commentail-ui-button .icon { flex-shrink: 0; width: 1rem; height: 1rem; }
 .commentail-ui-button:hover, .commentail-ui-button[aria-expanded=true] { background: var(--w-color-surface-button-outline-hover); border-color: var(--w-color-border-button-outline-hover); color: var(--w-color-text-button-outline-hover); }
-.commentail-list button:focus-visible, .commentail-list a:focus-visible { outline: 3px solid var(--w-color-focus); outline-offset: 3px; }
+.commentail-admin button:focus-visible, .commentail-admin a:focus-visible { outline: 3px solid var(--w-color-focus); outline-offset: 3px; }
 .commentail-ui-chevron { transition: transform .2s; }
 [aria-expanded=true] > .commentail-ui-chevron { transform: rotate(180deg); }
 .commentail-ui-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.3rem; min-height: 1.3rem; border-radius: 1rem; background: var(--w-color-surface-info-panel); color: var(--w-color-text-label); font-size: .75rem; }
@@ -106,7 +106,7 @@
 .commentail-list-management { position: relative; flex-shrink: 0; }
 .commentail-management-toggle { border-color: var(--w-color-border-button-outline-default); background: var(--w-color-surface-info-panel); padding-inline: 1rem; }
 .commentail-disclosure-ready > .commentail-ui-floating { position: absolute; right: 0; top: calc(100% + .5rem); z-index: 20; width: min(22rem, calc(100vw - 3rem)); border-radius: .65rem; box-shadow: 0 .5rem 1.75rem #0002; }
-.commentail-list nav.commentail-management-menu { display: flex; flex-direction: column; flex-wrap: nowrap; gap: .15rem; margin: 0; padding: .6rem; max-height: 70vh; overflow-y: auto; background: var(--w-color-surface-page); border: 1px solid var(--commentail-admin-border); border-radius: .65rem; }
+.commentail-admin nav.commentail-management-menu { display: flex; flex-direction: column; flex-wrap: nowrap; gap: .15rem; margin: 0; padding: .6rem; max-height: 70vh; overflow-y: auto; background: var(--w-color-surface-page); border: 1px solid var(--commentail-admin-border); border-radius: .65rem; }
 .commentail-management-menu .commentail-ui-panel-heading { padding: .35rem .4rem .65rem; margin-bottom: .25rem; border-bottom: 1px solid var(--commentail-admin-border); }
 .commentail-management-menu a { display: flex; align-items: center; gap: .8rem; padding: .8rem; border-radius: .4rem; color: var(--w-color-text-label); line-height: 1.4; }
 .commentail-management-menu a:hover { background: var(--w-color-surface-info-panel); }
@@ -190,5 +190,52 @@
   .commentail-selection-help { position: static; margin-inline-start: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .commentail-list .commentail-ui-panel, .commentail-list .commentail-ui-button, .commentail-ui-chevron { transition: none; transform: none; }
+  .commentail-admin .commentail-ui-panel, .commentail-admin .commentail-ui-button, .commentail-ui-chevron { transition: none; transform: none; }
+}
+
+/* Shared heading keeps cross-section navigation in the same place. */
+.commentail-shared-heading { position: relative; z-index: 30; padding-top: 1.75rem; padding-bottom: 0; margin-bottom: 1.5rem; }
+.commentail-shared-heading h1 { min-width: 0; overflow-wrap: anywhere; line-height: 1.25; }
+.commentail-list { padding-top: 0; }
+
+/* Bound Django fields retain their validation and native keyboard behavior. */
+.commentail-form-columns > :only-child { max-width: 72rem; }
+.commentail-form-card { padding: 0; overflow: visible; }
+.commentail-form-context { margin: 0; padding: 1rem 1.5rem; border-bottom: 1px solid var(--commentail-admin-border); color: var(--w-color-text-context); font-weight: 600; overflow-wrap: anywhere; }
+.commentail-form-card > .commentail-object-label { padding: 1rem 1.5rem 0; }
+.commentail-form-card > a { display: inline-block; margin: 0 1.5rem 1rem; }
+.commentail-settings-form > [role=alert] { margin: 1.5rem; color: var(--w-color-text-error); }
+.commentail-form-group { min-width: 0; margin: 0; padding: 1.5rem; border: 0; }
+.commentail-form-group + .commentail-form-group { border-top: 1px solid var(--commentail-admin-border); }
+.commentail-form-group legend { float: left; width: 100%; margin: 0 0 1rem; padding: 0; font-size: 1rem; font-weight: 700; color: var(--w-color-text-label); }
+.commentail-form-grid { clear: both; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.5rem; }
+.commentail-form-field { min-width: 0; }
+.commentail-form-field > label { display: block; margin-bottom: .45rem; font-weight: 600; color: var(--w-color-text-label); font-size: .9rem; line-height: 1.5; }
+.commentail-form-field select, .commentail-form-field input:not([type=checkbox]), .commentail-form-field textarea { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; padding: .65rem .8rem; font-size: .95rem; line-height: 1.5; }
+.commentail-form-field select { padding-inline-end: 2.5rem; }
+.commentail-form-check { display: flex; flex-direction: column; justify-content: center; padding: .85rem 1rem; border: 1px solid var(--commentail-admin-border); border-radius: .5rem; background: var(--w-color-surface-page); }
+.commentail-form-check > label { display: flex; align-items: center; gap: .7rem; margin: 0; cursor: pointer; }
+.commentail-form-check input[type=checkbox] { width: 1.25rem; height: 1.25rem; margin: 0; flex-shrink: 0; }
+.commentail-form-check input[type=checkbox]::before { inset: 50% auto auto 50%; transform: translate(-50%, -50%); }
+.commentail-form-help { margin-top: .45rem; color: var(--w-color-text-context); font-size: .8rem; line-height: 1.5; overflow-wrap: anywhere; }
+.commentail-form-check .commentail-form-help { margin-inline-start: 1.95rem; }
+.commentail-form-errors { color: var(--w-color-text-error); margin-top: .5rem; font-size: .85rem; }
+.commentail-form-errors ul { margin: 0; padding-inline-start: 1.2rem; }
+.commentail-form-invalid input, .commentail-form-invalid select { border-color: var(--w-color-text-error); }
+.commentail-form-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--commentail-admin-border); background: var(--w-color-surface-info-panel); border-radius: 0 0 .75rem .75rem; }
+@media (max-width: 700px) {
+  .commentail-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .commentail-form-group { padding: 1.1rem; }
+  .commentail-shared-heading { padding-top: 1.25rem; }
+}
+
+.commentail-field-email_enabled { grid-column: 1 / -1; }
+
+.commentail-form-columns { grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem); max-width: 84rem; }
+.commentail-list-management { max-width: 100%; }
+.commentail-management-menu a > span { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 900px) { .commentail-form-columns { grid-template-columns: minmax(0, 1fr); } }
+
+@media (max-width: 600px) {
+  .commentail-shared-heading h1 { padding-inline-start: 2.25rem; }
 }

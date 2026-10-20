@@ -1,10 +1,9 @@
-{% extends "wagtailadmin/base.html" %}
+{% extends "commentail/admin/base.html" %}
 {% load i18n commentail_tags %}
 {% block titletag %}{% trans "Confirm text erasure" %}{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
 {% block content %}
 {% trans "Confirm text erasure" as title %}
-{% include "wagtailadmin/shared/header.html" with title=title icon="warning" classname="commentail-admin-heading" %}
+{% include "commentail/admin/heading.html" with title=title icon="warning" %}
 <div class="nice-padding commentail-admin">
   <section class="commentail-admin-card" aria-labelledby="erasure-count">
     <h2 id="erasure-count">{% blocktrans %}Comments to erase: {{ count }}{% endblocktrans %}</h2>

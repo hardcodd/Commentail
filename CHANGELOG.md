@@ -5,6 +5,14 @@ describe changes that an existing installation needs to review.
 
 ## Unreleased
 
+- Keep the permission-aware Management menu on every Commentail admin page.
+  Group settings and group access fields into compact sections with aligned
+  controls, adjacent checkbox labels and inline validation errors.
+
+- Preserve the comment list's search, filters and pagination through comment
+  cards, single moderation and revision decisions, erasure confirmation and mail
+  retries. The card's back link returns to the same selection in each tab.
+
 - Add a selection panel above the comment list with a live count, clear selection,
   and explanations for unavailable bulk actions. Selection applies to eligible
   rows on the current page. A cog management menu, grouped advanced filters and

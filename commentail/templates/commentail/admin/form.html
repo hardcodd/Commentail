@@ -1,13 +1,39 @@
-{% extends "wagtailadmin/base.html" %}{% load i18n static commentail_tags %}
+{% extends "commentail/admin/base.html" %}
+{% load i18n commentail_admin %}
 {% block titletag %}{{ title }}{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
-{% block content %}{% include "wagtailadmin/shared/header.html" with title=title icon="cog" classname="commentail-admin-heading" %}
+{% block content %}
+{% include "commentail/admin/heading.html" with title=title icon="cog" %}
 <div class="nice-padding commentail-admin">
-<a class="commentail-admin-back" href="{% if back_url %}{% url back_url %}{% else %}{% url 'commentail_admin:list' %}{% endif %}">← {% if back_label %}{{ back_label }}{% else %}{% trans "Comments" %}{% endif %}</a>
-<div class="commentail-admin-columns">
-<section class="commentail-admin-card"><h2>{{ title }}{% if site %} · {{ site.hostname }}{% endif %}</h2>
-{% if target_label %}<p class="commentail-object-label">{{ target_label }}</p>{% endif %}{% if objects_back %}<a href="{% url 'commentail_admin:objects' %}">{% trans "Object discussions" %}</a>{% endif %}<form method="post">{% csrf_token %}{{ form.non_field_errors }}
-{% for field in form %}{% include "wagtailadmin/shared/field.html" with field=field only %}{% endfor %}
-<div class="commentail-admin-actions"><button class="button" type="submit">{% trans "Save" %}</button></div></form></section>
-{% if permissions != None %}<aside class="commentail-admin-card"><h2>{% trans "Group access" %}</h2><ul class="commentail-admin-items">{% for permission in permissions %}<li><a href="?id={{ permission.pk }}">{{ permission.group }}</a><span>{{ permission.site.hostname }}</span></li>{% empty %}<li>{% trans "No group permissions yet" %}</li>{% endfor %}</ul><a class="button button-secondary" href="{% url 'commentail_admin:access' %}">{% trans "Add group access" %}</a></aside>{% endif %}
-</div></div>{% endblock %}
+  <a class="commentail-admin-back" href="{% if back_url %}{% url back_url %}{% else %}{% url 'commentail_admin:list' %}{% endif %}">← {% if back_label %}{{ back_label }}{% else %}{% trans "Comments" %}{% endif %}</a>
+  <div class="commentail-admin-columns commentail-form-columns">
+    <section class="commentail-admin-card commentail-form-card">
+      {% if site %}<p class="commentail-form-context">{{ site.hostname }}</p>{% endif %}
+      {% if target_label %}<p class="commentail-object-label">{{ target_label }}</p>{% endif %}
+      {% if objects_back %}<a href="{% url 'commentail_admin:objects' %}">{% trans "Object discussions" %}</a>{% endif %}
+      <form method="post" class="commentail-settings-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+        {% commentail_form_groups form as groups %}
+        {% for heading, fields in groups %}
+          <fieldset class="commentail-form-group">
+            {% if heading %}<legend>{{ heading }}</legend>{% endif %}
+            <div class="commentail-form-grid">
+              {% for field in fields %}
+                {% include "commentail/admin/field.html" with field=field only %}
+              {% endfor %}
+            </div>
+          </fieldset>
+        {% endfor %}
+        <div class="commentail-form-footer"><button class="button" type="submit">{% trans "Save" %}</button></div>
+      </form>
+    </section>
+    {% if permissions != None %}
+      <aside class="commentail-admin-card"><h2>{% trans "Group access" %}</h2>
+        <ul class="commentail-admin-items">{% for permission in permissions %}<li><a href="?id={{ permission.pk }}">{{ permission.group }}</a><span>{{ permission.site.hostname }}</span></li>{% empty %}<li>{% trans "No group permissions yet" %}</li>{% endfor %}</ul>
+        <a class="button button-secondary" href="{% url 'commentail_admin:access' %}">{% trans "Add group access" %}</a>
+      </aside>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

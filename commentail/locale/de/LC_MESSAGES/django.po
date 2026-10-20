@@ -985,3 +985,12 @@ msgstr "Schließen"
 
 msgid "Date range"
 msgstr "Zeitraum"
+
+msgid "Back to results"
+msgstr "Zurück zu den Ergebnissen"
+
+msgid "Appearance"
+msgstr "Darstellung"
+
+msgid "Moderation"
+msgstr "Moderation"

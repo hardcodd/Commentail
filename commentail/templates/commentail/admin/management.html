@@ -1,0 +1,19 @@
+{% load i18n wagtailadmin_tags %}
+    {% if settings_sites or mail_allowed or rules_allowed or access_allowed %}
+      <div class="commentail-list-management" data-disclosure>
+        <button type="button" class="commentail-ui-button commentail-management-toggle" data-panel-toggle aria-expanded="false" aria-controls="commentail-management-panel" hidden>{% icon name="cog" %}<span>{% trans "Management" %}</span>{% icon name="arrow-down" classname="commentail-ui-chevron" %}</button>
+        <div class="commentail-ui-panel commentail-ui-floating" id="commentail-management-panel" data-panel>
+          <div class="commentail-ui-panel-clip">
+            <nav class="commentail-management-menu" aria-label="{% trans 'Management' %}">
+              <div class="commentail-ui-panel-heading"><h2>{% trans "Management" %}</h2><button type="button" class="commentail-ui-close" data-panel-close aria-label="{% trans 'Close' %}" hidden>{% icon name="cross" %}</button></div>
+              <a href="{% url 'commentail_admin:list' %}" data-management-link="comments">{% icon name="comment" %}<span>{% trans "Comments" %}</span></a>
+              {% if settings_sites %}<a href="{% url 'commentail_admin:objects' %}">{% icon name="doc-full" %}<span>{% trans "Object discussions" %}</span></a>{% endif %}
+              {% if mail_allowed %}<a href="{% url 'commentail_admin:mail' %}" data-management-link="mail">{% icon name="mail" %}<span>{% trans "Email delivery" %}</span></a>{% endif %}
+              {% for site in settings_sites %}<a href="{% url 'commentail_admin:settings' site.pk %}" data-management-link="settings">{% icon name="site" %}<span>{% trans "Site settings" %}<small>{{ site.hostname }}</small></span></a>{% endfor %}
+              {% if rules_allowed %}<a href="{% url 'commentail_admin:rules' %}" data-management-link="rules">{% icon name="clipboard-list" %}<span>{% trans "Moderation rules" %}</span></a>{% endif %}
+              {% if access_allowed %}<a href="{% url 'commentail_admin:access' %}" data-management-link="access">{% icon name="group" %}<span>{% trans "Group access" %}</span></a>{% endif %}
+            </nav>
+          </div>
+        </div>
+      </div>
+    {% endif %}

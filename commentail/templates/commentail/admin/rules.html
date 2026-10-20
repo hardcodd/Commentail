@@ -1,9 +1,8 @@
-{% extends "wagtailadmin/base.html" %}{% load i18n static commentail_tags %}
+{% extends "commentail/admin/base.html" %}{% load i18n static commentail_tags %}
 {% block titletag %}{% trans "Project-wide moderation rules" %}{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
 {% block content %}
 {% trans "Project-wide moderation rules" as rules_title %}
-{% include "wagtailadmin/shared/header.html" with title=rules_title icon="cog" classname="commentail-admin-heading" %}
+{% include "commentail/admin/heading.html" with title=rules_title icon="cog" %}
 <div class="nice-padding commentail-admin">
 <a class="commentail-admin-back" href="{% url 'commentail_admin:list' %}">← {% trans "Comments" %}</a>
 <div class="commentail-admin-meta"><h2>{% trans "Moderation rules" %} <span class="commentail-admin-status">{{ rules.paginator.count }}</span></h2><div class="commentail-admin-actions"><a class="button button-secondary" href="{% url 'commentail_admin:rules_import' %}">{% trans "Import CSV" %}</a><a class="button button-secondary" href="{% url 'commentail_admin:rules_export' %}">{% trans "Export CSV" %}</a><a class="button" href="{% url 'commentail_admin:rule_add' %}">{% trans "Add rule" %}</a></div></div>

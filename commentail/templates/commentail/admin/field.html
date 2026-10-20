@@ -1,0 +1,10 @@
+<div class="commentail-form-field commentail-field-{{ field.name }}{% if field.field.widget.input_type == 'checkbox' %} commentail-form-check{% endif %}{% if field.errors %} commentail-form-invalid{% endif %}">
+  {% if field.field.widget.input_type == 'checkbox' %}
+    <label for="{{ field.id_for_label }}">{{ field }}<span>{{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}</span></label>
+  {% else %}
+    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span aria-hidden="true"> *</span>{% endif %}</label>
+    {{ field }}
+  {% endif %}
+  {% if field.help_text %}<div class="commentail-form-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>{% endif %}
+  {% if field.errors %}<div class="commentail-form-errors" id="{{ field.auto_id }}_error" role="alert">{{ field.errors }}</div>{% endif %}
+</div>
