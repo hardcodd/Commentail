@@ -1,9 +1,88 @@
-{% extends "wagtailadmin/base.html" %}{% load i18n static commentail_tags %}
+{% extends "wagtailadmin/base.html" %}
+{% load i18n static commentail_tags wagtailadmin_tags %}
 {% block titletag %}{% trans "Comments" %}{% endblock %}
-{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}{% block content %}{% trans "Comments" as commentail_title %}{% include "wagtailadmin/shared/header.html" with title=commentail_title icon="comment" classname="commentail-admin-heading" %}
-<div class="nice-padding commentail-admin"><nav aria-label="{% trans 'Comment settings' %}">{% if settings_sites %}<a class="button button-secondary" href="{% url 'commentail_admin:objects' %}">{% trans "Object discussions" %}</a>{% endif %}{% if mail_allowed %}<a class="button button-secondary" href="{% url 'commentail_admin:mail' %}">{% trans "Email delivery" %}</a>{% endif %}{% for site in settings_sites %}<a class="button button-secondary" href="{% url 'commentail_admin:settings' site.pk %}">{{ site.hostname }}</a> {% endfor %}{% if rules_allowed %}<a class="button button-secondary" href="{% url 'commentail_admin:rules' %}">{% trans "Moderation rules" %}</a>{% endif %}{% if access_allowed %} <a class="button button-secondary" href="{% url 'commentail_admin:access' %}">{% trans "Group access" %}</a>{% endif %}</nav>
-<nav class="commentail-admin-tabs" aria-label="{% trans 'Status' %}">{% for tab in status_tabs %}<a href="?{{ tab.query }}"{% if tab.active %} aria-current="page"{% endif %}>{{ tab.label }} <span>{{ tab.count }}</span></a>{% endfor %}</nav><form class="commentail-admin-filters" method="get"><label>{% trans "Search" %}<input type="search" name="q" value="{{ request.GET.q }}"></label><label>{% trans "Site" %}<select name="site"><option value="">{% trans "All permitted sites" %}</option>{% for site in sites %}<option value="{{ site.pk }}"{% if site.pk|stringformat:"s" == request.GET.site %} selected{% endif %}>{{ site.hostname }}</option>{% endfor %}</select></label><label>{% trans "Status" %}<select name="status"><option value="">{% trans "All statuses" %}</option>{% for value,label in statuses %}<option value="{{ value }}"{% if value == active_status %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><div class="commentail-page-filter"><label for="commentail-page-filter">{% trans "Page" %}</label>{{ page_chooser }}</div><label>{% trans "From" %}<input type="date" name="from" value="{{ request.GET.from }}"></label><label>{% trans "To" %}<input type="date" name="to" value="{{ request.GET.to }}"></label><button class="button" type="submit">{% trans "Filter" %}</button></form>
-<form method="post" action="{% url 'commentail_admin:bulk' %}">{% csrf_token %}<input type="hidden" name="return_query" value="{{ return_query }}"><div class="commentail-admin-table"><table class="listing"><thead><tr><th>{% if bulk_actions %}<input type="checkbox" data-select-all aria-label="{% trans 'Select all' %}">{% endif %}</th><th>{% trans "Comment" %}</th><th>{% trans "Author" %}</th><th>{% trans "Site / Page" %}</th><th>{% trans "Status" %}</th></tr></thead><tbody>{% for comment in comments %}<tr><td>{% if comment.bulk_actions %}<input type="checkbox" name="ids" value="{{ comment.pk }}" data-actions="{{ comment.bulk_actions }}" aria-label="{% trans 'Select' %} {{ comment.pk }}">{% endif %}</td><td><a href="{% url 'commentail_admin:detail' comment.pk %}">{{ comment.text|truncatechars:160 }}</a></td><td><strong>{{ comment.display_name }}</strong><small>{{ comment.created_at }}</small></td><td>{{ comment.discussion.site.hostname }} / {{ comment.discussion.target_label }}</td><td><span class="commentail-admin-status" data-status="{{ comment.status }}">{{ comment.get_status_display }}</span>{% if comment.pending_revision %}<br><strong>{% trans "Author revision" %}</strong>{% endif %}</td></tr>{% empty %}<tr><td colspan="5">{% trans "No comments" %}</td></tr>{% endfor %}</tbody></table></div>{% if bulk_actions %}<div class="commentail-admin-actions">{% for action in bulk_actions %}<button class="button {% if action.value == "delete" %}serious{% elif action.value != "approve" %}button-secondary{% endif %}" name="action" value="{{ action.value }}">{{ action.label }}</button> {% endfor %}</div>{% endif %}</form>
-{% if comments.has_previous %}<a href="?{{ previous_query }}">{% trans "Previous" %}</a>{% endif %} {{ comments.number }} / {{ comments.paginator.num_pages }} {% if comments.has_next %}<a href="?{{ next_query }}">{% trans "Next" %}</a>{% endif %}</div>{% endblock %}
-
+{% block extra_css %}{{ block.super }}<link rel="stylesheet" href="{% commentail_asset 'admin.css' %}">{% endblock %}
+{% block content %}
+<div class="nice-padding commentail-admin commentail-list">
+  <header class="commentail-list-heading">
+    <h1>{% icon name="comment" %}{% trans "Comments" %}</h1>
+    {% if settings_sites or mail_allowed or rules_allowed or access_allowed %}
+      <div class="commentail-list-management" data-disclosure>
+        <button type="button" class="commentail-ui-button commentail-management-toggle" data-panel-toggle aria-expanded="false" aria-controls="commentail-management-panel" hidden>{% icon name="cog" %}<span>{% trans "Management" %}</span>{% icon name="arrow-down" classname="commentail-ui-chevron" %}</button>
+        <div class="commentail-ui-panel commentail-ui-floating" id="commentail-management-panel" data-panel>
+          <div class="commentail-ui-panel-clip">
+            <nav class="commentail-management-menu" aria-label="{% trans 'Comment settings' %}">
+              <div class="commentail-ui-panel-heading"><h2>{% trans "Management" %}</h2><button type="button" class="commentail-ui-close" data-panel-close aria-label="{% trans 'Close' %}" hidden>{% icon name="cross" %}</button></div>
+              {% if settings_sites %}<a href="{% url 'commentail_admin:objects' %}">{% icon name="doc-full" %}<span>{% trans "Object discussions" %}</span></a>{% endif %}
+              {% if mail_allowed %}<a href="{% url 'commentail_admin:mail' %}">{% icon name="mail" %}<span>{% trans "Email delivery" %}</span></a>{% endif %}
+              {% for site in settings_sites %}<a href="{% url 'commentail_admin:settings' site.pk %}">{% icon name="site" %}<span>{% trans "Site settings" %}<small>{{ site.hostname }}</small></span></a>{% endfor %}
+              {% if rules_allowed %}<a href="{% url 'commentail_admin:rules' %}">{% icon name="clipboard-list" %}<span>{% trans "Moderation rules" %}</span></a>{% endif %}
+              {% if access_allowed %}<a href="{% url 'commentail_admin:access' %}">{% icon name="group" %}<span>{% trans "Group access" %}</span></a>{% endif %}
+            </nav>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </header>
+  <nav class="commentail-admin-tabs" aria-label="{% trans 'Status' %}">
+    {% for tab in status_tabs %}<a href="?{{ tab.query }}"{% if tab.active %} aria-current="page"{% endif %}>{{ tab.label }} <span>{{ tab.count }}</span></a>{% endfor %}
+  </nav>
+  <form class="commentail-list-search" method="get" data-disclosure data-panel-inline data-initial-open="{% if advanced_filter_count %}true{% else %}false{% endif %}">
+    <div class="commentail-list-search-row">
+      <label class="commentail-list-search-field">{% icon name="search" %}<span class="w-sr-only">{% trans "Search" %}</span><input type="search" name="q" value="{{ request.GET.q }}" placeholder="{% trans 'Search comments' %}"></label>
+      <button class="button" type="submit">{% trans "Search" %}</button>
+      <button type="button" class="commentail-ui-button commentail-filter-toggle" data-panel-toggle aria-expanded="false" aria-controls="commentail-filters" hidden>{% icon name="clipboard-list" %}<span>{% trans "Filters" %}</span>{% if advanced_filter_count %}<span class="commentail-ui-count">{{ advanced_filter_count }}</span>{% endif %}{% icon name="arrow-down" classname="commentail-ui-chevron" %}</button>
+      <a class="commentail-list-reset" href="{% url 'commentail_admin:list' %}">{% trans "Reset filters" %}</a>
+    </div>
+    <div class="commentail-ui-panel" id="commentail-filters" data-panel>
+      <div class="commentail-ui-panel-clip">
+        <section class="commentail-filter-card" aria-labelledby="commentail-filter-title">
+          <div class="commentail-ui-panel-heading"><h2 id="commentail-filter-title">{% trans "Filters" %}</h2><button type="button" class="commentail-ui-close" data-panel-close aria-label="{% trans 'Close' %}" hidden>{% icon name="cross" %}</button></div>
+          <div class="commentail-filter-groups">
+            <fieldset class="commentail-filter-target"><legend>{% icon name="site" %}{% trans "Site / Page" %}</legend>
+              <label>{% trans "Site" %}<select name="site"><option value="">{% trans "All permitted sites" %}</option>{% for site in sites %}<option value="{{ site.pk }}"{% if site.pk|stringformat:"s" == request.GET.site %} selected{% endif %}>{{ site.hostname }}</option>{% endfor %}</select></label>
+              <div class="commentail-page-filter"><label for="commentail-page-filter">{% trans "Page" %}</label>{{ page_chooser }}</div>
+            </fieldset>
+            <fieldset><legend>{% icon name="clipboard-list" %}{% trans "Status" %}</legend>
+              <label>{% trans "Status" %}<select name="status"><option value="">{% trans "All statuses" %}</option>{% for value,label in statuses %}<option value="{{ value }}"{% if value == active_status %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+            </fieldset>
+            <fieldset><legend>{% icon name="date" %}{% trans "Date range" %}</legend>
+              <div class="commentail-filter-dates">
+                <label>{% trans "From" %}<input type="date" name="from" value="{{ request.GET.from }}"></label>
+                <label>{% trans "To" %}<input type="date" name="to" value="{{ request.GET.to }}"></label>
+              </div>
+            </fieldset>
+          </div>
+          <div class="commentail-filter-footer"><button class="button" type="submit">{% trans "Filter" %}</button><a href="{% url 'commentail_admin:list' %}">{% trans "Reset filters" %}</a></div>
+        </section>
+      </div>
+    </div>
+  </form>
+  <form method="post" action="{% url 'commentail_admin:bulk' %}">
+    {% csrf_token %}<input type="hidden" name="return_query" value="{{ return_query }}">
+    {% if bulk_actions %}{% include "commentail/admin/selection.html" %}{% endif %}
+    <div class="commentail-admin-table">
+      <table class="listing">
+        <thead><tr><th>{% if bulk_actions %}<input type="checkbox" data-select-all aria-label="{% trans 'Select all' %}">{% endif %}</th><th>{% trans "Comment" %}</th><th>{% trans "Author" %}</th><th>{% trans "Site / Page" %}</th><th>{% trans "Status" %}</th></tr></thead>
+        <tbody>
+          {% for comment in comments %}
+            <tr>
+              <td>{% if comment.bulk_actions %}<input type="checkbox" name="ids" value="{{ comment.pk }}" data-actions="{{ comment.bulk_actions }}" aria-label="{% trans 'Select' %} {{ comment.pk }}">{% endif %}</td>
+              <td><a href="{% url 'commentail_admin:detail' comment.pk %}">{{ comment.text|default:comment.get_status_display|truncatechars:160 }}</a></td>
+              <td><strong>{{ comment.display_name }}</strong><small>{{ comment.created_at }}</small></td>
+              <td>{{ comment.discussion.site.hostname }} / {{ comment.discussion.target_label }}</td>
+              <td><span class="commentail-admin-status" data-status="{{ comment.status }}">{{ comment.get_status_display }}</span>{% if comment.pending_revision %}<br><strong>{% trans "Author revision" %}</strong>{% endif %}</td>
+            </tr>
+          {% empty %}<tr><td colspan="5">{% trans "No comments" %}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </form>
+  <div class="commentail-list-pagination">
+    {% if comments.has_previous %}<a href="?{{ previous_query }}">{% trans "Previous" %}</a>{% endif %}
+    <span>{{ comments.number }} / {{ comments.paginator.num_pages }}</span>
+    {% if comments.has_next %}<a href="?{{ next_query }}">{% trans "Next" %}</a>{% endif %}
+  </div>
+</div>
+{% endblock %}
 {% block extra_js %}{{ block.super }}{{ page_chooser_media }}<script defer src="{% commentail_asset 'admin.js' %}"></script>{% endblock %}

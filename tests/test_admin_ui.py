@@ -135,6 +135,41 @@ class AdminInterfaceTests(TestCase):
                 self.assertEqual(row.bulk_actions, expected)
                 self.assertEqual([a["value"] for a in response.context["bulk_actions"]], expected.split())
 
+    def test_selection_panel_explains_scope_and_action_eligibility(self):
+        response = self.client.get(reverse("commentail_admin:list"))
+        self.assertContains(response, 'data-selection-summary hidden')
+        self.assertContains(response, 'data-selection-count')
+        self.assertContains(response, 'type="button" data-select-clear')
+        self.assertContains(response, "Selection applies only to this page.")
+        self.assertContains(response, "Requires pending comments and moderation permission")
+        self.assertContains(response, 'aria-describedby="commentail-bulk-help-approve"')
+        self.assertLess(response.content.index(b'data-selection-summary'),
+                        response.content.index(b'class="commentail-admin-table"'))
+        self.assertNotContains(response, "Requires published comments and hide permission")
+
+    def test_list_groups_management_and_keeps_advanced_filters_discoverable(self):
+        response = self.client.get(reverse("commentail_admin:list"))
+        self.assertContains(response, 'class="commentail-list-management" data-disclosure')
+        self.assertContains(response, 'aria-controls="commentail-management-panel"')
+        self.assertContains(response, 'id="commentail-filters" data-panel')
+        self.assertContains(response, 'type="search" name="q"')
+        self.assertContains(response, 'aria-controls="commentail-availability-panel"')
+        response = self.client.get(reverse("commentail_admin:list"), {"site": self.site.pk})
+        self.assertContains(response, 'data-initial-open="true"')
+        self.assertEqual(response.context["advanced_filter_count"], 1)
+        self.assertContains(response, 'value="' + str(self.site.pk) + '" selected')
+        response = self.client.get(reverse("commentail_admin:list"), {"status": "hidden"})
+        self.assertContains(response, 'data-initial-open="true"')
+
+    def test_read_only_and_empty_lists_have_no_selection_panel(self):
+        self.permission.moderate = False
+        self.permission.save()
+        response = self.client.get(reverse("commentail_admin:list"))
+        self.assertNotContains(response, 'data-selection-summary')
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("commentail_admin:list"), {"q": "no-match-at-all"})
+        self.assertNotContains(response, 'data-selection-summary')
+
     def test_bulk_hide_restore_and_delete_keep_replies(self):
         self.client.force_login(self.admin)
         moderate(self.comment.pk, "approve", actor=self.admin)

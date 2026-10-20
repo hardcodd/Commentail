@@ -78,3 +78,117 @@
   .commentail-settings-fields { grid-template-columns: minmax(0, 1fr); }
   .commentail-page-settings .commentail-settings-group { padding: 1rem; }
 }
+
+/* Queue controls share one visual and keyboard interaction model. */
+.commentail-list { padding-top: 1.75rem; }
+.commentail-list [hidden] { display: none !important; }
+.commentail-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.commentail-list-heading h1 { display: flex; align-items: center; gap: .6rem; margin: 0; font-size: 1.75rem; }
+.commentail-list-heading h1 .icon { width: 1.6rem; height: 1.6rem; flex-shrink: 0; }
+.commentail-ui-button { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; min-height: 2.6rem; padding: .55rem .9rem; border: 1px solid var(--w-color-border-button-outline-default); border-radius: .5rem; background: var(--w-color-surface-page); color: var(--w-color-text-label); font-size: .9rem; font-weight: 600; line-height: 1.4; cursor: pointer; transition: background .16s, border-color .16s, box-shadow .16s; }
+.commentail-ui-button .icon { flex-shrink: 0; width: 1rem; height: 1rem; }
+.commentail-ui-button:hover, .commentail-ui-button[aria-expanded=true] { background: var(--w-color-surface-button-outline-hover); border-color: var(--w-color-border-button-outline-hover); color: var(--w-color-text-button-outline-hover); }
+.commentail-list button:focus-visible, .commentail-list a:focus-visible { outline: 3px solid var(--w-color-focus); outline-offset: 3px; }
+.commentail-ui-chevron { transition: transform .2s; }
+[aria-expanded=true] > .commentail-ui-chevron { transform: rotate(180deg); }
+.commentail-ui-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.3rem; min-height: 1.3rem; border-radius: 1rem; background: var(--w-color-surface-info-panel); color: var(--w-color-text-label); font-size: .75rem; }
+.commentail-ui-panel { display: grid; grid-template-rows: 1fr; }
+.commentail-ui-panel-clip { min-height: 0; }
+.commentail-disclosure-ready > .commentail-ui-panel { grid-template-rows: 0fr; opacity: 0; visibility: hidden; transform: translateY(-.35rem); transition: grid-template-rows .22s ease, opacity .18s ease, transform .22s ease, visibility .22s; }
+.commentail-disclosure-ready > .commentail-ui-panel > .commentail-ui-panel-clip { overflow: hidden; }
+/* Release the animation's stacking context so host chooser menus clear the toolbar. */
+.commentail-disclosure-ready > .commentail-ui-panel[data-open=true] { grid-template-rows: 1fr; opacity: 1; visibility: visible; transform: none; }
+.commentail-ui-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.commentail-ui-panel-heading h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+.commentail-ui-close { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; flex-shrink: 0; padding: .4rem; border: 0; border-radius: .4rem; color: var(--w-color-text-context); background: transparent; cursor: pointer; }
+.commentail-ui-close:hover { background: var(--w-color-surface-button-outline-hover); }
+.commentail-ui-close .icon { width: 1rem; height: 1rem; }
+.commentail-list-management { position: relative; flex-shrink: 0; }
+.commentail-management-toggle { border-color: var(--w-color-border-button-outline-default); background: var(--w-color-surface-info-panel); padding-inline: 1rem; }
+.commentail-disclosure-ready > .commentail-ui-floating { position: absolute; right: 0; top: calc(100% + .5rem); z-index: 20; width: min(22rem, calc(100vw - 3rem)); border-radius: .65rem; box-shadow: 0 .5rem 1.75rem #0002; }
+.commentail-list nav.commentail-management-menu { display: flex; flex-direction: column; flex-wrap: nowrap; gap: .15rem; margin: 0; padding: .6rem; max-height: 70vh; overflow-y: auto; background: var(--w-color-surface-page); border: 1px solid var(--commentail-admin-border); border-radius: .65rem; }
+.commentail-management-menu .commentail-ui-panel-heading { padding: .35rem .4rem .65rem; margin-bottom: .25rem; border-bottom: 1px solid var(--commentail-admin-border); }
+.commentail-management-menu a { display: flex; align-items: center; gap: .8rem; padding: .8rem; border-radius: .4rem; color: var(--w-color-text-label); line-height: 1.4; }
+.commentail-management-menu a:hover { background: var(--w-color-surface-info-panel); }
+.commentail-management-menu a > .icon { width: 1.15rem; height: 1.15rem; flex-shrink: 0; color: var(--w-color-text-context); }
+.commentail-management-menu small { display: block; margin-top: .15rem; color: var(--w-color-text-context); font-size: .8rem; overflow-wrap: anywhere; }
+.commentail-list .commentail-admin-tabs { gap: .25rem; margin-bottom: 1rem; }
+.commentail-list .commentail-admin-tabs a { padding: .6rem .8rem; }
+.commentail-list-search { margin-bottom: 1rem; }
+.commentail-list-search-row { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; }
+.commentail-list-search-field { position: relative; flex: 1; max-width: 34rem; min-width: 10rem; }
+.commentail-list-search-field > .icon { position: absolute; left: .85rem; top: .8rem; width: 1rem; height: 1rem; color: var(--w-color-text-context); pointer-events: none; }
+.commentail-list-search-field input { box-sizing: border-box; width: 100%; min-width: 0; min-height: 0; height: 2.6rem; padding: .5rem .75rem .5rem 2.4rem; border-radius: .5rem; font-size: .95rem; }
+.commentail-list-search-row > .button { margin: 0; height: 2.6rem; border-radius: .5rem; }
+.commentail-list-reset { font-size: .85rem; padding: .4rem; }
+.commentail-filter-card { margin-top: .85rem; border: 1px solid var(--commentail-admin-border); border-radius: .65rem; background: var(--w-color-surface-header); }
+.commentail-filter-card > .commentail-ui-panel-heading { padding: .9rem 1.15rem; border-bottom: 1px solid var(--commentail-admin-border); }
+.commentail-filter-groups { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1.3fr); padding: 1.25rem 0; }
+.commentail-filter-groups fieldset { display: flex; flex-direction: column; gap: 1rem; min-width: 0; margin: 0; padding: 0 1.25rem; border: 0; border-inline-end: 1px solid var(--commentail-admin-border); }
+.commentail-filter-groups fieldset:last-child { border-inline-end: 0; }
+.commentail-filter-groups legend { display: flex; align-items: center; gap: .5rem; width: 100%; padding: 0 0 1rem; font-size: .9rem; font-weight: 700; color: var(--w-color-text-label); }
+.commentail-filter-groups legend .icon { width: 1rem; height: 1rem; color: var(--w-color-text-context); }
+.commentail-filter-groups label { display: grid; gap: .45rem; min-width: 0; font-size: .85rem; color: var(--w-color-text-context); }
+.commentail-filter-groups input, .commentail-filter-groups select { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; min-height: 0; height: 2.75rem; padding: .5rem .75rem; border-radius: .4rem; font-size: .95rem; color: var(--w-color-text-label); }
+.commentail-filter-groups select { padding-block: 0; padding-inline-end: 2.75rem; line-height: 1.5; }
+.commentail-filter-dates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.commentail-filter-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 1rem; padding: .85rem 1.15rem; border-top: 1px solid var(--commentail-admin-border); }
+.commentail-filter-footer .button { margin: 0; border-radius: .4rem; }
+.commentail-filter-footer a { font-size: .85rem; }
+/* Bound the host chooser's selected title, preview and actions to this field. */
+.commentail-filter-target .chooser { width: 100%; max-width: none; margin: 0; }
+.commentail-filter-target .chosen { display: flex; align-items: center; gap: .65rem; min-width: 0; padding: .6rem; border: 1px solid var(--w-color-border-field-default); border-radius: .4rem; background: var(--w-color-surface-field); }
+.commentail-filter-target .chooser.blank .chosen { display: none; }
+.commentail-filter-target .chooser__preview { width: 2rem; height: 2rem; }
+.commentail-filter-target .chooser__title { flex: 1; min-width: 0; margin: 0; font-size: .9rem; line-height: 1.45; overflow-wrap: anywhere; }
+.commentail-filter-target .chosen > .w-dropdown { flex-shrink: 0; }
+.commentail-filter-target .chooser__choose-button { width: 100%; min-height: 2.75rem; margin: 0; border-radius: .4rem; text-align: start; }
+.commentail-list .commentail-admin-table { margin: 0 0 1rem; border-radius: 0; border-inline: 0; }
+.commentail-list .listing { min-width: 46rem; }
+.commentail-list .listing th:first-child { width: 3rem; }
+.commentail-list .listing td, .commentail-list .listing th { padding: .85rem .75rem; }
+.commentail-list .listing td:nth-child(3) { width: 20%; }
+.commentail-list .listing td:nth-child(4) { width: 23%; }
+.commentail-list .listing small { margin-top: .3rem; }
+.commentail-list-pagination { display: flex; justify-content: center; gap: 1rem; font-size: .875rem; }
+.commentail-admin-selection { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; padding: .75rem 0; border-top: 1px solid var(--commentail-admin-border); }
+.commentail-admin-selection-summary { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem .75rem; }
+.commentail-admin-selection-summary p { margin: 0; white-space: nowrap; font-size: .9rem; }
+.commentail-selection-clear { background: none; border: 0; padding: .3rem 0; color: var(--w-color-text-link-default); cursor: pointer; font-size: .8rem; text-decoration: underline; }
+.commentail-selection-clear:disabled { color: var(--w-color-text-context); cursor: default; text-decoration: none; }
+.commentail-admin-selection .commentail-admin-actions { margin: 0; gap: .4rem; }
+.commentail-admin-selection .commentail-admin-actions .button { padding: .4rem .65rem; min-height: 2rem; border-radius: .35rem; font-size: .8rem; }
+.commentail-selection-help { position: relative; margin-inline-start: auto; }
+.commentail-help-toggle { min-height: 2rem; padding: .35rem .6rem; font-size: .8rem; border-color: transparent; color: var(--w-color-text-context); }
+.commentail-selection-help.commentail-disclosure-ready > .commentail-ui-floating { width: min(34rem, calc(100vw - 3rem)); }
+.commentail-selection-help-content { box-sizing: border-box; max-height: 65vh; overflow-y: auto; padding: 1rem 1.2rem; background: var(--w-color-surface-page); border: 1px solid var(--commentail-admin-border); border-radius: .65rem; font-size: .875rem; line-height: 1.5; }
+.commentail-selection-help-content .commentail-ui-panel-heading { margin-bottom: .75rem; }
+.commentail-selection-help-content p { margin: 0; padding: .75rem; border-radius: .4rem; background: var(--w-color-surface-info-panel); }
+.commentail-selection-help-content dl { margin: 0; }
+.commentail-selection-help-content dl > div { margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--commentail-admin-border); }
+.commentail-selection-help-content dt { font-weight: 700; }
+.commentail-selection-help-content dd { margin: .2rem 0 0; color: var(--w-color-text-context); }
+@media (max-width: 1100px) {
+  .commentail-filter-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem 0; }
+  .commentail-filter-groups fieldset:last-child { grid-column: 1 / -1; border-top: 1px solid var(--commentail-admin-border); padding-top: 1rem; }
+  .commentail-filter-groups fieldset:nth-child(2) { border-inline-end: 0; }
+}
+@media (max-width: 600px) {
+  .commentail-list { padding-top: 1rem; }
+  .commentail-list-heading { align-items: center; flex-wrap: wrap; }
+  .commentail-list-heading h1 { font-size: 1.35rem; }
+  .commentail-list-management { margin-inline-start: auto; }
+  .commentail-management-toggle { padding: .5rem .7rem; }
+  .commentail-list-search-field { flex-basis: 65%; }
+  .commentail-filter-groups { grid-template-columns: minmax(0, 1fr); gap: 1rem; padding: 1rem 0; }
+  .commentail-filter-groups fieldset { padding: 0 1rem; border-inline-end: 0; }
+  .commentail-filter-groups fieldset + fieldset { padding-top: 1rem; border-top: 1px solid var(--commentail-admin-border); }
+  .commentail-filter-groups fieldset:last-child { grid-column: auto; }
+  .commentail-filter-dates { grid-template-columns: minmax(0, 1fr); }
+  .commentail-admin-selection { gap: .65rem; }
+  .commentail-admin-selection-summary { width: 100%; justify-content: space-between; }
+  .commentail-selection-help { position: static; margin-inline-start: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .commentail-list .commentail-ui-panel, .commentail-list .commentail-ui-button, .commentail-ui-chevron { transition: none; transform: none; }
+}

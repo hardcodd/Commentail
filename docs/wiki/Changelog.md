@@ -5,6 +5,13 @@ describe changes that an existing installation needs to review.
 
 ## Unreleased
 
+- Add a selection panel above the comment list with a live count, clear selection,
+  and explanations for unavailable bulk actions. Selection applies to eligible
+  rows on the current page. A cog management menu, grouped advanced filters and
+  action-help popover support keyboard dismissal and reduced-motion preferences.
+  Controls remain available without JavaScript.
+  Refresh static assets when upgrading.
+
 - Highlight staff author names with a colored badge and add a golden crown on
   super administrators’ avatars, with a distinct golden name badge. Enabled by
   default; a per-Site switch disables both.

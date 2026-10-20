@@ -158,9 +158,16 @@ def index(request: HttpRequest) -> HttpResponse:
         comment.bulk_actions = " ".join(actions)
         available_actions.update(actions)
     action_labels = {
-        "approve": _("Approve selected"), "reject": _("Reject selected"),
+        "approve": _("Approve"), "reject": _("Reject"),
         "hide": _("Hide"), "restore": _("Restore"),
-        "delete": _("Erase text permanently"),
+        "delete": _("Erase text"),
+    }
+    action_help = {
+        "approve": _("Requires pending comments and moderation permission for every selected comment."),
+        "reject": _("Requires pending comments and moderation permission for every selected comment."),
+        "hide": _("Requires published comments and hide permission for every selected comment."),
+        "restore": _("Requires hidden comments and hide permission for every selected comment."),
+        "delete": _("Requires comments whose text has not been erased and delete permission for every selected comment."),
     }
     previous = request.GET.copy()
     previous["p"] = str(max(1, page.number - 1))
@@ -172,6 +179,9 @@ def index(request: HttpRequest) -> HttpResponse:
             pk=identifier, discussion__site__in=sites,
         ).first()
     page_chooser = AdminPageChooser()
+    advanced_filter_count = sum(bool(request.GET.get(key)) for key in ("site", "page", "from", "to"))
+    if active_status not in {"pending", "published", "rejected", ""}:
+        advanced_filter_count += 1
     return TemplateResponse(
         request,
         "commentail/admin/list.html",
@@ -181,6 +191,7 @@ def index(request: HttpRequest) -> HttpResponse:
             "settings_sites": settings_sites,
             "statuses": Comment.Status.choices,
             "active_status": active_status,
+            "advanced_filter_count": advanced_filter_count,
             "status_tabs": status_tabs,
             "page_chooser": page_chooser.render(
                 "page", selected_page, attrs={"id": "commentail-page-filter"},
@@ -190,7 +201,7 @@ def index(request: HttpRequest) -> HttpResponse:
             "rules_allowed": sites_for(request.user, "rules").exists(),
             "access_allowed": request.user.is_superuser,
             "bulk_actions": [
-                {"value": action, "label": label}
+                {"value": action, "label": label, "help_text": action_help[action]}
                 for action, label in action_labels.items() if action in available_actions
             ],
             "return_query": request.GET.urlencode(),

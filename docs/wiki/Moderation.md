@@ -16,7 +16,14 @@ messages in their current state.
 
 ## Queue and decisions
 
-Open **Comments**, choose Site/status and filter by search, date or Page. Counts
+Open **Comments** and search directly above the list. Expand **Filters** to
+choose Site, status, date or Page; applied advanced filters open automatically
+and their count remains visible when collapsed. **Reset filters** returns to the
+default pending queue. Service links, including Site settings, email delivery
+and permissions, are grouped under the cog **Management** button. Filters are
+grouped into Site/Page, status and date range sections. Floating menus close on
+outside click or Escape; Escape and close buttons return focus to their trigger.
+Opening and closing motion follows the reduced-motion preference. Counts
 respect permitted Sites and active filters. Open a message to see its author,
 state, text, action journal and any pending author revision.
 
@@ -39,7 +46,13 @@ comments, hide for published comments, restore for hidden comments, and permanen
 text erasure for any non-deleted comment. Checkboxes and buttons respect each
 comment's status and your Site permissions. A button is enabled only when every
 selected comment supports that action; **Select all** selects eligible rows on
-the current page. The server rechecks the entire selection and rolls back all
+the current page. The panel above the list shows **Selected: N** and offers
+**Clear selection**. For a nonempty selection, expand **Action availability**
+to see the required status and permissions of unavailable actions. The live count
+and clear control require JavaScript. Without JavaScript, management links,
+filters and action guidance stay visible; selecting rows and submitting actions
+still works. The Page chooser keeps Wagtail's existing behavior.
+The server rechecks the entire selection and rolls back all
 changes if any row is no longer eligible or permitted. A batch accepts at most
 100 identifiers. Successful actions preserve the list filters and pagination.
 Single and bulk text erasure first open a confirmation page showing the number

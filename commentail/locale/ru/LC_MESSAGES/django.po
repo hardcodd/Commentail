@@ -940,3 +940,48 @@ msgstr "Выделяет имена сотрудников цветной пла
 
 msgid "Super administrator"
 msgstr "Суперадминистратор"
+
+msgid "Selected comments"
+msgstr "Выбранные комментарии"
+
+msgid "Selected:"
+msgstr "Выбрано:"
+
+msgid "Clear selection"
+msgstr "Снять выделение"
+
+msgid "Selection applies only to this page. Actions must be allowed for every selected comment."
+msgstr "Выбор действует только на этой странице. Действие должно быть доступно для каждого выбранного комментария."
+
+msgid "Requires pending comments and moderation permission for every selected comment."
+msgstr "Все выбранные комментарии должны ожидать модерации; нужны права модерации для каждого из них."
+
+msgid "Requires published comments and hide permission for every selected comment."
+msgstr "Все выбранные комментарии должны быть опубликованы; нужны права скрытия для каждого из них."
+
+msgid "Requires hidden comments and hide permission for every selected comment."
+msgstr "Все выбранные комментарии должны быть скрыты; нужны права скрытия и восстановления для каждого из них."
+
+msgid "Requires comments whose text has not been erased and delete permission for every selected comment."
+msgstr "Текст выбранных комментариев не должен быть уже удалён; нужны права удаления для каждого из них."
+
+msgid "Management"
+msgstr "Управление"
+
+msgid "Search comments"
+msgstr "Поиск комментариев"
+
+msgid "Filters"
+msgstr "Фильтры"
+
+msgid "Action availability"
+msgstr "Доступность действий"
+
+msgid "Erase text"
+msgstr "Удалить текст"
+
+msgid "Close"
+msgstr "Закрыть"
+
+msgid "Date range"
+msgstr "Период"

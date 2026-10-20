@@ -940,3 +940,48 @@ msgstr "Añade un fondo de color a los nombres del personal y una corona dorada 
 
 msgid "Super administrator"
 msgstr "Superadministrador"
+
+msgid "Selected comments"
+msgstr "Comentarios seleccionados"
+
+msgid "Selected:"
+msgstr "Seleccionados:"
+
+msgid "Clear selection"
+msgstr "Quitar selección"
+
+msgid "Selection applies only to this page. Actions must be allowed for every selected comment."
+msgstr "La selección solo se aplica a esta página. Las acciones deben estar permitidas para todos los comentarios seleccionados."
+
+msgid "Requires pending comments and moderation permission for every selected comment."
+msgstr "Requiere comentarios pendientes de moderación y permiso de moderación para cada comentario seleccionado."
+
+msgid "Requires published comments and hide permission for every selected comment."
+msgstr "Requiere comentarios publicados y permiso para ocultar cada comentario seleccionado."
+
+msgid "Requires hidden comments and hide permission for every selected comment."
+msgstr "Requiere comentarios ocultos y permiso para ocultar cada comentario seleccionado."
+
+msgid "Requires comments whose text has not been erased and delete permission for every selected comment."
+msgstr "Requiere comentarios cuyo texto no se haya borrado y permiso de eliminación para cada comentario seleccionado."
+
+msgid "Management"
+msgstr "Administración"
+
+msgid "Search comments"
+msgstr "Buscar comentarios"
+
+msgid "Filters"
+msgstr "Filtros"
+
+msgid "Action availability"
+msgstr "Disponibilidad de acciones"
+
+msgid "Erase text"
+msgstr "Borrar texto"
+
+msgid "Close"
+msgstr "Cerrar"
+
+msgid "Date range"
+msgstr "Intervalo de fechas"

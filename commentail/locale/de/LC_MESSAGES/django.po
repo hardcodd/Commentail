@@ -940,3 +940,48 @@ msgstr "Hinterlegt die Namen von Mitarbeitenden farbig und fügt bei Superadmini
 
 msgid "Super administrator"
 msgstr "Superadministrator"
+
+msgid "Selected comments"
+msgstr "Ausgewählte Kommentare"
+
+msgid "Selected:"
+msgstr "Ausgewählt:"
+
+msgid "Clear selection"
+msgstr "Auswahl aufheben"
+
+msgid "Selection applies only to this page. Actions must be allowed for every selected comment."
+msgstr "Die Auswahl gilt nur für diese Seite. Aktionen müssen für jeden ausgewählten Kommentar zulässig sein."
+
+msgid "Requires pending comments and moderation permission for every selected comment."
+msgstr "Erfordert Kommentare, die auf Moderation warten, und Moderationsrechte für jeden ausgewählten Kommentar."
+
+msgid "Requires published comments and hide permission for every selected comment."
+msgstr "Erfordert veröffentlichte Kommentare und Ausblendungsrechte für jeden ausgewählten Kommentar."
+
+msgid "Requires hidden comments and hide permission for every selected comment."
+msgstr "Erfordert ausgeblendete Kommentare und Ausblendungsrechte für jeden ausgewählten Kommentar."
+
+msgid "Requires comments whose text has not been erased and delete permission for every selected comment."
+msgstr "Erfordert Kommentare, deren Text noch nicht gelöscht wurde, und Löschrechte für jeden ausgewählten Kommentar."
+
+msgid "Management"
+msgstr "Verwaltung"
+
+msgid "Search comments"
+msgstr "Kommentare suchen"
+
+msgid "Filters"
+msgstr "Filter"
+
+msgid "Action availability"
+msgstr "Verfügbarkeit der Aktionen"
+
+msgid "Erase text"
+msgstr "Text löschen"
+
+msgid "Close"
+msgstr "Schließen"
+
+msgid "Date range"
+msgstr "Zeitraum"

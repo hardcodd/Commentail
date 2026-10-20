@@ -1,0 +1,26 @@
+{% load i18n wagtailadmin_tags %}
+<section class="commentail-admin-selection" aria-label="{% trans 'Selected comments' %}">
+  <div class="commentail-admin-selection-summary" data-selection-summary hidden>
+    <p role="status" aria-live="polite" aria-atomic="true">{% trans "Selected:" %} <strong data-selection-count>0</strong></p>
+    <button class="commentail-selection-clear" type="button" data-select-clear>{% trans "Clear selection" %}</button>
+  </div>
+  <div class="commentail-admin-actions">
+    {% for action in bulk_actions %}
+      <button type="submit" class="button {% if action.value == 'delete' %}button-secondary serious{% elif action.value != 'approve' %}button-secondary{% endif %}" name="action" value="{{ action.value }}" aria-describedby="commentail-bulk-help-{{ action.value }}">{{ action.label }}</button>
+    {% endfor %}
+  </div>
+  <div class="commentail-selection-help" data-action-help data-disclosure>
+    <button type="button" class="commentail-ui-button commentail-help-toggle" data-panel-toggle aria-expanded="false" aria-controls="commentail-availability-panel" hidden>{% icon name="help" %}<span>{% trans "Action availability" %}</span></button>
+    <div class="commentail-ui-panel commentail-ui-floating" id="commentail-availability-panel" data-panel>
+      <div class="commentail-ui-panel-clip">
+        <section class="commentail-selection-help-content" aria-labelledby="commentail-help-title">
+          <div class="commentail-ui-panel-heading"><h2 id="commentail-help-title">{% trans "Action availability" %}</h2><button type="button" class="commentail-ui-close" data-panel-close aria-label="{% trans 'Close' %}" hidden>{% icon name="cross" %}</button></div>
+          <p>{% trans "Selection applies only to this page. Actions must be allowed for every selected comment." %}</p>
+          <dl>
+            {% for action in bulk_actions %}<div data-bulk-reason="{{ action.value }}"><dt>{{ action.label }}</dt><dd id="commentail-bulk-help-{{ action.value }}">{{ action.help_text }}</dd></div>{% endfor %}
+          </dl>
+        </section>
+      </div>
+    </div>
+  </div>
+</section>
