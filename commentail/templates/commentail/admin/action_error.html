@@ -1,0 +1,22 @@
+{% extends "commentail/admin/base.html" %}
+{% load i18n wagtailadmin_tags %}
+{% block titletag %}{% trans "Action not completed" %}{% endblock %}
+{% block content %}
+{% trans "Action not completed" as title %}
+{% include "commentail/admin/heading.html" with title=title icon="warning" %}
+<div class="nice-padding commentail-admin">
+  <section class="commentail-admin-card commentail-action-error" aria-labelledby="commentail-error-heading">
+    <div class="commentail-error-summary" role="alert">
+      <span class="commentail-error-icon" aria-hidden="true">{% icon name="warning" %}</span>
+      <div>
+        <h2 id="commentail-error-heading">{{ explanation }}</h2>
+        <p>{% trans "No changes were made." %}</p>
+      </div>
+    </div>
+    <p class="commentail-error-next">{% if has_commentail_access %}{% trans "Return to your results to see the current statuses and select the comments again." %}{% else %}{% trans "Ask an administrator to check your Commentail permissions before trying again." %}{% endif %}</p>
+    <div class="commentail-admin-actions">
+      <a class="button" href="{{ back_url }}">{% if has_commentail_access %}{% trans "Back to results" %}{% else %}{% trans "Back to dashboard" %}{% endif %}</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

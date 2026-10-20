@@ -5,6 +5,10 @@ describe changes that an existing installation needs to review.
 
 ## Unreleased
 
+- Explain failed moderation actions with a translated recovery page and a return
+  link to the same list filters. Changed statuses, permissions and unavailable
+  comments leave the entire bulk action unchanged, including audit and mail jobs.
+
 - Send optional publication notices only after moderator approval of pending
   comments or author revisions. Immediate publication stays silent for the author;
   guest confirmation/edit links and reply notifications remain available.

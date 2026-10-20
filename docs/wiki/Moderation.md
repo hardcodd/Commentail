@@ -70,6 +70,17 @@ still works. The Page chooser keeps Wagtail's existing behavior.
 The server rechecks the entire selection and rolls back all
 changes if any row is no longer eligible or permitted. A batch accepts at most
 100 identifiers. Successful actions preserve the list filters and pagination.
+
+If a moderation action fails because statuses or permissions have changed, or a
+comment is no longer available, Commentail shows **Action not completed** with
+an explanation and **Back to results**. The link preserves search, filters and
+pagination and reloads the current results; it never repeats the failed action.
+No part of a failed bulk action is saved, including audit entries and queued
+mail. Already-reviewed author revisions also offer recovery instead of another
+decision. If all Commentail access has been revoked, the recovery link opens
+the Wagtail dashboard. Recovery links work without JavaScript, and error pages
+retain HTTP 400/403/404 statuses without revealing unavailable comments.
+
 Single and bulk text erasure first open a confirmation page showing the number
 of comments and an irreversible-erasure warning. Cancel leaves text and revisions
 unchanged; bulk cancellation returns to the same list filters and page. Confirming

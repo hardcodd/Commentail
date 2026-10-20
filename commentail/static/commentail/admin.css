@@ -62,6 +62,15 @@
 
 .commentail-object-label { overflow-wrap: anywhere; }
 
+.commentail-action-error { max-width: 48rem; box-sizing: border-box; }
+.commentail-error-summary { display: flex; align-items: flex-start; gap: 1rem; }
+.commentail-error-summary > div { min-width: 0; }
+.commentail-error-summary h2 { margin-bottom: .6rem; line-height: 1.5; overflow-wrap: anywhere; }
+.commentail-error-summary p { margin: 0; font-weight: 600; }
+.commentail-error-icon { display: flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; flex-shrink: 0; border-radius: 50%; color: var(--w-color-text-error); background: var(--w-color-surface-info-panel); }
+.commentail-error-icon .icon { width: 1.25rem; height: 1.25rem; }
+.commentail-error-next { margin: 1.5rem 0 0; color: var(--w-color-text-context); line-height: 1.6; }
+
 /* Page-editor overrides use native fields without changing other admin forms. */
 .commentail-page-settings { max-width: 56rem; padding-block: .5rem 2rem; }
 .commentail-page-settings-intro { max-width: 48rem; margin: 0 0 2rem; color: var(--w-color-text-context); line-height: 1.6; }

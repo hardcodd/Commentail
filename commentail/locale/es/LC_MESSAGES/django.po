@@ -994,3 +994,36 @@ msgstr "Apariencia"
 
 msgid "Moderation"
 msgstr "Moderación"
+
+msgid "Action not completed"
+msgstr "Acción no completada"
+
+msgid "The comments or available actions have changed."
+msgstr "Los comentarios o las acciones disponibles han cambiado."
+
+msgid "Your permissions no longer allow this action."
+msgstr "Sus permisos ya no permiten realizar esta acción."
+
+msgid "Some comments are no longer available or you no longer have access to them."
+msgstr "Algunos comentarios ya no están disponibles o ya no tiene acceso a ellos."
+
+msgid "Select between 1 and 100 comments and choose an available action."
+msgstr "Seleccione entre 1 y 100 comentarios y una acción disponible."
+
+msgid "Choose an available action for the author revision."
+msgstr "Elija una acción disponible para la revisión del autor."
+
+msgid "This author revision is no longer awaiting moderation."
+msgstr "Esta revisión del autor ya no está pendiente de moderación."
+
+msgid "No changes were made."
+msgstr "No se ha realizado ningún cambio."
+
+msgid "Return to your results to see the current statuses and select the comments again."
+msgstr "Vuelva a los resultados para ver los estados actuales y seleccionar los comentarios de nuevo."
+
+msgid "Ask an administrator to check your Commentail permissions before trying again."
+msgstr "Pida a un administrador que compruebe sus permisos de Commentail antes de volver a intentarlo."
+
+msgid "Back to dashboard"
+msgstr "Volver al panel de control"

@@ -8,7 +8,13 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count, Exists, F, OuterRef, Q, QuerySet
-from django.http import HttpRequest, HttpResponse, QueryDict, StreamingHttpResponse
+from django.http import (
+    Http404,
+    HttpRequest,
+    HttpResponse,
+    QueryDict,
+    StreamingHttpResponse,
+)
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -258,6 +264,26 @@ def _comment_url(identifier: int, query: str) -> str:
     return url + ("?" + urlencode({"return_query": query}) if query else "")
 
 
+def _action_error(
+    request: HttpRequest, *, status: int = 400, message: str | None = None,
+) -> TemplateResponse:
+    """Explain a failed write without exposing item data or replaying the POST."""
+    explanations = {
+        400: _("The comments or available actions have changed."),
+        403: _("Your permissions no longer allow this action."),
+        404: _("Some comments are no longer available or you no longer have access to them."),
+    }
+    query = _selection_query(request)
+    list_url = reverse("commentail_admin:list") + (f"?{query}" if query else "")
+    has_access = any(sites_for(request.user, capability).exists()
+                     for capability in ("view", "settings", "rules"))
+    return TemplateResponse(request, "commentail/admin/action_error.html", {
+        "explanation": message or explanations[status],
+        "back_url": list_url if has_access else reverse("wagtailadmin_home"),
+        "has_commentail_access": has_access,
+    }, status=status)
+
+
 def detail(request: HttpRequest, identifier: int) -> HttpResponse:
     comment = get_object_or_404(_comments(request), pk=identifier)
     query = _selection_query(request)
@@ -331,13 +357,15 @@ def _delete_confirmation(
 
 @require_POST
 def action(request: HttpRequest, identifier: int) -> HttpResponse:
-    comment = get_object_or_404(_comments(request), pk=identifier)
     card_url = _comment_url(identifier, _selection_query(request))
+    comment = _comments(request).filter(pk=identifier).first()
+    if comment is None:
+        return _action_error(request, status=404)
     if request.POST.get("action") == "delete":
         if not can(request.user, comment.discussion.site_id, "delete"):
-            return HttpResponse("Permission denied", status=403)
+            return _action_error(request, status=403)
         if comment.status not in _BULK_STATUSES["delete"]:
-            return HttpResponse("Invalid selection", status=400)
+            return _action_error(request)
         if request.POST.get("confirm_delete") != "yes":
             return _delete_confirmation(
                 request, [comment.pk],
@@ -346,9 +374,9 @@ def action(request: HttpRequest, identifier: int) -> HttpResponse:
     try:
         _mutate(request, comment)
     except PermissionDenied:
-        return HttpResponse("Permission denied", status=403)
+        return _action_error(request, status=403)
     except DomainError as exc:
-        return HttpResponse(str(exc), status=400)
+        return _action_error(request, status=403 if str(exc) == _("Permission denied") else 400)
     comment.refresh_from_db(fields=["status"])
     messages.success(
         request,
@@ -365,10 +393,11 @@ def bulk(request: HttpRequest) -> HttpResponse:
     if (
         not identifiers
         or len(identifiers) > 100
-        or not all(value.isdecimal() for value in identifiers)
+        or not all(value.isdecimal() and len(value) <= 19 and int(value) <= 2**63 - 1
+                   for value in identifiers)
         or request.POST.get("action") not in _BULK_STATUSES
     ):
-        return HttpResponse("Invalid selection", status=400)
+        return _action_error(request, message=_("Select between 1 and 100 comments and choose an available action."))
     identifiers = sorted({int(value) for value in identifiers})
     query = QueryDict(request.POST.get("return_query", "")).urlencode()
     list_url = reverse("commentail_admin:list") + (f"?{query}" if query else "")
@@ -377,11 +406,13 @@ def bulk(request: HttpRequest) -> HttpResponse:
         # revalidates access and state inside the existing atomic writer path.
         selected = []
         for identifier in identifiers:
-            comment = get_object_or_404(_comments(request), pk=identifier)
+            comment = _comments(request).filter(pk=identifier).first()
+            if comment is None:
+                return _action_error(request, status=404)
             if not can(request.user, comment.discussion.site_id, "delete"):
-                return HttpResponse("Permission denied", status=403)
+                return _action_error(request, status=403)
             if comment.status not in _BULK_STATUSES["delete"]:
-                return HttpResponse("Invalid selection", status=400)
+                return _action_error(request)
             selected.append(comment.pk)
         return _delete_confirmation(request, selected, list_url)
     try:
@@ -390,14 +421,18 @@ def bulk(request: HttpRequest) -> HttpResponse:
         for identifier in identifiers:
             comment = get_object_or_404(_comments(request), pk=identifier)
             if comment.status not in _BULK_STATUSES[request.POST["action"]]:
+                response = _action_error(request)
                 transaction.set_rollback(True)
-                return HttpResponse("Invalid selection", status=400)
+                return response
             _mutate(request, comment)
-    except (DomainError, PermissionDenied) as exc:
-        transaction.set_rollback(True)
-        return HttpResponse(
-            str(exc), status=403 if isinstance(exc, PermissionDenied) else 400
+    except (DomainError, PermissionDenied, Http404) as exc:
+        status = 404 if isinstance(exc, Http404) else (
+            403 if isinstance(exc, PermissionDenied) or str(exc) == _("Permission denied") else 400
         )
+        # Build the permission-aware context before queries are blocked by rollback.
+        response = _action_error(request, status=status)
+        transaction.set_rollback(True)
+        return response
     outcome = {
         "approve": _("Approved"), "reject": _("Rejected"),
         "hide": _("Hidden"), "restore": _("Published"), "delete": _("Deleted"),
@@ -412,17 +447,22 @@ def bulk(request: HttpRequest) -> HttpResponse:
 
 @require_POST
 def revision_action(request: HttpRequest, identifier: int) -> HttpResponse:
-    if not request.POST.get("revision", "").isdecimal() or request.POST.get(
-        "action"
-    ) not in {"approve", "reject"}:
-        return HttpResponse("Invalid revision action", status=400)
-    comment = get_object_or_404(_comments(request), pk=identifier)
-    if not can(request.user, comment.discussion.site_id, "moderate"):
-        raise PermissionDenied
-    revision = get_object_or_404(
-        comment.revisions, pk=request.POST.get("revision"), status="pending"
-    )
+    revision_id = request.POST.get("revision", "")
+    if (
+        not revision_id.isdecimal() or len(revision_id) > 19
+        or int(revision_id) > 2**63 - 1
+        or request.POST.get("action") not in {"approve", "reject"}
+    ):
+        return _action_error(request, message=_("Choose an available action for the author revision."))
     card_url = _comment_url(identifier, _selection_query(request))
+    comment = _comments(request).filter(pk=identifier).first()
+    if comment is None:
+        return _action_error(request, status=404)
+    if not can(request.user, comment.discussion.site_id, "moderate"):
+        return _action_error(request, status=403)
+    revision = comment.revisions.filter(pk=revision_id, status="pending").first()
+    if revision is None:
+        return _action_error(request, message=_("This author revision is no longer awaiting moderation."))
     try:
         moderate_revision(
             revision.pk,
@@ -431,7 +471,7 @@ def revision_action(request: HttpRequest, identifier: int) -> HttpResponse:
             reason=request.POST.get("reason", ""),
         )
     except DomainError as exc:
-        return HttpResponse(str(exc), status=400)
+        return _action_error(request, status=403 if str(exc) == _("Permission denied") else 400)
     revision.refresh_from_db(fields=["status"])
     messages.success(
         request,

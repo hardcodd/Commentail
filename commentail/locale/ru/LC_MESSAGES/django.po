@@ -994,3 +994,36 @@ msgstr "Оформление"
 
 msgid "Moderation"
 msgstr "Модерация"
+
+msgid "Action not completed"
+msgstr "Действие не выполнено"
+
+msgid "The comments or available actions have changed."
+msgstr "Статусы комментариев или доступные действия изменились."
+
+msgid "Your permissions no longer allow this action."
+msgstr "Ваши права больше не позволяют выполнить это действие."
+
+msgid "Some comments are no longer available or you no longer have access to them."
+msgstr "Некоторые комментарии больше недоступны или у вас больше нет доступа к ним."
+
+msgid "Select between 1 and 100 comments and choose an available action."
+msgstr "Выберите от 1 до 100 комментариев и доступное действие."
+
+msgid "Choose an available action for the author revision."
+msgstr "Выберите доступное действие для правки автора."
+
+msgid "This author revision is no longer awaiting moderation."
+msgstr "Эта правка автора больше не ожидает модерации."
+
+msgid "No changes were made."
+msgstr "Никакие изменения не внесены."
+
+msgid "Return to your results to see the current statuses and select the comments again."
+msgstr "Вернитесь к результатам, чтобы увидеть актуальные статусы и выбрать комментарии заново."
+
+msgid "Ask an administrator to check your Commentail permissions before trying again."
+msgstr "Попросите администратора проверить ваши права в Commentail перед повторной попыткой."
+
+msgid "Back to dashboard"
+msgstr "В панель управления"

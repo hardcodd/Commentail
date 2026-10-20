@@ -1,14 +1,22 @@
 from html import escape
+from unittest.mock import patch
 from urllib.parse import urlencode
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import translation
 from wagtail.models import Page, Site
 
-from commentail.models import Comment, Discussion, SiteGroupPermission
-from commentail.services import moderate, revise, submit
+from commentail.models import (
+    Comment,
+    Discussion,
+    MailJob,
+    ModerationEvent,
+    SiteGroupPermission,
+)
+from commentail.services import DomainError, moderate, moderate_revision, revise, submit
 
 
 class AdminInterfaceTests(TestCase):
@@ -477,6 +485,121 @@ class AdminInterfaceTests(TestCase):
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "published")
         self.assertEqual(self.comment.events.count(), event_count)
+
+    def assert_action_error(self, response, status, query="q=Visible&status=&p=2"):
+        self.assertEqual(response.status_code, status)
+        self.assertTemplateUsed(response, "commentail/admin/action_error.html")
+        self.assertContains(response, "No changes were made.", status_code=status)
+        self.assertContains(response, 'role="alert"', status_code=status)
+        self.assertContains(response, 'aria-controls="commentail-management-panel"', status_code=status)
+        back_url = reverse("commentail_admin:list") + "?" + query
+        self.assertContains(response, f'href="{escape(back_url)}"', status_code=status)
+        self.assertNotContains(response, "FOREIGN PRIVATE CONTENT", status_code=status)
+
+    def test_stale_bulk_status_explains_failure_and_rolls_back_mail_and_audit(self):
+        self.client.force_login(self.admin)
+        from commentail.models import SiteCommentSettings
+
+        SiteCommentSettings.objects.create(site=self.site, notify_publication=True)
+        Comment.objects.filter(pk=self.foreign.pk).update(status="published")
+        before = (ModerationEvent.objects.count(), MailJob.objects.count())
+        response = self.client.post(reverse("commentail_admin:bulk"), {
+            "action": "approve", "ids": [self.comment.pk, self.foreign.pk],
+            "return_query": "q=Visible&status=&p=2",
+        })
+        self.assert_action_error(response, 400)
+        self.assertContains(response, "The comments or available actions have changed.", status_code=400)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.status, "pending")
+        self.assertEqual((ModerationEvent.objects.count(), MailJob.objects.count()), before)
+
+    def test_missing_or_invisible_bulk_item_rolls_back_prior_item(self):
+        for identifier in (self.foreign.pk, 999999):
+            with self.subTest(identifier=identifier):
+                response = self.client.post(reverse("commentail_admin:bulk"), {
+                    "action": "approve", "ids": [self.comment.pk, identifier],
+                    "return_query": "q=Visible&status=&p=2",
+                })
+                self.assert_action_error(response, 404)
+                self.assertNotContains(response, "other.invalid", status_code=404)
+                self.comment.refresh_from_db()
+                self.assertEqual(self.comment.status, "pending")
+                self.assertFalse(self.comment.edit_locked)
+                self.assertFalse(self.comment.events.exists())
+
+    def test_revoked_action_permission_explains_failure_with_return_selection(self):
+        self.permission.moderate = False
+        self.permission.save()
+        for name, args, extra in [("action", [self.comment.pk], {}),
+                                  ("bulk", [], {"ids": [self.comment.pk]})]:
+            response = self.client.post(reverse("commentail_admin:" + name, args=args), {
+                "action": "approve", "return_query": "q=Visible&status=&p=2", **extra,
+            })
+            self.assert_action_error(response, 403)
+            self.assertContains(response, "Your permissions no longer allow this action.", status_code=403)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.status, "pending")
+
+    def test_stale_single_action_and_revision_offer_results_without_repeating_write(self):
+        moderate(self.comment.pk, "approve", actor=self.admin)
+        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
+            "action": "restore", "return_query": "q=Visible&status=&p=2",
+        })
+        self.assert_action_error(response, 403)
+        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
+            "action": "reject", "return_query": "q=Visible&status=&p=2",
+        })
+        self.assert_action_error(response, 400)
+        revision = revise(self.comment.pk, "New text", user=self.admin)
+        moderate_revision(revision.pk, "reject", actor=self.admin)
+        before = self.comment.events.count()
+        response = self.client.post(reverse("commentail_admin:revision", args=[self.comment.pk]), {
+            "action": "approve", "revision": revision.pk,
+            "return_query": "q=Visible&status=&p=2",
+        })
+        self.assert_action_error(response, 400)
+        self.assertEqual(self.comment.events.count(), before)
+
+    def test_service_failure_never_exposes_internal_error_text(self):
+        with patch("commentail.admin_views.moderate", side_effect=DomainError("INTERNAL PRIVATE DETAIL")):
+            response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
+                "action": "approve", "return_query": "q=Visible&status=&p=2",
+            })
+        self.assert_action_error(response, 400)
+        self.assertNotContains(response, "INTERNAL PRIVATE DETAIL", status_code=400)
+
+    def test_localized_service_permission_failure_keeps_forbidden_status(self):
+        with translation.override("ru"), patch(
+            "commentail.admin_views.moderate", side_effect=DomainError("Permission denied"),
+        ):
+            response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
+                "action": "approve", "return_query": "q=Visible&status=&p=2",
+            })
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "commentail/admin/action_error.html")
+
+    def test_invalid_selection_and_revision_requests_show_safe_recovery(self):
+        for identifier in ("bad", "9" * 5000, "9999999999999999999"):
+            for name, args, extra in [("bulk", [], {"ids": [identifier]}),
+                                      ("revision", [self.comment.pk], {"revision": identifier})]:
+                with self.subTest(name=name, identifier_length=len(identifier)):
+                    response = self.client.post(reverse("commentail_admin:" + name, args=args), {
+                        "action": "approve", "return_query": "q=Visible&status=&p=2", **extra,
+                    })
+                    self.assert_action_error(response, 400)
+        self.comment.refresh_from_db()
+        self.assertEqual(self.comment.status, "pending")
+
+    def test_revoked_all_access_offers_dashboard_instead_of_inaccessible_list(self):
+        self.permission.view = False
+        self.permission.save()
+        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
+            "action": "approve", "return_query": "q=Visible&status=&p=2",
+        })
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, "commentail/admin/action_error.html")
+        self.assertContains(response, f'href="{reverse("wagtailadmin_home")}"', status_code=404)
+        self.assertContains(response, "Back to dashboard", status_code=404)
 
     def test_new_bulk_actions_require_their_own_permission(self):
         for action, status in [("hide", "published"), ("restore", "hidden"), ("delete", "pending")]:
