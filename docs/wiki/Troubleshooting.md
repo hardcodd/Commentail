@@ -5,10 +5,11 @@
 | Widget missing | Actual template needs the widget tag; inspect target access and hidden mode. Resource tags alone do not enable comments. |
 | Editor tab missing | Check template inheritance/includes; supply GET_COMMENT_TEMPLATES for dynamic dependencies. |
 | Message not public | Review all is default; guests confirm first. Inspect private status, queue, request signals and rules. |
-| Guests unavailable | Site mail, SMTP backend/host, author policy, mode, target permission and quotas. Console/file backend does not enable guests. |
-| Mail stuck | Worker schedule and environment/database must match the site; inspect next attempt/status. |
+| Guests unavailable | Site mail, configured email backend, author policy, mode, target permission and quotas. SMTP requires an explicit host; other backends use their own settings. |
+| Mail stuck | Command or host task schedule and environment/database must match the site; inspect next attempt/status, broker/task failures and batch capacity. |
+| Background task rejects a transaction | Call `process_pending()` outside `atomic()` with autocommit enabled; do not wrap the batch in a transaction. |
 | Sent but absent in inbox | Sent means backend acceptance; inspect spam/provider logs and sender authorization. |
-| Duplicate mail | An uncertain SMTP outcome may be retried. Exactly-once delivery is not promised. |
+| Duplicate mail | An uncertain backend outcome may be retried. Exactly-once delivery is not promised. |
 | Resend disabled | Check original expiry, active worker claim, disabled mail and resend quotas. Deadline never extends. |
 | Edit missing | Check age, accepted reply, pending revision, ownership, target access and open mode. Guests use the publication email link. |
 | Old text after edit | Revision may be pending or rejected; inspect moderation. |
@@ -23,8 +24,11 @@
 
 ## Can comments work without mail or JavaScript?
 
-Registered users can post without SMTP but receive no mail; guests need it for
-proof. Without JS, normal links/forms work; reply selection uses the top form.
+Registered users can post without configured email delivery but receive no mail;
+guests need delivery for proof. Non-SMTP backends are supported; console,
+file, in-memory and dummy backends do not deliver to an inbox. See
+[backend configuration](Email-and-worker.md).
+Without JS, normal links/forms work; reply selection uses the top form.
 There is no standalone discussion/edit document; service reads return to the article.
 Confirmation/unsubscribe remain intentional customizable action screens.
 

@@ -3,6 +3,38 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## [1.2.0] — 2026-10-22 · Stable
+
+- Verify Wagtail 8.0.1 in every Wagtail 8 CI stack while retaining the existing
+  support bounds. Update test pins to certifi 2026.10.19 and Pillow 13.0.0 to
+  address the known advisories in the previous test environment.
+
+- Support the configured Django email backend for guest submissions and mail
+  delivery without requiring SMTP settings for other backends. Keep SMTP timeout
+  protection and permanent refusal handling; retry other backend failures within
+  the existing budget without storing provider diagnostics.
+- Add `commentail.background.process_pending(mail_limit=100)` for periodic host
+  task queues, returning JSON-compatible sent/removed counts. The existing
+  `process_commentail` command shares the same implementation; a separate command
+  schedule is unnecessary when the host schedules this function. Retain the DB
+  outbox, retries, leases and cleanup; reject caller transactions before side effects.
+- Place reply cancellation beside Send comment at the bottom of the form,
+  preserving native navigation, inline dismissal and focus restoration to Reply.
+  Use a compact text action that reveals its button surface on hover or keyboard
+  focus. Refresh static assets and review overridden reply-form templates when
+  upgrading.
+
+- Compact guest form spacing and hints, place a short math CAPTCHA input beside
+  its text refresh action, emphasize submission, and explain email confirmation
+  after submission in every supported language. The submit button inherits host
+  text colors and paired button overrides, with no fixed light/dark palette.
+- Validate numeric navigation/filter IDs before conversion, reject null bytes in
+  comment text and guest names, and enforce the stored guest-email length.
+  Malformed input returns validation errors instead of server/database errors;
+  native draft recovery drops unsupported null bytes while retaining the rest.
+- Redact capability secrets from Django logs even when the token parameter name
+  is percent-encoded. Host proxy/access logs still require their own redaction.
+
 ## [1.1.0] — 2026-10-20 · Stable
 
 - Explain failed moderation actions with a translated recovery page and a return
@@ -165,3 +197,5 @@ See [0.1.0 release notes](docs/releases/0.1.0.md).
 [0.2.0]: https://github.com/hardcodd/Commentail/compare/v0.1.1...v0.2.0
 
 [1.1.0]: https://github.com/hardcodd/Commentail/compare/v1.0.0...v1.1.0
+
+[1.2.0]: https://github.com/hardcodd/Commentail/compare/v1.1.0...v1.2.0

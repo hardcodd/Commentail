@@ -18,7 +18,7 @@ from django.views.decorators.csrf import requires_csrf_token
 from django.views.decorators.http import require_http_methods, require_POST
 from wagtail.models import Page, Site
 
-from .admission import accept_request, can_view, issue_form, smtp_configured
+from .admission import accept_request, can_view, email_configured, issue_form
 from .avatars import author_name, avatar_url, default_avatar
 from .config import technical_settings
 from .detection import DetectionError, has_comments
@@ -45,6 +45,7 @@ from .policies import EditorialSettings, editorial_settings, email_enabled
 from .security import create_captcha, remembered_guest, verify_token
 from .services import DomainError, edit_block_reason, revise
 from .structured import CommentMarkup, comment_markup
+from .validation import valid_identifier
 
 
 def _draft_redirect(
@@ -310,7 +311,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
     form_values = request.POST if request.method == "POST" else restored
     edit_identifier = form_values.get("edit_comment") or request.GET.get("edit_comment", "")
     editing = None
-    if edit_identifier.isdecimal():
+    if valid_identifier(edit_identifier):
         candidate = (
             discussion.comments.select_related("discussion__site")
             .filter(pk=edit_identifier).first()
@@ -370,7 +371,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
     # Validation/refresh POSTs have no navigation query. Keep the addressee's
     # thread visible so progressive clients can restore the inline composer.
     target_id = str(editing["id"]) if editing else request.GET.get("target") or reply_identifier
-    if target_id and target_id.isdecimal():
+    if target_id and valid_identifier(target_id):
         target = comments.filter(pk=target_id, status="published").first()
         if target is None:
             private = comments.filter(pk=target_id)
@@ -540,7 +541,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
                 not request.user.is_authenticated
                 and options.access != Access.REGISTERED
                 and email_enabled(discussion.site_id)
-                and smtp_configured()
+                and email_configured()
             )
         )
     )
@@ -567,7 +568,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
     reply_to = None
     if identifier := reply_identifier:
         reply_to = (
-            visible.filter(pk=identifier).first() if identifier.isdecimal() else None
+            visible.filter(pk=identifier).first() if valid_identifier(identifier) else None
         )
     base.update(
         {
@@ -636,7 +637,7 @@ def submit_view(
         return TemplateResponse(request, "commentail/block.html", context)
     try:
         reply = request.POST.get("reply_to", "")
-        if reply and not reply.isdecimal():
+        if reply and not valid_identifier(reply):
             raise DomainError("Invalid reply target")
         comment = accept_request(
             request,

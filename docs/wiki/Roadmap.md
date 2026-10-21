@@ -3,6 +3,18 @@
 This page records planned directions. A target release or delivery date is only
 listed once agreed. Planned work is not part of the published package.
 
+## Released in 1.2.0
+
+Version 1.2.0 includes configurable Django email backends, integration
+with the host task queue and compact reply cancellation beside Send comment.
+The guest form is also more compact, with a short CAPTCHA field and clearer email
+confirmation guidance. All three planned features have been implemented and accepted.
+The pre-release audit added input/logging fixes and verified Wagtail 8.0.1 with
+updated test dependencies across the full supported matrix.
+
+See [1.2.0 changes and upgrade guidance](Release-1.2.0.md) and
+[email/background setup](Email-and-worker.md).
+
 ## Released in 1.1.0
 
 The accepted moderation improvements include bulk actions, erasure confirmation,

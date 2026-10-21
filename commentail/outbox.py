@@ -1,8 +1,8 @@
 """Transactional notification producers and bounded, leased background delivery.
 
-No user text is copied into jobs. SMTP runs outside the database transaction.
+No user text is copied into jobs. Delivery runs outside the database transaction.
 A timed-out transport may have delivered a message: retries are intentionally
-at least once, with a stable Message-ID, not an exactly-once SMTP promise.
+at least once, with a stable Message-ID, not an exactly-once delivery promise.
 """
 
 import uuid
@@ -15,6 +15,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser
 from django.core.mail import EmailMultiAlternatives, get_connection
+from django.core.mail.backends.smtp import EmailBackend
 from django.db import transaction
 from django.db.models import F, Model, Q
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
@@ -35,6 +36,18 @@ class GuestRecipient:
     email: str
     name: str
     confirmed_at: datetime | None
+
+
+class MailBackendError(Exception):
+    """Keep arbitrary backend failures within the queue's bounded retry policy.
+
+    Only transport construction/sending is wrapped. Rendering and domain failures
+    retain their own handling; backend diagnostics must never reach saved status.
+    """
+
+    def __init__(self, error: Exception) -> None:
+        super().__init__(type(error).__name__)
+        self.error = error
 
 
 def _enqueue(
@@ -359,11 +372,6 @@ def deliver(job: MailJob) -> None:
             render_to_string(prefix + ".txt", context),
             settings.DEFAULT_FROM_EMAIL,
             [_email(job.recipient)],
-            connection=get_connection(
-                timeout=max(
-                    1, min(30, technical_settings(site)["MAIL_LEASE_SECONDS"] // 2)
-                )
-            ),
             headers={"Message-ID": f"<commentail-{job.pk}@{site.hostname}>"},
         )
         html_name = prefix + ".html"
@@ -375,13 +383,25 @@ def deliver(job: MailJob) -> None:
         else:
             # Missing includes in an existing override are errors, not opt-outs.
             message.attach_alternative(html_template.render(context), "text/html")
-        if message.send() != 1:
-            raise OSError("Backend did not report successful delivery")
+        try:
+            connection = get_connection()
+            if isinstance(connection, EmailBackend):
+                ceiling = max(1, min(30, technical_settings(site)["MAIL_LEASE_SECONDS"] // 2))
+                connection.timeout = (
+                    ceiling if connection.timeout is None else min(ceiling, connection.timeout)
+                )
+            message.connection = connection
+            if message.send() != 1:
+                raise OSError("Backend did not report successful delivery")
+        except Exception as exc:
+            # Django backends may raise provider-specific exceptions. Only this
+            # transport boundary retries them; do not hide template/domain bugs.
+            raise MailBackendError(exc) from exc
 
 
 @transaction.atomic
 def claim_job(identifier: int) -> MailJob | None:
-    """Only one worker can claim a due row; SMTP itself is outside this lock."""
+    """Only one worker can claim a due row; delivery is outside this lock."""
     now = timezone.now()
     claim = uuid.uuid4()
     query = MailJob.objects.filter(pk=identifier, next_attempt_at__lte=now).filter(
@@ -477,9 +497,10 @@ def process_mail(limit: int = 100) -> int:
             DomainError,
         ) as exc:
             owner.update(status="failed", error=type(exc).__name__, lease_until=None)
-        except (SMTPException, OSError, ValueError) as exc:
-            error = type(exc).__name__  # Never store a transport dump or secret URL.
-            if _permanent(exc) or job.attempts > len(intervals):
+        except (MailBackendError, SMTPException, OSError, ValueError) as exc:
+            failure = exc.error if isinstance(exc, MailBackendError) else exc
+            error = type(failure).__name__  # Never store a transport dump or secret URL.
+            if _permanent(failure) or job.attempts > len(intervals):
                 owner.update(status="failed", error=error, lease_until=None)
             else:
                 owner.update(
@@ -522,7 +543,7 @@ def resend_confirmation(comment_id: int) -> None:
     """Trusted owner boundary reuses the original job, token and deadline.
 
     The HTTP caller must prove guest ownership and consume site-wide quotas.
-    A currently claimed job cannot be reset while SMTP is in flight.
+    A currently claimed job cannot be reset while delivery is in flight.
     """
     query = MailJob.objects.filter(comment_id=comment_id, kind="confirm")
     if not query.update(attempts=F("attempts")):

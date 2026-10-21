@@ -3,8 +3,12 @@
 **Self-hosted comments for Wagtail CMS.** Add moderated discussions to Wagtail
 Pages and registered Django models using your site's accounts, templates and styles.
 
-> **1.1.0 Stable:** Wagtail 7.4.3+ / Django 5.2 or 6.0; Wagtail 8.0 / Django 5.2, 6.0 or 6.1; Python 3.12–3.14; file SQLite and PostgreSQL 16.
+> **1.2.0 Stable:** Wagtail 7.4.3+ / Django 5.2 or 6.0; Wagtail 8.0 / Django 5.2, 6.0 or 6.1; Python 3.12–3.14; file SQLite and PostgreSQL 16.
 > Published 0.1.0 retains Wagtail >=7.4.3,<7.5 and Django 5.2 support.
+
+Configure Django email delivery through SMTP or another backend, and schedule
+background processing through the command or your existing task queue.
+See the [1.2.0 changes and upgrade guide](Release-1.2.0.md).
 
 ## Find your guide
 
@@ -28,7 +32,7 @@ Pages and registered Django models using your site's accounts, templates and sty
 | Understand query costs and run load checks | [Performance](Performance.md) |
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md) |
 | Run the example and tests | [Example and testing](Example-and-testing.md) |
-| Read the current release scope | [Release 1.1.0](Release-1.1.0.md) |
+| Read the current release scope and upgrade steps | [Release 1.2.0](Release-1.2.0.md) |
 | Understand the stable contract | [Stability](Stability.md) |
 | Compare versions | [Changelog](Changelog.md) |
 | See planned work | [Roadmap](Roadmap.md) |
@@ -39,14 +43,15 @@ Pages and registered Django models using your site's accounts, templates and sty
 
 1. Complete Installation on a test site.
 2. Start with **Review all**, the default moderation policy.
-3. Configure SMTP and schedule the worker before enabling guests.
+3. Configure [email delivery and its background schedule](Email-and-worker.md) before
+   enabling guests. Choose a real delivery backend and one background schedule.
 4. Exercise publication, a reply and an eligible edit.
 5. Adapt the theme and assign site-scoped moderator rights.
 
 Plain text, server-rendered HTML and progressive JavaScript keep integration
-independent of a frontend framework. Version 0.2.0 includes English, Russian,
-German, French, Spanish and Brazilian Portuguese across the UI, moderation and
-emails; see [Languages](Configuration.md#languages).
+independent of a frontend framework. English, Russian, German, French, Spanish
+and Brazilian Portuguese are available across the UI, moderation and emails;
+see [Languages](Configuration.md#languages).
 No external comments platform, Redis, Celery or CDN is required.
 
 ---

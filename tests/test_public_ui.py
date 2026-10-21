@@ -459,6 +459,7 @@ class PublicInterfaceTests(TestCase):
         self.client.logout()
         self.assertNotContains(self.client.get(self.url), "Own revision")
 
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="")
     def test_guest_refresh_preserves_input_without_submission(self):
         response = self.client.get(self.url)
         self.assertIsNone(response.context["captcha"])
@@ -555,7 +556,7 @@ class PublicInterfaceTests(TestCase):
         self.assertIsNone(response.context["captcha"])
         self.assertContains(response, hint)
         self.assertNotContains(
-            response, "Confirm your email before moderation and publication."
+            response, "After submitting, we will email you a link to confirm your email address."
         )
         response = self.client.post(
             reverse("commentail:submit", args=[self.site.root_page.pk]),
@@ -564,7 +565,7 @@ class PublicInterfaceTests(TestCase):
         self.assertIsNotNone(response.context["captcha"])
         self.assertNotContains(response, hint)
         self.assertContains(
-            response, "Confirm your email before moderation and publication."
+            response, "After submitting, we will email you a link to confirm your email address."
         )
 
     @override_settings(

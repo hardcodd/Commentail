@@ -14,6 +14,7 @@ from .admission import issue_form, session_digest
 from .models import Discussion, FormTicket
 from .objects import ObjectAccessError, target_url
 from .security import digest
+from .validation import valid_identifier
 
 SESSION_KEY = "commentail_drafts"
 QUERY_KEY = "commentail_draft"
@@ -36,7 +37,9 @@ def save_draft(
     secret = issue_form(request, discussion)
     ticket = FormTicket.objects.get(digest=digest(secret))
     ticket.draft = {
-        "values": {key: request.POST.get(key, "") for key in (
+        # PostgreSQL text/JSON cannot represent U+0000. Retain the remaining
+        # invalid draft for review without persisting an unsupported character.
+        "values": {key: request.POST.get(key, "").replace("\x00", "") for key in (
             "text", "name", "email", "reply_to", "subscribe", "edit_comment"
         )},
         "error": error,
@@ -54,7 +57,7 @@ def save_draft(
     query[QUERY_KEY] = str(ticket.pk)
     fragment = "commentail"
     identifier = request.POST.get("edit_comment", "")
-    if identifier.isdecimal():
+    if valid_identifier(identifier):
         query["edit_comment"] = identifier
         query["target"] = identifier
         fragment = f"commentail-{identifier}"
@@ -65,7 +68,7 @@ def load_draft(request: HttpRequest, discussion: Discussion) -> tuple[QueryDict,
     values = QueryDict(mutable=True)
     identifier = request.GET.get(QUERY_KEY, "")
     secret = request.session.get(SESSION_KEY, {}).get(identifier)
-    if request.method != "GET" or not secret or not identifier.isdecimal():
+    if request.method != "GET" or not secret or not valid_identifier(identifier):
         return values, ""
     ticket = FormTicket.objects.filter(
         pk=identifier,

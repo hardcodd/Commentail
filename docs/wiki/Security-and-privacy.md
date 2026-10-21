@@ -43,8 +43,9 @@ removes stored email and cancels subscriptions/mail. Runtime ORM deletion of a
 Page/registered target cascades discussions; raw SQL and historical-model migrations
 must explicitly clean up related records.
 
-The worker erases expired unconfirmed comments/proofs. Published comments have no
-automatic retention policy in 0.1.0. Backups, CSV exports, SMTP logs and host analytics
+The scheduled background pass erases expired unconfirmed comments/proofs.
+Published comments have no automatic retention policy. Backups, CSV exports,
+mail-provider logs and host analytics
 have separate retention. These controls do not establish legal compliance for a site.
 
 ## Text and links

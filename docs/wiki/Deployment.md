@@ -5,8 +5,12 @@
 - Install a supported version in a test environment; back up your database.
 - Run migrations, system checks and collectstatic; serve the static assets.
 - Check Wagtail Site host/port, HTTPS scheme, ALLOWED_HOSTS, cookies and proxy settings.
-- Configure SMTP through secrets/environment and verify real delivery.
-- Schedule process_commentail once per minute against the site's database.
+- Configure [email delivery](Email-and-worker.md) through secrets/environment and
+  verify real delivery. SMTP and other Django backends are supported.
+  Configure their timeout below the mail lease.
+- Schedule background processing once per minute against the site's database:
+  `process_commentail`, or the host queue calling
+  [`commentail.background.process_pending()`](Email-and-worker.md#use-the-host-task-queue).
 - Assign moderator rights per Site; begin with Review all.
 - Keep personalized widget/action responses out of shared caches.
 - Check [database/query costs and load-test guidance](Performance.md) against your
@@ -31,8 +35,8 @@ and assume compatibility. The development example is not a production template.
 ## Monitor
 
 Use Comments and Email delivery for status; monitor worker exit failures, queue age,
-SMTP acceptance and database health in your own operations system. Leases prevent
-parallel claims, but uncertain SMTP delivery can produce duplicates. Redact protected
+backend acceptance and database health in your own operations system. Leases prevent
+parallel claims, but uncertain delivery can produce duplicates. Redact protected
 URLs and rotate logs. Do not suppress host security checks to pass deployment.
 
 ---

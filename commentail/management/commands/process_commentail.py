@@ -1,24 +1,13 @@
-from datetime import timedelta
-
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 
-from commentail.models import CaptchaChallenge, FormTicket, GuestGrant, RateEvent
-from commentail.outbox import process_mail
-from commentail.services import cleanup_unconfirmed
+from commentail.background import process_pending
 
 
 class Command(BaseCommand):
     help = "Send queued Commentail mail and erase expired transient records. Run once per minute."
 
     def handle(self, *args: object, **options: object) -> None:
-        removed = cleanup_unconfirmed()
-        sent = process_mail()
-        now = timezone.now()
-        CaptchaChallenge.objects.filter(expires_at__lte=now).delete()
-        GuestGrant.objects.filter(expires_at__lte=now).delete()
-        FormTicket.objects.filter(expires_at__lte=now).delete()
-        RateEvent.objects.filter(created_at__lt=now - timedelta(hours=1)).delete()
+        result = process_pending()
         self.stdout.write(
-            f"Sent {sent} messages; removed {removed} unconfirmed comments."
+            f"Sent {result['sent']} messages; removed {result['removed']} unconfirmed comments."
         )

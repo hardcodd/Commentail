@@ -55,7 +55,7 @@ Django's template loader order. For each kind (`confirm`, `edit`, `published`,
 - `commentail/emails/<kind>.html`: HTML alternative, included since 0.2.0
   (published 0.1.1 has plain text only).
 
-Version 0.2.0 defaults use a neutral card, the host Site name, one primary link
+The default emails use a neutral card, the host Site name, one primary link
 styled as a button, descriptive secondary links and a copyable action URL. Both
 alternatives explain confirmation, editing, moderation and per-comment unsubscribe.
 Revision decisions have distinct subjects and body text. There are no remote

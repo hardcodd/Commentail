@@ -147,6 +147,16 @@ class ConfigurationTests(TestCase):
 
 
 class LogSafetyTests(TestCase):
+    def test_encoded_capability_parameter_names_are_redacted(self):
+        from commentail.logging import redact
+
+        for key in ("%74oken", "to%6ben", "%74%6F%6b%65%6e"):
+            with self.subTest(key=key):
+                value = redact(f"GET /commentail/actions/edit/?{key}=private-secret&other=kept HTTP/1.1")
+                self.assertNotIn("private-secret", value)
+                self.assertIn("other=kept", value)
+                self.assertIn("[redacted]", value)
+
     def test_capability_query_is_redacted_in_django_log(self):
         import logging
 

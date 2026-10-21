@@ -2,7 +2,7 @@
 
 ## Requirements and package
 
-| Component | 1.1.0 Stable |
+| Component | 1.2.0 Stable |
 | --- | --- |
 | Python | 3.12, 3.13, 3.14 |
 | Wagtail / Django | 7.4.3+ in 7.4 / Django 5.2 or 6.0; 8.0.x / Django 5.2, 6.0 or 6.1 |
@@ -18,17 +18,20 @@ verification. The published 0.1.0 artifact retains its original bounds:
 In a virtual environment, install the release from PyPI:
 
 ```sh
-python -m pip install commentail==1.1.0
+python -m pip install commentail==1.2.0
 ```
 
 For the PostgreSQL driver use
-`python -m pip install 'commentail[postgres]==1.1.0'`.
+`python -m pip install 'commentail[postgres]==1.2.0'`.
 Alternatively, install a downloaded wheel or extract the source archive and run
 `python -m pip install .` in its root. Your site's `DATABASES` setting still selects
 the actual database.
 For downloaded release archives, verify the supplied checksum before installation.
-See [1.1.0 changes and upgrade notes](Release-1.1.0.md) and the
+See [1.2.0 changes and upgrade notes](Release-1.2.0.md) and the
 [version-to-version changelog](Changelog.md).
+
+The Wagtail 8 CI stacks now select 8.0.1 or a newer patch within 8.0; the
+supported framework pairs and package bounds above are unchanged.
 
 ## 1. Apps, middleware and templates
 
@@ -89,35 +92,27 @@ is the initial policy. Page overrides save with the standard page action and app
 immediately, independently of revision publication. Commentail uses your site's
 existing accounts and supplies no login/registration system.
 
-Configure [SMTP and the once-per-minute worker](Email-and-worker.md). Without SMTP,
-registered authors can comment but guests cannot. Submit and approve a test
+Configure [email delivery and once-per-minute background processing](Email-and-worker.md).
+Use the host task queue or a separate command schedule. SMTP and other Django
+email backends are supported. Without configured delivery, registered authors can comment
+but guests cannot. Submit and approve a test
 message before opening the integration to visitors.
 
 ## Upgrading and restoring
 
-Version 1.1.0 adds migration `0015_sitecommentsettings_highlight_staff` over 1.0.0.
-It adds an enabled-by-default Site setting for staff name badges and super-admin
-crowns; existing comments are retained. Disable **Highlight staff names** per Site
-if unwanted. Run `migrate`, `check` and `collectstatic --noinput`, refresh cached
-assets and restart the application and worker. Review host overrides of comment
-item/author/avatar markup and admin templates for the new UI. Publication notices
-are now queued only after moderator approval; immediate publication stays silent
-for the author. Existing queued mail is retained. See [1.1.0 notes](Release-1.1.0.md).
+Review the notes for your target version and every intervening release:
 
-Version 1.0.0 changes no runtime files, dependencies or migrations from 0.2.0;
-the migration notes below apply when upgrading from earlier versions.
+| Target | Main upgrade considerations |
+| --- | --- |
+| [1.2.0](Release-1.2.0.md) | No new Commentail migration over 1.1.0. Refresh assets and review form/CAPTCHA overrides; choose one background schedule. |
+| [1.1.0](Release-1.1.0.md) | Migration `0015` adds staff highlighting; review author/admin overrides and publication-notice behavior. |
+| [1.0.0](Release-1.0.0.md) | Stable API policy; no runtime or schema changes over 0.2.0. |
+| [0.2.0](Release-0.2.0.md) | Index migration `0014` can block writes and needs extra space; review HTML/plain-text email overrides and languages. |
+| [0.1.1](Release-0.1.1.md) | Framework support, URL prefixes and the 40-grapheme guest-name limit. |
 
-Version 0.2.0 adds migration `0014_reading_indexes` over 0.1.1. It creates
-publication/thread, active CAPTCHA and rate-cleanup indexes without changing
-comment content or state. Standard index builds may block writes and need extra
-disk space; SQLite also rebuilds the rate-event table for the field-index change.
-Measure on a representative restored copy and plan a maintenance
-window where appropriate. See [performance guidance](Performance.md#database-upgrade).
-Recollect static files for the searchable moderation Page chooser. Review both
-HTML and plain-text email overrides; existing host overrides retain precedence.
-The recent-comments tag is additive and requires no changes to existing widgets.
-See [0.2.0 release notes](Release-0.2.0.md). For upgrades from 0.1.0, also follow
-[0.1.1 notes](Release-0.1.1.md), including guest-name validation.
+For every upgrade, run `migrate`, `check` and `collectstatic --noinput`, refresh
+cached assets and restart application/background processes through your normal
+deployment procedure. Framework upgrades can require their own migrations.
 
 Rehearse the upgrade on a restored copy of your site's database before changing
 the live installation. Keep the previous package and exact dependency versions,
@@ -131,7 +126,7 @@ Use your database's consistent backup mechanism. For SQLite, use the
 or an equivalent supported tool rather than copying a live database file in
 isolation. For PostgreSQL, a custom-format `pg_dump -Fc` archive can be restored
 into a separate empty database with
-[`pg_restore --exit-on-error --single-transaction`](https://www.postgresql.org/docs/14/app-pgrestore.html).
+[`pg_restore --exit-on-error --single-transaction`](https://www.postgresql.org/docs/16/app-pgrestore.html).
 Preserve required database roles separately; a database dump does not include
 cluster-wide roles or tablespaces.
 

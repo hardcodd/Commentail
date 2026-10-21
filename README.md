@@ -6,7 +6,7 @@
 
 Moderated discussions, verified guests and inline replies — styled by your site.
 
-**Current release: [1.1.0](https://github.com/hardcodd/Commentail/releases/tag/v1.1.0)** · [PyPI](https://pypi.org/project/commentail/1.1.0/)
+**Current release: [1.2.0](https://github.com/hardcodd/Commentail/releases/tag/v1.2.0)** · [PyPI](https://pypi.org/project/commentail/1.2.0/)
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -27,12 +27,6 @@ The widget inherits your site's typography and colors. CSS custom properties,
 replaceable templates and Python callbacks let you adapt it without a frontend
 framework or an external comments platform.
 
-> **1.1.0** improves moderation with bulk actions, erasure confirmation,
-> clearer filters and selection, preserved navigation and useful error recovery.
-> Optional staff badges and publication notices only after moderation are included.
-> [Version-to-version changelog](https://github.com/hardcodd/Commentail/blob/main/CHANGELOG.md) · [Roadmap](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Roadmap.md).
-> [Changes and upgrade notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.1.0.md).
-
 ## Why Commentail?
 
 | For readers | For editors | For developers |
@@ -51,7 +45,7 @@ Published comments include **Schema.org Comment microdata and JSON-LD**, using
 the visible text and author name. Choose either format or disable output in Python.
 [Structured-data guide →](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Structured-data.md)
 
-From **1.0.0**, documented integration contracts follow the [stable API and compatibility policy](docs/wiki/Stability.md).
+Documented integrations follow the [stable API and compatibility policy](docs/wiki/Stability.md).
 
 ## Screenshots
 
@@ -111,46 +105,44 @@ discussion.
 | Frontend | Django templates, optional progressive JavaScript |
 | License | [MIT](https://github.com/hardcodd/Commentail/blob/main/LICENSE) |
 
-This table describes the 1.1.0 release; compatibility is unchanged from 1.0.0.
-CI defines all five framework
-pairs on Python 3.12, 3.13 and 3.14 with both databases (30 combinations).
+CI defines all five framework pairs on Python 3.12, 3.13 and 3.14 with both databases (30 combinations).
 Package bounds are `Wagtail>=7.4.3,<8.1` and `Django>=5.2,<6.2`; only the pairs
 listed above are supported. Wagtail 7.4 with Django 6.1 is outside this matrix.
 Wagtail 8.1 and later require separate verification before support is declared.
 
-Guest comments require configured SMTP and the scheduled worker. Registered
-users can comment without an email address, but receive no mail. Your site
-provides login and registration. No required external CDN or CAPTCHA service.
+The Wagtail 8 CI stacks select 8.0.1 or a newer patch within 8.0.
+
+Guest comments require configured Django email delivery and scheduled background
+processing. Use SMTP or another Django `EMAIL_BACKEND`, and schedule the command
+or `commentail.background.process_pending()` through your existing task queue.
+Registered users can comment without an email address, but receive no mail. Your
+site provides login and registration. No required external CDN or CAPTCHA service.
+See [email setup](docs/wiki/Email-and-worker.md).
 
 ### Languages
 
-Alongside English and Russian, 0.2.0 includes German (`de`), French (`fr`),
-Spanish (`es`) and Brazilian Portuguese (`pt-br`) for the public UI,
+English (`en`), Russian (`ru`), German (`de`), French (`fr`), Spanish (`es`)
+and Brazilian Portuguese (`pt-br`) are available for the public UI,
 moderation/settings and all notification emails.
 The host site selects the active Django language; queued emails retain the
 recipient's saved language. User comments and rejection reasons are not translated.
-Documentation remains in English and Russian.
+The guides are in English; this README is also [available in Russian](README.ru.md).
 [Language configuration →](docs/wiki/Configuration.md#languages)
 
 ## Quick start
 
 ### 1. Install
 
-In your site's virtual environment, install the release:
+In your existing Wagtail site's virtual environment, install the published release:
 
 ```sh
-python -m pip install commentail==1.1.0
+python -m pip install commentail==1.2.0
 ```
 
 For the optional PostgreSQL driver, use
-`python -m pip install 'commentail[postgres]==1.1.0'`.
-You can also extract the source distribution and run `python -m pip install .` in its root.
-When upgrading, review the
-[upgrade notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.1.0.md),
-including migration `0015`, updated static assets and host template overrides.
-When coming from 0.1.1, also apply the [0.2.0 upgrade notes](docs/releases/0.2.0.md). For older
-installations, also review the [0.1.1 notes](docs/releases/0.1.1.md). The 0.1.0 package retains
-its original Wagtail 7.4 and Django 5.2 limits.
+`python -m pip install 'commentail[postgres]==1.2.0'`.
+For an existing installation, follow
+the [upgrade guide](docs/wiki/Installation.md#upgrading-and-restoring) for your target version.
 
 ### 2. Connect Django and Wagtail
 
@@ -182,7 +174,31 @@ The template controls where Page comments are available; the corresponding Page
 editor receives a Comments tab. Configure site defaults, then inherit or override
 on individual Pages. **Review all** is the initial moderation policy.
 
-### Recent comments elsewhere
+### 4. Enable email and cleanup
+
+Configure Django's email backend and run this command once per minute:
+
+```sh
+python manage.py process_commentail
+```
+
+The command sends queued mail and removes expired temporary records. Guests confirm
+their email before moderation. Authors with email are subscribed to direct-reply
+notifications when mail is enabled; every reply email includes per-comment unsubscribe.
+
+You can configure an API-based Django backend and schedule
+`commentail.background.process_pending()` in your project's queue instead of a
+separate command job. Choose one schedule. Backend acceptance does not prove inbox
+delivery. [Backend setup, scheduling and verification →](docs/wiki/Email-and-worker.md)
+
+### 5. Check the integration
+
+Submit a comment while signed in, approve it in **Comments**, then try a reply
+and an eligible edit. In a separate browser session, submit as a guest and complete
+email confirmation. Check the real site's theme, permissions and mail delivery.
+[Deployment checks →](docs/wiki/Deployment.md#host-acceptance)
+
+## Recent comments elsewhere
 
 Use the recent-comments tag on a home page, sidebar or another template:
 
@@ -199,26 +215,11 @@ respects the current visitor's access and Site, requires a request context and
 must not be shared-cached. It needs no widget CSS or JavaScript.
 [Fields, filters and caching →](docs/wiki/Recent-comments.md)
 
-### 4. Enable email and cleanup
-
-Version 0.2.0 includes minimal HTML emails with the site name, clear action
-links and equivalent plain text. Existing host email overrides take precedence.
-
-Configure Django's SMTP settings and schedule this once per minute:
-
-```sh
-python manage.py process_commentail
-```
-
-It sends the database outbox and removes expired transient records. Guests confirm
-email before moderation. Public submissions with an email are automatically
-subscribed to direct-reply notifications when mail is enabled; each reply email
-includes per-comment unsubscribe. [Email setup and behavior →](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Email-and-worker.md)
-
 ## Make it yours
 
 The widget has a transparent surface and inherits the container's font and text
-color, following your site's light/dark theme. Load overrides after its stylesheet:
+color, following your site's light/dark theme. No custom properties are required
+for the default appearance. To customize it, load overrides after its stylesheet:
 
 ```css
 .commentail {
@@ -243,25 +244,23 @@ cover the same topics. Start with the task you need:
 | Configure | [Site, Page and Python settings](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Configuration.md) · [Moderation](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Moderation.md) · [CSV rules](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Rules-and-CSV.md) |
 | Reader behavior | [Guests](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Guest-comments.md) · [Replies and editing](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Replies-and-editing.md) |
 | Customize | [CSS and themes](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Styling.md) · [Templates and email](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Templates.md) · [Python callbacks](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Callbacks.md) · [Django model adapters](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Object-adapters.md) |
-| Operate | [SMTP and worker](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Email-and-worker.md) · [Deployment](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Deployment.md) · [Security and privacy](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Security-and-privacy.md) |
+| Operate | [Email and background processing](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Email-and-worker.md) · [Deployment](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Deployment.md) · [Security and privacy](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Security-and-privacy.md) |
 | Diagnose | [Troubleshooting / FAQ](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Troubleshooting.md) · [Example and testing](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Example-and-testing.md) · [Performance and load checks](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Performance.md) |
 
-## Release scope and verification
+## Verification and limits
 
-[1.1.0 release notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.1.0.md) describe the changes and upgrade steps;
-[0.1.0 release notes](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.1.0.md) preserve the initial release contract.
+See the [changelog](CHANGELOG.md) and [release/upgrade guides](docs/wiki/Installation.md#upgrading-and-restoring)
+for version-specific changes.
 The source distribution includes the runnable Wagtail example, tests and
 guides; the wheel includes the runtime, translations, templates and static assets.
 
 The CI workflow defines 30 framework/Python/database combinations, JavaScript, lint, migration drift,
-translations and source/wheel installation. Browser checks covered installed Safari,
-Chrome, Yandex Browser and Firefox with and without JS, plus selected VoiceOver
-scenarios and a phone. Historical checks also covered Chrome 142 on macOS and Windows ARM64 and Firefox
-140 ESR on Windows ARM64; Chrome x64 used Windows emulation. This is not an
-exhaustive accessibility or device certification.
+translations and source/wheel installation. Local checks and hosted CI are separate;
+inspect the workflow for the revision you use. Browser/accessibility coverage and
+its limits are documented in [Example and testing](docs/wiki/Example-and-testing.md#acceptance-boundaries).
 
 There is no separate REST API, rich-text editor, uploads, likes, reports or live
-updates in 1.1.0. SMTP retries can duplicate mail after an uncertain delivery result.
+updates. Mail retries can duplicate delivery after an uncertain backend result.
 Host-specific themes, access rules and email delivery need their own acceptance checks.
 
 ## Support Commentail

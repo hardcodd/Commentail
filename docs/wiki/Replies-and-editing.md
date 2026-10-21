@@ -10,6 +10,8 @@ With JS, Reply opens one composer below the selected comment. The main form keep
 its independent draft. Switching addressees retains the reply draft. Cancel removes
 the reply form and returns focus. Submission reveals the accepted message while
 retaining expanded threads and reading position; pending messages are author-only.
+Cancel sits beside Send comment as a quiet text action,
+with a button surface on hover or keyboard focus.
 Without JS, reply selection uses the form at the discussion's top. All navigation
 stays in the host article. Inline editing also works without JS.
 
@@ -36,7 +38,7 @@ Roots and replies load in batches of 20 using signed snapshot windows. New messa
 appear after refresh. Loading more preserves drafts and avoids duplicates. A direct
 permalink expands its thread and loads the exact reply beyond the first batch.
 Counters include published visible comments and replies only. No live polling,
-likes, attachments or report button is included in 0.1.0.
+likes, attachments or report button are included.
 
 ---
 

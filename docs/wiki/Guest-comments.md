@@ -40,8 +40,9 @@ eligible mail. An email address alone never proves ownership. Guest edits open
 inline from the protected publication email link and use the same rules as account
 edits: see [Replies and editing](Replies-and-editing.md).
 
-Site email and SMTP must be enabled for guest submission. Also check author access,
-discussion mode, target permission and quotas. See [Email and worker](Email-and-worker.md).
+Site email and configured Django email delivery must be enabled for guest submission.
+See [email setup](Email-and-worker.md). Also check author access,
+discussion mode, target permission and quotas.
 
 ---
 

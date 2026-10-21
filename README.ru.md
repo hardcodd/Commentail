@@ -6,7 +6,7 @@
 
 Модерация обсуждений, подтверждённые гости и ответы рядом с комментарием — в стиле вашего сайта.
 
-**Текущая версия: [1.1.0](https://github.com/hardcodd/Commentail/releases/tag/v1.1.0)** · [PyPI](https://pypi.org/project/commentail/1.1.0/)
+**Текущая версия: [1.2.0](https://github.com/hardcodd/Commentail/releases/tag/v1.2.0)** · [PyPI](https://pypi.org/project/commentail/1.2.0/)
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -26,12 +26,6 @@ Commentail — библиотека комментариев Django для **Wag
 Виджет наследует шрифты и цвета сайта. CSS-переменные, заменяемые шаблоны и
 Python callbacks позволяют адаптировать его без фронтенд-фреймворка или
 внешней платформы комментариев.
-
-> **1.1.0:** массовые действия, подтверждение удаления, понятные фильтры
-> и выбор комментариев, сохранение выборки и сообщения об ошибках.
-> Добавлены отключаемое выделение сотрудников и письма о публикации только после модерации.
-> [Изменения между версиями](https://github.com/hardcodd/Commentail/blob/main/CHANGELOG.md) · [Планы развития](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Roadmap.md).
-> [Изменения и обновление](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.1.0.md).
 
 ## Зачем Commentail?
 
@@ -53,7 +47,7 @@ Python callbacks позволяют адаптировать его без фр�
 отключить вывод.
 [Руководство по структурированным данным →](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Structured-data.md)
 
-Начиная с **1.0.0**, документированные контракты интеграции подчиняются [правилам стабильного API и совместимости](docs/wiki/Stability.md).
+Документированные контракты интеграции подчиняются [правилам стабильного API и совместимости](docs/wiki/Stability.md).
 
 ## Скриншоты
 
@@ -112,47 +106,44 @@ Python callbacks позволяют адаптировать его без фр�
 | Фронтенд | Шаблоны Django, необязательный JavaScript для постепенного улучшения интерфейса |
 | Лицензия | [MIT](https://github.com/hardcodd/Commentail/blob/main/LICENSE) |
 
-Таблица описывает выпуск 1.1.0; совместимость не изменилась с 1.0.0.
-CI определяет все пять пар фреймворков
-на Python 3.12, 3.13 и 3.14 с обеими базами данных — всего 30 сочетаний.
+CI определяет все пять пар фреймворков на Python 3.12, 3.13 и 3.14 с обеими базами данных — всего 30 сочетаний.
 Границы зависимостей пакета: `Wagtail>=7.4.3,<8.1` и `Django>=5.2,<6.2`;
 поддерживаются только перечисленные пары. Wagtail 7.4 с Django 6.1 не входит
 в эту матрицу. Wagtail 8.1 и новее требуют отдельной проверки перед объявлением поддержки.
 
-Для гостевых комментариев нужны настроенный SMTP и запуск обработчика по
-расписанию. Зарегистрированные пользователи могут комментировать без адреса
-почты, но не получают писем. Вход и регистрацию предоставляет ваш сайт.
-Обязательных внешних CDN и CAPTCHA-сервисов нет.
+Для ветки Wagtail 8 матрица CI выбирает 8.0.1 или более новый патч в пределах 8.0.
+
+Для гостей нужны настроенная доставка писем Django и фоновая обработка по
+расписанию. Используйте SMTP или другой `EMAIL_BACKEND` Django и запускайте
+команду либо `commentail.background.process_pending()` через очередь проекта.
+Зарегистрированные пользователи могут комментировать без адреса почты, но не
+получают писем. Вход и регистрацию предоставляет ваш сайт. Обязательных внешних
+CDN и CAPTCHA-сервисов нет. См. [настройку писем](docs/wiki/Email-and-worker.md).
 
 ### Языки
 
-В 0.2.0 помимо английского и русского доступны немецкий (`de`), французский (`fr`),
-испанский (`es`) и бразильский португальский (`pt-br`): публичный интерфейс,
-модерация, настройки и все письма. Активный язык выбирает сайт средствами Django;
+Английский (`en`), русский (`ru`), немецкий (`de`), французский (`fr`),
+испанский (`es`) и бразильский португальский (`pt-br`) доступны для публичного интерфейса,
+модерации, настроек и всех писем. Активный язык выбирает сайт средствами Django;
 отложенные письма используют сохранённый язык получателя. Тексты комментариев
-и причины отклонения автоматически не переводятся. Документация остаётся
-на русском и английском.
+и причины отклонения автоматически не переводятся. Подробные руководства написаны
+на английском, README — на русском и английском.
 [Настройка языков →](docs/wiki/Configuration.md#languages)
 
 ## Быстрый старт
 
 ### 1. Установка
 
-В виртуальном окружении сайта установите выпуск:
+В виртуальном окружении существующего сайта Wagtail установите опубликованный выпуск:
 
 ```sh
-python -m pip install commentail==1.1.0
+python -m pip install commentail==1.2.0
 ```
 
 Для необязательного драйвера PostgreSQL используйте
-`python -m pip install 'commentail[postgres]==1.1.0'`.
-Также можно распаковать исходный архив и выполнить `python -m pip install .` в его корне.
-При обновлении прочитайте
-[инструкцию по обновлению](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.1.0.md),
-включая миграцию `0015`, обновление статики и собственных шаблонов.
-При переходе с 0.1.1 также выполните [инструкцию для 0.2.0](docs/releases/0.2.0.md). Для более старых
-установок также прочитайте [примечания к 0.1.1](docs/releases/0.1.1.md). Пакет 0.1.0 сохраняет
-исходные ограничения Wagtail 7.4 и Django 5.2.
+`python -m pip install 'commentail[postgres]==1.2.0'`.
+Для существующей установки следуйте [инструкции обновления](docs/wiki/Installation.md#upgrading-and-restoring)
+до нужной версии.
 
 ### 2. Подключение Django и Wagtail
 
@@ -185,7 +176,32 @@ Page получает вкладку Comments. Настройте парамет
 или переопределите их на отдельных Pages. Начальная политика модерации —
 **Review all**: проверять все комментарии.
 
-### Последние комментарии в других местах сайта
+### 4. Почта и очистка
+
+Настройте почтовый backend Django и запускайте команду раз в минуту:
+
+```sh
+python manage.py process_commentail
+```
+
+Команда отправляет очередь писем и удаляет просроченные временные записи. Гости
+подтверждают email до модерации. При включённой почте авторы с email подписываются
+на уведомления о прямых ответах; каждое такое письмо содержит отписку для комментария.
+
+Можно настроить почтовый backend Django с доставкой через
+API и запускать `commentail.background.process_pending()` в очереди проекта
+вместо отдельной команды по расписанию. Выберите один способ запуска. Принятие
+письма backend’ом ещё не доказывает доставку во входящие.
+[Настройка backend’а, расписания и проверка →](docs/wiki/Email-and-worker.md)
+
+### 5. Проверка интеграции
+
+Отправьте комментарий из учётной записи, одобрите его в **Comments**, затем
+проверьте ответ и доступную правку. В отдельной сессии браузера отправьте гостевой
+комментарий и подтвердите email. Проверьте тему, права доступа и доставку на своём сайте.
+[Проверки перед развёртыванием →](docs/wiki/Deployment.md#host-acceptance)
+
+## Последние комментарии в других местах сайта
 
 Добавьте тег последних комментариев на главную страницу, в боковую панель или другой шаблон:
 
@@ -202,28 +218,11 @@ Page получает вкладку Comments. Настройте парамет
 в контексте и не должен попадать в общий кеш. CSS и JavaScript виджета не нужны.
 [Поля, фильтры и кеширование →](docs/wiki/Recent-comments.md)
 
-### 4. Почта и очистка
-
-В 0.2.0 добавлено минимальное HTML-оформление писем: название сайта, понятные
-действия и равноценная текстовая версия. Шаблоны писем сайта имеют приоритет.
-
-Настройте SMTP в Django и запускайте раз в минуту:
-
-```sh
-python manage.py process_commentail
-```
-
-Обработчик отправляет очередь писем из БД и удаляет просроченные временные
-записи. Гости подтверждают почту до модерации. При включённой почте авторы
-публичных отправок с адресом email автоматически подписываются на уведомления
-о прямых ответах; каждое письмо с ответом содержит отписку от уведомлений для
-конкретного комментария.
-[Настройка и поведение почты →](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Email-and-worker.md)
-
 ## Адаптация под сайт
 
 Виджет имеет прозрачный фон, наследует шрифт и цвет текста контейнера и
-следует светлой или тёмной теме сайта. Подключайте переопределения после его CSS:
+следует светлой или тёмной теме сайта. Для стандартного оформления CSS-переменные
+не требуются. При необходимости подключайте переопределения после его CSS:
 
 ```css
 .commentail {
@@ -250,29 +249,26 @@ Django через `OBJECT_ADAPTERS`. Технические настройки �
 | Настройка | [Параметры сайта, Page и Python](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Configuration.md) · [Модерация](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Moderation.md) · [Правила CSV](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Rules-and-CSV.md) |
 | Поведение для читателей | [Гости](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Guest-comments.md) · [Ответы и редактирование](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Replies-and-editing.md) |
 | Адаптация | [CSS и темы](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Styling.md) · [Шаблоны и письма](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Templates.md) · [Python callbacks](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Callbacks.md) · [Адаптеры моделей Django](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Object-adapters.md) |
-| Эксплуатация | [SMTP и обработчик](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Email-and-worker.md) · [Развёртывание](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Deployment.md) · [Безопасность и приватность](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Security-and-privacy.md) |
+| Эксплуатация | [Почта и фоновая обработка](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Email-and-worker.md) · [Развёртывание](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Deployment.md) · [Безопасность и приватность](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Security-and-privacy.md) |
 | Диагностика | [Решение проблем / FAQ](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Troubleshooting.md) · [Пример и тестирование](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Example-and-testing.md) · [Производительность и нагрузочные проверки](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Performance.md) |
 
-## Границы выпуска и проверок
+## Проверки и ограничения
 
-[Примечания к выпуску 1.1.0](https://github.com/hardcodd/Commentail/blob/main/docs/releases/1.1.0.md)
-описывают изменения и обновление;
-[примечания к 0.1.0](https://github.com/hardcodd/Commentail/blob/main/docs/releases/0.1.0.md)
-сохраняют исходный контракт выпуска. Архив исходников включает запускаемый
+Изменения между версиями описаны в [changelog](CHANGELOG.md) и
+[инструкциях обновления](docs/wiki/Installation.md#upgrading-and-restoring).
+Архив исходников включает запускаемый
 пример Wagtail, тесты и руководства; wheel содержит исполняемый код, переводы,
 шаблоны и статические файлы.
 
 CI определяет 30 сочетаний фреймворков, Python и БД, проверки JavaScript,
 линтеров, изменений моделей без миграций, переводов и установки из исходников/wheel.
-Браузерные проверки охватили установленные Safari, Chrome, Яндекс Браузер и
-Firefox с JavaScript и без него, отдельные сценарии VoiceOver и телефон.
-Дополнительно проверены Chrome 142 на macOS и Windows ARM64 и Firefox 140 ESR
-на Windows ARM64; Chrome x64 работал через эмуляцию Windows. Это не исчерпывающая
-сертификация доступности или устройств.
+Локальные проверки и размещённый CI — разные результаты; смотрите запуск для
+используемой ревизии. Покрытие браузеров и доступности с его ограничениями
+описано в [руководстве по тестированию](docs/wiki/Example-and-testing.md#acceptance-boundaries).
 
-В 1.1.0 нет отдельного REST API, редактора форматированного текста, загрузки
-файлов, лайков, жалоб и обновлений в реальном времени. Повторные попытки SMTP
-могут дублировать письма после неопределённого результата доставки. Темы сайта,
+Нет отдельного REST API, редактора форматированного текста, загрузки
+файлов, лайков, жалоб и обновлений в реальном времени. Повторные попытки отправки
+могут дублировать письма после неопределённого результата backend’а. Темы сайта,
 правила доступа и доставка почты требуют собственной приёмки.
 
 ## Поддержать Commentail

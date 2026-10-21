@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from wagtail.models import Site
 
@@ -35,8 +35,7 @@ class AutomaticNotificationTests(TestCase):
         self.assertEqual(response.status_code, 302)
         return Comment.objects.latest("pk")
 
-    @patch("commentail.admission.smtp_configured", return_value=True)
-    def test_public_submission_subscribes_without_checkbox_and_notice_is_once(self, _smtp):
+    def test_public_submission_subscribes_without_checkbox_and_notice_is_once(self):
         comment = self.post_comment()
         self.assertTrue(ReplySubscription.objects.get(comment=comment).enabled)
         response = self.client.get(self.url)
@@ -48,14 +47,13 @@ class AutomaticNotificationTests(TestCase):
         self.client.get(self.url)
         self.assertFalse(ReplySubscription.objects.get(comment=comment).enabled)
 
-    @patch("commentail.admission.smtp_configured", return_value=False)
-    def test_no_smtp_registered_comment_has_no_subscription_or_promise(self, _smtp):
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="")
+    def test_unconfigured_mail_registered_comment_has_no_subscription_or_promise(self):
         comment = self.post_comment()
         self.assertFalse(ReplySubscription.objects.filter(comment=comment).exists())
         self.assertNotContains(self.client.get(self.url), "We’ll email you about replies.")
 
-    @patch("commentail.admission.smtp_configured", return_value=True)
-    def test_account_without_email_can_comment_without_mail_promise(self, _smtp):
+    def test_account_without_email_can_comment_without_mail_promise(self):
         self.author.email = ""
         self.author.save()
         comment = self.post_comment()
@@ -67,8 +65,7 @@ class AutomaticNotificationTests(TestCase):
         self.assertIn("email_enabled", SiteSettingsForm().fields)
         self.assertNotIn("email_enabled", DiscussionSettingsForm().fields)
 
-    @patch("commentail.admission.smtp_configured", return_value=True)
-    def test_disabled_site_blocks_guests_but_allows_registered_without_mail(self, _smtp):
+    def test_disabled_site_blocks_guests_but_allows_registered_without_mail(self):
         SiteCommentSettings.objects.create(site=self.site, email_enabled=False, notify_publication=True)
         comment = self.post_comment()
         moderate(comment.pk, "approve", actor=self.admin)

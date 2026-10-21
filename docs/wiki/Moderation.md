@@ -42,7 +42,7 @@ in links and forms, so tabs are independent and return navigation works without
 JavaScript. If moderation empties the last list page, the existing pagination
 returns to the nearest available page while preserving the filters.
 
-Since 0.2.0, the Page filter opens Wagtail's standard
+The Page filter opens Wagtail's standard
 searchable chooser instead of loading every discussion Page into the list.
 Choosing a Page does not grant permission to its comments; Site grants still
 bound the resulting queue.

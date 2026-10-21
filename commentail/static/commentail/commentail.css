@@ -192,6 +192,16 @@
   font: inherit; font-weight: 500; line-height: 1.4; text-align: center;
   text-decoration: none;
 }
+/* Keep cancellation visually subordinate to submission. */
+.commentail a.commentail-control[data-commentail-cancel] {
+  min-height: 2rem; padding: .25rem .5rem;
+  border: 1px solid transparent; background: transparent;
+  font-size: .875em; font-weight: 400;
+}
+.commentail a.commentail-control[data-commentail-cancel]:is(:hover, :focus-visible) {
+  border-color: var(--commentail-color-border, currentColor);
+  background: var(--commentail-color-control-hover, ButtonFace);
+}
 .commentail-actions .commentail-secondary { border-color: transparent; }
 .commentail a.commentail-control:hover { text-decoration: none; }
 .commentail-menu { position: relative; margin-inline-start: auto; flex: 0 0 auto; align-self: flex-start; }
@@ -217,11 +227,49 @@
 }
 @supports (color: color-mix(in srgb, currentColor, transparent)) {
   .commentail a.commentail-control:hover, .commentail-actions .commentail-secondary:hover,
+  .commentail a.commentail-control[data-commentail-cancel]:is(:hover, :focus-visible),
   .commentail-menu summary:hover, .commentail-menu[open] summary, .commentail-menu-panel a:hover {
     background: var(--commentail-color-control-hover, color-mix(in srgb, currentColor 8%, transparent));
   }
   .commentail-menu-panel {
     background: var(--commentail-color-menu-surface, color-mix(in srgb, Canvas 97%, CanvasText));
     border-color: var(--commentail-color-border, color-mix(in srgb, currentColor 18%, transparent));
+  }
+}
+
+/* Keep helper copy close to the fields it explains. */
+.commentail .commentail-form { gap: calc(var(--commentail-spacing, 1rem) * .5); }
+.commentail .commentail-form > .commentail-muted {
+  margin: 0; font-size: .8em; line-height: 1.4;
+}
+.commentail-captcha { display: grid; gap: .3rem; margin-top: .25rem; }
+.commentail-captcha-actions { display: flex; align-items: center; gap: .4rem .6rem; }
+.commentail .commentail-captcha-actions > .commentail-input { width: 5rem; flex: 0 1 5rem; text-align: center; }
+.commentail .commentail-captcha-refresh {
+  min-height: 2rem; min-width: 0; max-width: 100%; padding: .25rem .5rem;
+  border: 1px solid transparent; border-radius: var(--commentail-border-radius, .75rem);
+  color: var(--commentail-color-accent, currentColor); background: transparent;
+  font: inherit; font-size: .875em; cursor: pointer;
+}
+.commentail .commentail-captcha-refresh:is(:hover, :focus-visible) {
+  border-color: var(--commentail-color-border, currentColor);
+  background: var(--commentail-color-control-hover, ButtonFace);
+}
+.commentail .commentail-primary {
+  font-weight: 600; border-width: 2px;
+  color: var(--commentail-color-button-text, inherit);
+}
+@supports (color: color-mix(in srgb, currentColor, transparent)) {
+  .commentail .commentail-primary {
+    background: var(--commentail-color-button-surface, color-mix(in srgb, currentColor 12%, transparent));
+  }
+  .commentail .commentail-primary:hover {
+    background: var(--commentail-color-button-hover, color-mix(in srgb, currentColor 18%, transparent));
+  }
+  .commentail .commentail-form > .commentail-muted {
+    color: var(--commentail-color-muted, color-mix(in srgb, currentColor 70%, transparent));
+  }
+  .commentail .commentail-captcha-refresh:is(:hover, :focus-visible) {
+    background: var(--commentail-color-control-hover, color-mix(in srgb, currentColor 8%, transparent));
   }
 }

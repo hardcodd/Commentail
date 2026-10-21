@@ -47,6 +47,7 @@ from .outbox import requeue
 from .permissions import Capability, can, sites_for
 from .rules_csv import export_rules, import_rules
 from .services import DomainError, hide, moderate, moderate_revision, remove, restore
+from .validation import valid_identifier
 
 _ACTION_CAPABILITIES: dict[str, Capability] = {
     "approve": "moderate", "reject": "moderate", "hide": "hide",
@@ -82,13 +83,13 @@ def index(request: HttpRequest) -> HttpResponse:
     if value := request.GET.get("site"):
         query = (
             query.filter(discussion__site_id=value)
-            if value.isdecimal()
+            if valid_identifier(value)
             else query.none()
         )
     if value := request.GET.get("page"):
         query = (
             query.filter(discussion__page_id=value)
-            if value.isdecimal()
+            if valid_identifier(value)
             else query.none()
         )
     active_status = request.GET.get("status", "pending")
@@ -181,7 +182,7 @@ def index(request: HttpRequest) -> HttpResponse:
     following = request.GET.copy()
     following["p"] = str(page.number + 1)
     selected_page = None
-    if (identifier := request.GET.get("page", "")).isdecimal():
+    if valid_identifier(identifier := request.GET.get("page", "")):
         selected_page = Page.objects.filter(
             pk=identifier, discussion__site__in=sites,
         ).first()
@@ -393,8 +394,7 @@ def bulk(request: HttpRequest) -> HttpResponse:
     if (
         not identifiers
         or len(identifiers) > 100
-        or not all(value.isdecimal() and len(value) <= 19 and int(value) <= 2**63 - 1
-                   for value in identifiers)
+        or not all(valid_identifier(value) for value in identifiers)
         or request.POST.get("action") not in _BULK_STATUSES
     ):
         return _action_error(request, message=_("Select between 1 and 100 comments and choose an available action."))
@@ -449,8 +449,7 @@ def bulk(request: HttpRequest) -> HttpResponse:
 def revision_action(request: HttpRequest, identifier: int) -> HttpResponse:
     revision_id = request.POST.get("revision", "")
     if (
-        not revision_id.isdecimal() or len(revision_id) > 19
-        or int(revision_id) > 2**63 - 1
+        not valid_identifier(revision_id)
         or request.POST.get("action") not in {"approve", "reject"}
     ):
         return _action_error(request, message=_("Choose an available action for the author revision."))
@@ -528,7 +527,7 @@ def rules(request: HttpRequest) -> HttpResponse:
     if not sites_for(request.user, "rules").exists():
         raise PermissionDenied
     if identifier := request.GET.get("id"):
-        if not identifier.isdecimal():
+        if not valid_identifier(identifier):
             return HttpResponse("Invalid rule identifier", status=400)
         rule = get_object_or_404(ModerationRule, pk=identifier)
         return redirect("commentail_admin:rule_edit", identifier=rule.pk)
@@ -589,7 +588,7 @@ def access(request: HttpRequest) -> HttpResponse:
         raise PermissionDenied
     from .models import SiteGroupPermission
 
-    if request.GET.get("id") and not request.GET["id"].isdecimal():
+    if request.GET.get("id") and not valid_identifier(request.GET["id"]):
         return HttpResponse("Invalid permission identifier", status=400)
 
     instance = (
@@ -700,7 +699,7 @@ def mail_queue(request: HttpRequest) -> HttpResponse:
     if selected_site:
         query = (
             query.filter(recipient__discussion__site_id=selected_site)
-            if selected_site.isdecimal()
+            if valid_identifier(selected_site)
             else query.none()
         )
     page = Paginator(query.order_by("-created_at", "-pk"), 25).get_page(
@@ -751,7 +750,7 @@ def objects_list(request: HttpRequest) -> HttpResponse:
             Q(object_id__icontains=value) | Q(content_type__model__icontains=value)
         )
     if value := request.GET.get("site", ""):
-        query = query.filter(site_id=value) if value.isdecimal() else query.none()
+        query = query.filter(site_id=value) if valid_identifier(value) else query.none()
     page = Paginator(
         query.order_by("site_id", "content_type_id", "object_id", "pk"), 25
     ).get_page(request.GET.get("p"))

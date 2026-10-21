@@ -9,7 +9,13 @@ import re
 
 
 def redact(value: str) -> str:
-    return re.sub(r"([?&]?token=)[^&\s]+", r"\1[redacted]", value)
+    # Django decodes parameter names before lookup. Match their percent-encoded
+    # spellings too, without decoding/reformatting unrelated log content.
+    return re.sub(
+        r"([?&]?(?:t|%74)(?:o|%6[fF])(?:k|%6[bB])(?:e|%65)(?:n|%6[eE])=)[^&\s]+",
+        r"\1[redacted]",
+        value,
+    )
 
 
 class CapabilityFilter(logging.Filter):

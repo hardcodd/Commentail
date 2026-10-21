@@ -1,11 +1,19 @@
 # Theme and CSS customization
 
+When upgrading an existing form override, see [upgrade guidance](Release-1.2.0.md).
+
 The widget inherits the containing element's text color, font, font size and
 line height. Its background is transparent; fields, buttons and separators use
-subtle translucent tones of the current text color. This follows the site's own
+subtle translucent tones of the current text color. The comment submit button
+uses a stronger border, weight and tint without imposing a fixed palette. This follows the site's own
 light/dark switch and decorative backgrounds without JavaScript or an OS-theme
 guess. Without `color-mix()` support, controls retain transparent backgrounds and
-solid current-color borders. Generated avatar colors remain independent.
+solid current-color borders.
+Generated avatar colors remain independent.
+
+No host CSS variables are required for the default widget. The library reads
+`currentColor` from its container; it does not discover arbitrary site tokens
+such as `--brand-link`. Map those explicitly only when customizing.
 
 Classes use `commentail-*`; custom properties use `--commentail-*`. Set properties
 on the widget or an ancestor such as `:root`; load class overrides after the
@@ -26,8 +34,8 @@ package stylesheet. For example, map the site's own accent token explicitly:
 | `color-surface` | Transparent widget background |
 | `color-border` | Text-color tint; stronger on controls |
 | `color-input-surface` | 3% text-color tint |
-| `color-button-text` | Accent or inherited text color |
-| `color-button-surface`, `color-button-hover` | 8% / 15% button-text tint |
+| `color-button-text` | Inherited text for comment submission; accent or inherited text for other buttons |
+| `color-button-surface`, `color-button-hover` | 12% / 18% text-color tint for comment submission; 8% / 15% for other buttons |
 | `color-control-surface`, `color-control-hover` | Quiet actions: transparent / 8% text-color tint |
 | `color-menu-surface`, `color-menu-text` | Action popup: browser canvas with a subtle tint / canvas text |
 | `color-staff-text`, `color-staff-surface` | Staff name: accent/inherited text and a 12% tint; blue foreground/pale blue background without `color-mix()` |
@@ -46,10 +54,14 @@ are controlled by the Site setting described in [Configuration](Configuration.md
 The host must provide readable foreground/background contrast. A busy photograph
 or conflicting global `!important` rules can require explicit overrides; the
 widget cannot safely infer a brand palette or repair the host's contrast.
-For a filled accent button, set both `color-button-surface` and
+When customizing a filled button, set both `color-button-surface` and
 `color-button-text` to a contrasting pair, and set `color-button-hover` as needed.
 Standalone email-action documents need the same host theme via
 overridden page templates; they cannot inherit CSS from a different document.
+Their bundled `.commentail-document` styles have their own light/dark palette,
+selected by the browser's `prefers-color-scheme`. Override
+`--commentail-document-background` and the shared text/surface properties there
+to match a site-managed theme; `--commentail-document-shadow` controls the card shadow.
 
 ## Scoped theme recipe
 

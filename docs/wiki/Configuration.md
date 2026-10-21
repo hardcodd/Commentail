@@ -50,10 +50,11 @@ Names and structured author metadata retain their original text.
 
 ## Languages
 
-Version 0.2.0 includes English (`en`), Russian (`ru`), German (`de`), French (`fr`),
-Spanish (`es`) and Brazilian Portuguese (`pt-br`) for the public UI, moderation/admin screens and all notification emails.
+English (`en`), Russian (`ru`), German (`de`), French (`fr`), Spanish (`es`)
+and Brazilian Portuguese (`pt-br`) are available for the public UI,
+moderation/admin screens and all notification emails.
 The compiled catalogs are included in the package; no runtime translation service
-is required. Documentation stays in English and Russian.
+is required. Guides are in English, with English and Russian README entry points.
 
 Commentail follows the active Django language selected by your host project.
 Include the desired codes in your project's `LANGUAGES` and use its existing
@@ -91,6 +92,9 @@ are integer seconds; callbacks are import-path strings. Existing tokens retain
 their issued deadlines when a configured duration changes.
 
 ## Complete reference
+
+Email transport uses Django's `EMAIL_BACKEND`/`EMAIL_*` and the chosen backend's
+own settings, rather than keys in `COMMENTAIL`; see [email configuration](Email-and-worker.md).
 
 | Key | Default | Meaning |
 | --- | --- | --- |

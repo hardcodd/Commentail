@@ -26,7 +26,7 @@ form without loading the enhancement script.
 Run `bootstrap_demo` only on this example's local database; reruns preserve the
 created home and current settings. Runtime data stays in `.runtime/`.
 
-Guest comments require a configured SMTP server. Before starting the server, set
+The example defaults to SMTP. Before testing guests with a real mail server, set
 `EMAIL_HOST`, `EMAIL_PORT`, optional `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`,
 `DEFAULT_FROM_EMAIL` and either `EMAIL_USE_TLS=1` (STARTTLS, usually port 587)
 or `EMAIL_USE_SSL=1` (implicit TLS, usually port 465) for your test mail system.
@@ -39,5 +39,14 @@ python manage.py process_commentail
 The worker delivers queued messages and expires old proof records. Guest email
 confirmation requires an explicit action in the opened link. SMTP configuration
 is read from the environment; the example never writes credentials to source.
-Without SMTP, registered users can comment and guest submission is unavailable.
+Without mail configuration, registered users can comment and guest submission is unavailable.
+
+You can instead change
+`EMAIL_BACKEND` in `demo/settings.py` to
+`"django.core.mail.backends.console.EmailBackend"`. SMTP variables are then
+unnecessary: the worker prints each queued email in its terminal, where you can
+copy its action link and continue confirmation. This does not send to an inbox;
+keep those protected links private. For real API delivery or a host task queue,
+follow the [email/backend guide](../docs/wiki/Email-and-worker.md).
+
 This project uses development settings and is not a production deployment template.

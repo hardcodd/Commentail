@@ -26,6 +26,9 @@ features or migrations beyond 0.2.0.
   Its other ORM attributes are not public API.
 - `process_commentail` with no required custom arguments. Command stdout is
   human-readable and is not a machine interface.
+- `commentail.background.process_pending(*, mail_limit=100)`
+  and its `ProcessingResult` dictionary keys `sent` and `removed`, documented in
+  [host task integration](Email-and-worker.md#use-the-host-task-queue).
 - Documented override paths, context fields and JS hooks in
   [Templates](Templates.md) and [Template contract](Template-contract.md);
   CSS custom properties and documented selectors in [Styling](Styling.md).

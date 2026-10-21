@@ -68,6 +68,7 @@ def _text(text: str, options: EditorialSettings) -> None:
     if (
         not isinstance(text, str)
         or not text.strip()
+        or "\x00" in text
         or character_count(text) > options.max_length
     ):
         raise DomainError("Comment is empty or too long")
@@ -128,7 +129,7 @@ def submit(
         raise DomainError("Author cannot comment")
     if guest:
         guest_name = guest_name.strip()
-        if not guest_name or character_count(guest_name) > 40:
+        if not guest_name or "\x00" in guest_name or character_count(guest_name) > 40:
             raise DomainError(
                 "Guest name is required and must be at most 40 characters"
             )
@@ -136,6 +137,8 @@ def submit(
             validate_email(guest_email)
         except ValidationError as exc:
             raise DomainError("Guest email is required") from exc
+        if len(guest_email.strip()) > Comment._meta.get_field("email").max_length:
+            raise DomainError("Invalid guest email")
     target = None
     if reply_to is not None:
         target = Comment.objects.filter(

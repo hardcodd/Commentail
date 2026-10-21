@@ -115,8 +115,8 @@ msgstr "Confirmar correo electrónico"
 msgid "Confirm your email"
 msgstr "Confirme su correo electrónico"
 
-msgid "Confirm your email before moderation and publication."
-msgstr "Confirme su correo electrónico antes de la moderación y publicación."
+msgid "After submitting, we will email you a link to confirm your email address."
+msgstr "Después de enviar, recibirás un correo con un enlace para confirmar tu dirección de correo electrónico."
 
 msgid "Deleted"
 msgstr "Eliminado"
@@ -178,8 +178,8 @@ msgstr "Acceso del grupo"
 msgid "Group access by site"
 msgstr "Acceso del grupo por sitio"
 
-msgid "Guest comments require configured SMTP"
-msgstr "Los comentarios de invitados requieren SMTP configurado"
+msgid "Guest comments require configured email delivery"
+msgstr "Los comentarios de invitados requieren el envío de correo configurado"
 
 msgid "Guest email is required"
 msgstr "El correo electrónico del invitado es obligatorio"

@@ -8,12 +8,12 @@ import secrets
 from datetime import timedelta
 
 from django.conf import settings
-from django.core.mail import get_connection
 from django.core.mail.backends.smtp import EmailBackend
 from django.db import transaction
 from django.db.models import F
 from django.http import HttpRequest
 from django.utils import timezone
+from django.utils.module_loading import import_string
 from wagtail.models import Site
 
 from .config import technical_settings
@@ -47,12 +47,16 @@ def can_view(request: HttpRequest, discussion: Discussion) -> bool:
     )
 
 
-def smtp_configured() -> bool:
-    return (
-        isinstance(get_connection(), EmailBackend)
-        and settings.is_overridden("EMAIL_HOST")
-        and bool(settings.EMAIL_HOST)
-    )
+def email_configured() -> bool:
+    """Check configuration without constructing or contacting the transport.
+
+    Only SMTP needs an explicit host; other Django backends own their settings.
+    This is availability for forms, not evidence of successful delivery.
+    """
+    backend = import_string(settings.EMAIL_BACKEND)
+    if issubclass(backend, EmailBackend):
+        return settings.is_overridden("EMAIL_HOST") and bool(settings.EMAIL_HOST)
+    return True
 
 
 def issue_form(request: HttpRequest, discussion: Discussion) -> str:
@@ -124,12 +128,12 @@ def accept_request(
             or (user is not None and options.access == Access.GUESTS)
         ):
             raise DomainError("Author cannot comment")
-        mail_available = email_enabled(site.pk) and smtp_configured()
+        mail_available = email_enabled(site.pk) and email_configured()
         subscribe = mail_available and bool(
             guest_email.strip() if user is None else getattr(user, "email", "")
         )
         if user is None and not mail_available:
-            raise DomainError("Guest comments require configured SMTP")
+            raise DomainError("Guest comments require configured email delivery")
         actor = (
             "user:" + str(user.pk)
             if user is not None
