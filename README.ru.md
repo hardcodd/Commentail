@@ -13,7 +13,7 @@
 
 [English](README.md) · Русский
 
-[Начать работу](#быстрый-старт) · [Документация](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home.md) · [Wiki](https://github.com/hardcodd/Commentail/wiki) · [Поддержать](#поддержать-commentail)
+[Начать работу](#быстрый-старт) · [Скриншоты](#скриншоты) · [Документация](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home.md) · [Wiki](https://github.com/hardcodd/Commentail/wiki) · [Поддержать](#поддержать-commentail)
 
 <img src="https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/commentail-preview.png" alt="Commentail — синяя птица на облачке комментария" width="100%">
 
@@ -54,6 +54,52 @@ Python callbacks позволяют адаптировать его без фр�
 [Руководство по структурированным данным →](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Structured-data.md)
 
 Начиная с **1.0.0**, документированные контракты интеграции подчиняются [правилам стабильного API и совместимости](docs/wiki/Stability.md).
+
+## Скриншоты
+
+Снято на Commentail **1.1.0**, установленной с PyPI в изолированном демо
+с Wagtail 8.0.1 и Django 6.1.2. Имена и обсуждения — демонстрационные данные.
+У публичной страницы собственная тема сайта; виджет и административные экраны
+взяты из выпущенного пакета без переопределения шаблонов.
+
+**На сайте:** обсуждение Wagtail, шаблонов Django и постепенного улучшения
+интерфейса, с вложенным ответом и выделением редактора.
+
+![Обсуждение статьи на Wagtail: вопрос читателя и ответ редактора](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/public-discussion.jpg)
+
+**Внутри Wagtail:** очередь модерации, раскрытые фильтры сайта/страницы, статуса
+и дат, а также два комментария, выбранных для массового действия.
+
+![Очередь модерации Wagtail с раскрытыми фильтрами и выбором комментариев](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/moderation-filters.jpg)
+
+<details>
+<summary>Гостевая форма, встроенный ответ, модерация и настройки сайта/страницы</summary>
+
+**Гостевая форма.** Закрытый от других читателей email, уведомление о подтверждении
+адреса и локальная арифметическая задача. На снимке — неотправленный черновик.
+
+![Гостевая форма с примером черновика и уведомлением о подтверждении email](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/guest-form.jpg)
+
+**Встроенный ответ.** Форма открывается под выбранным комментарием и показывает
+адресата. На снимке также неотправленный черновик.
+
+![Встроенная форма ответа читателю рядом с существующим обсуждением](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/inline-reply.jpg)
+
+**Модерация комментария.** Исходный текст, доступные действия и история решений.
+
+![Карточка комментария в ожидании модерации с действиями и историей](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/comment-moderation.jpg)
+
+**Настройки сайта.** Доступ к обсуждению, политика модерации, выделение сотрудников,
+кликабельные ссылки и параметры писем.
+
+![Настройки комментариев сайта в Wagtail: модерация, оформление и письма](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/site-settings.jpg)
+
+**Настройки страницы.** Наследование политики сайта или её изменение для отдельного
+обсуждения.
+
+![Настройки обсуждения страницы с наследованием конфигурации сайта](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/page-settings.jpg)
+
+</details>
 
 ## Совместимость
 

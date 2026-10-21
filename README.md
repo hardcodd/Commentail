@@ -13,7 +13,7 @@ Moderated discussions, verified guests and inline replies — styled by your sit
 
 English · [Русский](README.ru.md)
 
-[Get started](#quick-start) · [Documentation](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home.md) · [Wiki](https://github.com/hardcodd/Commentail/wiki) · [Support](#support-commentail)
+[Get started](#quick-start) · [Screenshots](#screenshots) · [Documentation](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home.md) · [Wiki](https://github.com/hardcodd/Commentail/wiki) · [Support](#support-commentail)
 
 <img src="https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/commentail-preview.png" alt="Commentail — a blue bird perched on a comment bubble" width="100%">
 
@@ -52,6 +52,53 @@ the visible text and author name. Choose either format or disable output in Pyth
 [Structured-data guide →](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Structured-data.md)
 
 From **1.0.0**, documented integration contracts follow the [stable API and compatibility policy](docs/wiki/Stability.md).
+
+## Screenshots
+
+Captured from Commentail **1.1.0**, installed from PyPI in an isolated Wagtail
+8.0.1 / Django 6.1.2 demo. Names and conversations are sample data.
+The public page uses a custom host theme; the widget and admin screens are the
+released package, without template overrides.
+
+**On the site:** a discussion about Wagtail, Django templates and progressive
+enhancement, with a threaded reply and a highlighted editor.
+
+![Commentail discussion on a Wagtail article, with a reader question and an editor reply](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/public-discussion.jpg)
+
+**Inside Wagtail:** the moderation queue, expanded site/page, status and date
+filters, and two comments selected for bulk actions.
+
+![Wagtail moderation queue with expanded filters and bulk comment selection](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/moderation-filters.jpg)
+
+<details>
+<summary>Guest form, inline reply, comment review and site/page settings</summary>
+
+**Guest form.** A private email field, email-verification notice and the local
+arithmetic challenge. The sample is an unsent draft.
+
+![Guest comment form with a sample draft and email-verification notice](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/guest-form.jpg)
+
+**Inline reply.** The reply form opens below the selected comment and keeps the
+recipient visible. This sample is also an unsent draft.
+
+![Inline reply form addressed to a reader, beside the existing discussion](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/inline-reply.jpg)
+
+**Comment review.** Read the original text, choose a moderation action and inspect
+its activity history.
+
+![Individual comment awaiting moderation with available actions and activity history](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/comment-moderation.jpg)
+
+**Site settings.** Discussion access, moderation policy, staff highlighting,
+clickable links and email preferences in one place.
+
+![Site comment settings in Wagtail, including moderation, appearance and email options](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/site-settings.jpg)
+
+**Page settings.** Inherit the site policy or override it for an individual
+discussion.
+
+![Page discussion settings showing inheritance from the site configuration](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/page-settings.jpg)
+
+</details>
 
 ## Compatibility
 
