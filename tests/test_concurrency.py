@@ -3,7 +3,7 @@ from threading import Barrier
 
 from django.contrib.auth import get_user_model
 from django.db import close_old_connections, connection
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, override_settings
 from wagtail.models import Site
 
 from commentail.models import Comment, CommentRevision, Discussion, ModerationEvent
@@ -85,6 +85,18 @@ class SQLiteConcurrencyTests(TransactionTestCase):
         self.assertTrue(all(isinstance(item, Comment) for item in outcomes))
         self.assertEqual(outcomes[0].pk, outcomes[1].pk)
         self.assertEqual(Comment.objects.count(), 1)
+
+    @override_settings(COMMENTAIL={"default": {"FORM_IP_LIMIT_PER_MINUTE": 1}})
+    def test_form_issuance_budget_cannot_be_spent_twice_concurrently(self):
+        from commentail.limits import consume
+        from commentail.models import RateEvent
+
+        outcomes = self.race(
+            lambda: consume(self.site, "form", "", "192.0.2.1"),
+            lambda: consume(self.site, "form", "", "192.0.2.1"),
+        )
+        self.assertEqual(sum(isinstance(item, DomainError) for item in outcomes), 1)
+        self.assertEqual(RateEvent.objects.filter(kind="form_ip").count(), 1)
 
     def test_guest_duplicate_checks_serialize_across_discussions(self):
         from wagtail.models import Page

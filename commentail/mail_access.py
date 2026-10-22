@@ -68,7 +68,9 @@ def _can_receive(recipient: Comment) -> bool:
             return False
         return _guest_can_receive(recipient, target)
     page = recipient.discussion.page
-    if not page.live:
+    if not page.live or not page.path.startswith(
+        recipient.discussion.site.root_page.path
+    ):
         return False
     restrictions = list(page.get_view_restrictions())
     if not restrictions:

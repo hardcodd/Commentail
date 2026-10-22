@@ -19,6 +19,7 @@ from wagtail.models import Site
 
 from .config import technical_settings
 from .content_checks import check_and_record, lock_site
+from .fingerprints import fingerprint, fingerprint_candidates
 from .models import (
     Access,
     Comment,
@@ -523,10 +524,10 @@ def submit_once(
     The same key and actor cannot submit a changed payload. Hashes contain no
     retrievable text or guest email; the record dies with its comment.
     """
-    import hashlib
     import json
 
     from .models import SubmissionRecord
+    from .security import digest
 
     if user is None:
         lock_site(Discussion.objects.filter(pk=discussion_id))
@@ -539,24 +540,23 @@ def submit_once(
         else "guest:" + guest_email.strip().casefold()
     )
 
-    def sha(value: str) -> str:
-        return hashlib.sha256(value.encode()).hexdigest()
-
-    payload = sha(
-        json.dumps(
-            [text, guest_name, guest_email, reply_to, language, subscribe],
-            ensure_ascii=False,
-        )
+    payload = json.dumps(
+        [text, guest_name, guest_email, reply_to, language, subscribe],
+        ensure_ascii=False,
     )
+    actor_scope = f"submission.actor.{discussion.pk}"
+    payload_scope = f"submission.payload.{discussion.pk}"
     record = (
         SubmissionRecord.objects.filter(
-            discussion=discussion, actor_digest=sha(actor), key_digest=sha(key)
+            discussion=discussion,
+            actor_digest__in=fingerprint_candidates(actor, actor_scope),
+            key_digest=digest(key),
         )
         .select_related("comment")
         .first()
     )
     if record:
-        if record.payload_digest != payload:
+        if record.payload_digest not in fingerprint_candidates(payload, payload_scope):
             raise DomainError("Submission key was already used with different content")
         return record.comment
 
@@ -573,9 +573,9 @@ def submit_once(
     )
     SubmissionRecord.objects.create(
         discussion=discussion,
-        actor_digest=sha(actor),
-        key_digest=sha(key),
-        payload_digest=payload,
+        actor_digest=fingerprint(actor, actor_scope),
+        key_digest=digest(key),
+        payload_digest=fingerprint(payload, payload_scope),
         comment=comment,
     )
     return comment

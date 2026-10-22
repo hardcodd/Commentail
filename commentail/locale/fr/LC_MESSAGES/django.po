@@ -1060,3 +1060,6 @@ msgstr "Le nombre de liens a atteint le seuil de vérification."
 
 msgid "Retry check"
 msgstr "Réessayer la vérification"
+
+msgid "Too many form requests. Please wait and retry the check. Your draft is kept."
+msgstr "Trop de demandes de formulaire. Veuillez patienter et réessayer la vérification. Votre brouillon est conservé."

@@ -3,6 +3,20 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## [1.3.1] — 2026-10-23 · Security update
+
+- Key quota identities and submission actor/payload fingerprints with purpose-scoped
+  HMAC; migrate existing records without resetting quotas or accepted retries.
+- Deny Page discussions, protected links and mail outside the saved Site root.
+- Limit form/recovery ticket issuance per Site/IP while preserving reading,
+  submitted drafts and existing valid tickets; translate refusal in all UI languages.
+- Report distinct object-adapter validation causes without private exception text.
+- Clean expired CAPTCHA, guest grants, form tickets and rate events in batches
+  of at most 500, committing each batch independently and preserving live records.
+
+Migration `0018` is irreversible: stop writers and back up database/key/package
+before upgrading. See the [1.3.1 upgrade notes](Release-1.3.1.md).
+
 ## [1.3.0] — 2026-10-22 · Stable
 
 - Keep bundled external CAPTCHA bindings valid for the form lifetime, allowing
@@ -227,5 +241,6 @@ See [0.1.0 release notes](Release-0.1.0.md).
 
 [1.1.0]: https://github.com/hardcodd/Commentail/compare/v1.0.0...v1.1.0
 
+[1.3.1]: https://github.com/hardcodd/Commentail/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/hardcodd/Commentail/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/hardcodd/Commentail/compare/v1.1.0...v1.2.0

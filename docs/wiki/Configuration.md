@@ -103,6 +103,8 @@ own settings, rather than keys in `COMMENTAIL`; see [email configuration](Email-
 | `RULES_CSV_MAX_BYTES` | `5242880` | Maximum CSV upload bytes (project-wide). |
 | `RULES_CSV_MAX_ROWS` | `20000` | Maximum imported rule rows (project-wide). |
 | `FORM_TICKET_SECONDS` | `3600` | Private form/recovery ticket lifetime; also the local binding lifetime for bundled Google/Yandex widgets. |
+| `FORM_IP_LIMIT_PER_MINUTE` | `120` | New form/recovery tickets per IP/Site/minute, including registered users and navigation. |
+| `FORM_IP_LIMIT_PER_HOUR` | `1200` | New form/recovery tickets per IP/Site/hour. Existing valid forms remain usable. |
 | `EDIT_WINDOW_SECONDS` | `900` | Edit window from publication; accepted replies lock earlier. |
 | `EMAIL_CONFIRM_SECONDS` | `86400` | Confirmation deadline from initial acceptance. |
 | `GUEST_GRANT_SECONDS` | `2592000` | Browser proof lifetime from confirmation; never sliding. |

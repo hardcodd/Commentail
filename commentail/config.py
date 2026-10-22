@@ -31,6 +31,8 @@ class TechnicalSettings(TypedDict):
     RESEND_IP_LIMIT_PER_HOUR: int
     CAPTCHA_IP_LIMIT_PER_MINUTE: int
     CAPTCHA_IP_LIMIT_PER_HOUR: int
+    FORM_IP_LIMIT_PER_MINUTE: int
+    FORM_IP_LIMIT_PER_HOUR: int
     TRUSTED_PROXIES: list[str]
     GUEST_REQUEST_CHECKS: list[str]
     MAIL_RETENTION_SECONDS: int
@@ -81,6 +83,8 @@ DEFAULTS: TechnicalSettings = {
     "RESEND_IP_LIMIT_PER_HOUR": 20,
     "CAPTCHA_IP_LIMIT_PER_MINUTE": 10,
     "CAPTCHA_IP_LIMIT_PER_HOUR": 100,
+    "FORM_IP_LIMIT_PER_MINUTE": 120,
+    "FORM_IP_LIMIT_PER_HOUR": 1200,
     "TRUSTED_PROXIES": [],
     "GUEST_REQUEST_CHECKS": ["missing_user_agent", "cross_site"],
     "MAIL_RETENTION_SECONDS": 604800,

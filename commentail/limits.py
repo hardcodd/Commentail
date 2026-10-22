@@ -12,8 +12,8 @@ from django.utils import timezone
 from wagtail.models import Site
 
 from .config import technical_settings
+from .fingerprints import fingerprint, fingerprint_candidates
 from .models import RateEvent
-from .security import digest
 from .services import DomainError
 
 
@@ -66,7 +66,10 @@ def client_ip(request: HttpRequest, site: Site) -> str:
 
 @transaction.atomic
 def consume(
-    site: Site, kind: Literal["comment", "resend", "captcha"], author: str, ip: str
+    site: Site,
+    kind: Literal["comment", "resend", "captcha", "form"],
+    author: str,
+    ip: str,
 ) -> None:
     """Count author and IP together, or reject without spending either quota.
 
@@ -74,7 +77,7 @@ def consume(
     making quotas shared across pages and serializing decisions on SQLite too.
     Prune old entries through the background cleanup command, not per request.
     """
-    if kind not in {"comment", "resend", "captcha"}:
+    if kind not in {"comment", "resend", "captcha", "form"}:
         raise DomainError("Unknown rate limit")
     if not Site.objects.filter(pk=site.pk).update(port=F("port")):
         raise DomainError("Site does not exist")
@@ -87,7 +90,9 @@ def consume(
         return RateEvent.objects.filter(
             site=site,
             kind=event_kind,
-            subject_digest=digest(subject),
+            subject_digest__in=fingerprint_candidates(
+                subject, f"rate.{site.pk}.{event_kind}"
+            ),
             created_at__gt=now - timedelta(seconds=seconds),
         ).count()
 
@@ -96,12 +101,21 @@ def consume(
             "comment": "IP_LIMIT_PER_HOUR",
             "resend": "RESEND_IP_LIMIT_PER_HOUR",
             "captcha": "CAPTCHA_IP_LIMIT_PER_HOUR",
+            "form": "FORM_IP_LIMIT_PER_HOUR",
         }[kind]
     ]
     if count(ip_kind, ip, 3600) >= ip_limit:
+        if kind == "form":
+            raise DomainError(
+                "Too many form requests. Please wait and retry the check. Your draft is kept."
+            )
         raise DomainError("IP limit exceeded")
-    if kind == "captcha":
-        if count(ip_kind, ip, 60) >= options["CAPTCHA_IP_LIMIT_PER_MINUTE"]:
+    if kind in {"captcha", "form"}:
+        if count(ip_kind, ip, 60) >= options[kind.upper() + "_IP_LIMIT_PER_MINUTE"]:
+            if kind == "form":
+                raise DomainError(
+                    "Too many form requests. Please wait and retry the check. Your draft is kept."
+                )
             raise DomainError("Captcha limit exceeded")
     else:
         prefix = "AUTHOR" if kind == "comment" else "RESEND"
@@ -111,6 +125,12 @@ def consume(
         ):
             raise DomainError("Author limit exceeded")
         RateEvent.objects.create(
-            site=site, kind=author_kind, subject_digest=digest(author)
+            site=site,
+            kind=author_kind,
+            subject_digest=fingerprint(author, f"rate.{site.pk}.{author_kind}"),
         )
-    RateEvent.objects.create(site=site, kind=ip_kind, subject_digest=digest(ip))
+    RateEvent.objects.create(
+        site=site,
+        kind=ip_kind,
+        subject_digest=fingerprint(ip, f"rate.{site.pk}.{ip_kind}"),
+    )

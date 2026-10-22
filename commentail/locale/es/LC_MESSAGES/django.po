@@ -1060,3 +1060,6 @@ msgstr "La cantidad de enlaces alcanzó el umbral de revisión."
 
 msgid "Retry check"
 msgstr "Reintentar la verificación"
+
+msgid "Too many form requests. Please wait and retry the check. Your draft is kept."
+msgstr "Demasiadas solicitudes de formulario. Espera y vuelve a intentar la verificación. Tu borrador se conserva."

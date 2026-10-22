@@ -20,6 +20,7 @@ from wagtail.models import Site
 
 from .antispam import captcha_required, consume_attempt, form_signals, request_signals
 from .config import technical_settings
+from .fingerprints import fingerprint_candidates
 from .limits import client_ip, consume
 from .models import Access, Comment, Discussion, FormTicket, Mode, SubmissionRecord
 from .policies import editorial_settings, email_enabled
@@ -47,9 +48,13 @@ def can_view(request: HttpRequest, discussion: Discussion) -> bool:
         except ObjectAccessError:
             return False
     page = discussion.page
-    return page.live and all(
-        restriction.accept_request(request)
-        for restriction in page.get_view_restrictions()
+    return (
+        page.live
+        and page.path.startswith(discussion.site.root_page.path)
+        and all(
+            restriction.accept_request(request)
+            for restriction in page.get_view_restrictions()
+        )
     )
 
 
@@ -79,6 +84,7 @@ def issue_form(
     """
     if not can_view(request, discussion):
         raise DomainError("Page access is required")
+    consume(discussion.site, "form", "", client_ip(request, discussion.site))
     session = session_digest(request)
     now = timezone.now()
     prior = FormTicket.objects.filter(
@@ -191,7 +197,11 @@ def accept_request(
 
     def recorded() -> bool:
         return SubmissionRecord.objects.filter(
-            discussion=discussion, actor_digest=digest(actor), key_digest=digest(key)
+            discussion=discussion,
+            actor_digest__in=fingerprint_candidates(
+                actor, f"submission.actor.{discussion.pk}"
+            ),
+            key_digest=digest(key),
         ).exists()
 
     def save(*, suspicious: bool = False) -> Comment:

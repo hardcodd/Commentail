@@ -6,7 +6,11 @@
 
 Модерация обсуждений, подтверждённые гости и ответы рядом с комментарием — в стиле вашего сайта.
 
-**Текущая версия: [1.3.0](https://github.com/hardcodd/Commentail/releases/tag/v1.3.0)** · [PyPI](https://pypi.org/project/commentail/1.3.0/)
+**Текущая версия: [1.3.1](https://github.com/hardcodd/Commentail/releases/tag/v1.3.1)** · [PyPI](https://pypi.org/project/commentail/1.3.1/)
+
+[1.3.1 — обновление безопасности](docs/releases/1.3.1.md). Обновление требует
+необратимой миграции отпечатков; заранее проверьте рекомендации о резервной
+копии, остановке записи и лимитах выдачи форм.
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -144,11 +148,11 @@ CDN и CAPTCHA-сервисов нет. См. [настройку писем](do
 В виртуальном окружении существующего сайта Wagtail установите опубликованный выпуск:
 
 ```sh
-python -m pip install commentail==1.3.0
+python -m pip install commentail==1.3.1
 ```
 
 Для необязательного драйвера PostgreSQL используйте
-`python -m pip install 'commentail[postgres]==1.3.0'`.
+`python -m pip install 'commentail[postgres]==1.3.1'`.
 Для существующей установки следуйте [инструкции обновления](docs/wiki/Installation.md#upgrading-and-restoring)
 до нужной версии.
 

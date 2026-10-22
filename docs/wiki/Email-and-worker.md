@@ -111,7 +111,12 @@ pass, including cancelled/deferred jobs, not the amount of cleanup. The returned
 JSON-compatible dictionary contains `sent` (messages accepted by the backend) and
 `removed` (expired unconfirmed comments erased, excluding related records).
 The same pass expires CAPTCHA proofs, guest grants, form tickets and old rate
-records. Internal outbox functions and models are not the task integration API.
+records. These four record types are cleaned in batches of at most 500, with a
+separate transaction for each batch. One fixed cutoff is used for the pass;
+expiry is rechecked before deletion. Active records remain intact, and a later
+failure does not undo already committed batches. This bounds each delete, not
+the total duration or record count of a maintenance pass. Internal outbox
+functions and models are not the task integration API.
 
 Run after Django initialization, against the site's database and settings, outside
 `transaction.atomic()` and with autocommit enabled. A caller transaction raises

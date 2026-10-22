@@ -7,6 +7,8 @@ from unittest.mock import patch
 from django.core import mail
 from django.core.management import call_command
 from django.db import transaction
+from django.db.models import QuerySet
+from django.db.models.signals import pre_delete
 from django.db.transaction import TransactionManagementError
 from django.test import SimpleTestCase, TransactionTestCase
 from django.utils import timezone
@@ -113,6 +115,181 @@ class HostTaskTests(TransactionTestCase):
         self.assertEqual(process_pending(mail_limit=1), {"sent": 1, "removed": 0})
         self.assertEqual(process_pending(), {"sent": 0, "removed": 0})
         self.assertEqual(len(mail.outbox), 2)
+
+    def test_cleanup_commits_multiple_batches_and_preserves_active_records(self):
+        now = timezone.now()
+        old = now - timedelta(days=2)
+        future = now + timedelta(days=1)
+        models = (CaptchaChallenge, GuestGrant, FormTicket, RateEvent)
+        for index in range(501):
+            digest = f"{index:064x}"
+            CaptchaChallenge.objects.create(
+                site=self.site, session_digest=digest, answer=2, expires_at=old
+            )
+            GuestGrant.objects.create(
+                site=self.site,
+                digest=digest,
+                email="guest@example.invalid",
+                confirmed_at=old,
+                expires_at=old,
+            )
+            FormTicket.objects.create(
+                digest=digest,
+                discussion=self.discussion,
+                session_digest="s" * 64,
+                expires_at=old,
+            )
+        RateEvent.objects.bulk_create(
+            [
+                RateEvent(site=self.site, kind="post", subject_digest="a" * 64)
+                for _ in range(501)
+            ]
+        )
+        RateEvent.objects.update(created_at=old)
+        self.ticket(future, "z")
+        CaptchaChallenge.objects.create(
+            site=self.site, session_digest="z" * 64, answer=2, expires_at=future
+        )
+        GuestGrant.objects.create(
+            site=self.site,
+            digest="z" * 64,
+            email="guest@example.invalid",
+            confirmed_at=now,
+            expires_at=future,
+        )
+        live_rate = RateEvent.objects.create(
+            site=self.site, kind="post", subject_digest="z" * 64
+        )
+        kept = {
+            model: set(
+                model.objects.filter(expires_at=future).values_list("pk", flat=True)
+            )
+            for model in models[:-1]
+        }
+        kept[RateEvent] = {live_rate.pk}
+        seen = {model: [] for model in models}
+        committed = {model: [] for model in models}
+
+        def observe_delete(sender, instance, using, **kwargs):
+            # The second batch must begin after the first one's commit callbacks.
+            self.assertLess(len(seen[sender]) - len(committed[sender]), 500)
+            seen[sender].append(instance.pk)
+            transaction.on_commit(
+                lambda pk=instance.pk: committed[sender].append(pk), using=using
+            )
+
+        for model in models:
+            pre_delete.connect(observe_delete, sender=model)
+        try:
+            with patch("commentail.background.timezone.now", return_value=now):
+                self.assertEqual(process_pending(), {"sent": 0, "removed": 0})
+        finally:
+            for model in models:
+                pre_delete.disconnect(observe_delete, sender=model)
+        for model in models:
+            with self.subTest(model=model.__name__):
+                self.assertEqual(len(seen[model]), 501)
+                self.assertEqual(committed[model], seen[model])
+                self.assertEqual(
+                    set(model.objects.values_list("pk", flat=True)),
+                    kept[model],
+                )
+                self.assertEqual(model.objects.count(), 1)
+        self.assertTrue(RateEvent.objects.filter(pk=live_rate.pk).exists())
+
+    def test_cleanup_failure_preserves_previously_committed_batches(self):
+        old = timezone.now() - timedelta(days=2)
+        for _ in range(5):
+            RateEvent.objects.create(
+                site=self.site, kind="post", subject_digest="a" * 64
+            )
+        RateEvent.objects.update(created_at=old)
+        identifiers = list(
+            RateEvent.objects.order_by("pk").values_list("pk", flat=True)
+        )
+
+        def fail_second_batch(sender, instance, **kwargs):
+            if instance.pk == identifiers[2]:
+                raise RuntimeError("Synthetic cleanup failure")
+
+        pre_delete.connect(fail_second_batch, sender=RateEvent)
+        try:
+            with (
+                patch("commentail.background.CLEANUP_BATCH_SIZE", 2),
+                self.assertRaisesMessage(RuntimeError, "Synthetic cleanup failure"),
+            ):
+                process_pending()
+        finally:
+            pre_delete.disconnect(fail_second_batch, sender=RateEvent)
+        self.assertEqual(
+            list(RateEvent.objects.order_by("pk").values_list("pk", flat=True)),
+            identifiers[2:],
+        )
+
+    def test_cleanup_retains_existing_expiry_boundaries(self):
+        from commentail.limits import retention_seconds
+
+        now = timezone.now()
+        self.ticket(now)
+        CaptchaChallenge.objects.create(
+            site=self.site, session_digest="a" * 64, answer=2, expires_at=now
+        )
+        GuestGrant.objects.create(
+            site=self.site,
+            digest="a" * 64,
+            email="guest@example.invalid",
+            confirmed_at=now,
+            expires_at=now,
+        )
+        rate = RateEvent.objects.create(
+            site=self.site, kind="post", subject_digest="a" * 64
+        )
+        RateEvent.objects.filter(pk=rate.pk).update(
+            created_at=now - timedelta(seconds=retention_seconds())
+        )
+        with patch("commentail.background.timezone.now", return_value=now):
+            process_pending()
+        for model in (CaptchaChallenge, GuestGrant, FormTicket):
+            self.assertFalse(model.objects.exists())
+        self.assertTrue(RateEvent.objects.filter(pk=rate.pk).exists())
+
+    def test_cleanup_rechecks_expiry_before_deleting_selected_records(self):
+        now = timezone.now()
+        ticket = self.ticket(now - timedelta(minutes=1))
+        original_delete = QuerySet.delete
+
+        def renew_then_delete(query):
+            if query.model is FormTicket:
+                FormTicket.objects.filter(pk=ticket.pk).update(
+                    expires_at=now + timedelta(hours=1)
+                )
+            return original_delete(query)
+
+        with patch.object(QuerySet, "delete", renew_then_delete):
+            process_pending()
+        self.assertTrue(FormTicket.objects.filter(pk=ticket.pk).exists())
+
+    def test_cleanup_keeps_one_cutoff_when_time_advances_between_batches(self):
+        now = timezone.now()
+        self.ticket(now - timedelta(minutes=1), "a")
+        later_ticket = self.ticket(now + timedelta(minutes=1), "b")
+
+        with patch("commentail.background.timezone.now", return_value=now) as clock:
+
+            def advance_clock(sender, instance, **kwargs):
+                transaction.on_commit(
+                    lambda: setattr(clock, "return_value", now + timedelta(hours=1))
+                )
+
+            pre_delete.connect(advance_clock, sender=FormTicket)
+            try:
+                with patch("commentail.background.CLEANUP_BATCH_SIZE", 1):
+                    process_pending()
+            finally:
+                pre_delete.disconnect(advance_clock, sender=FormTicket)
+        self.assertEqual(
+            list(FormTicket.objects.values_list("pk", flat=True)), [later_ticket.pk]
+        )
 
     def test_active_claim_is_skipped_and_expired_lease_is_recovered(self):
         self.guest()

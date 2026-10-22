@@ -11,8 +11,8 @@ from django.utils.translation import gettext as _
 from wagtail.models import Site
 
 from .config import technical_settings
+from .fingerprints import fingerprint, fingerprint_candidates
 from .models import FormTicket, RateEvent
-from .security import digest
 from .services import DomainError
 
 
@@ -71,8 +71,8 @@ def consume_attempt(request: HttpRequest, site: Site, ip: str) -> None:
     Site.objects.filter(pk=site.pk).update(port=F("port"))
     options = technical_settings(site)
     now = timezone.now()
-    session = digest(request.session.session_key)
-    address = digest(ip)
+    session = request.session.session_key
+    address = ip
     budgets = (
         ("attempt_session", session, 60, options["GUEST_ATTEMPTS_PER_MINUTE"]),
         ("attempt_ip", address, 60, options["GUEST_IP_ATTEMPTS_PER_MINUTE"]),
@@ -83,7 +83,9 @@ def consume_attempt(request: HttpRequest, site: Site, ip: str) -> None:
             RateEvent.objects.filter(
                 site=site,
                 kind=kind,
-                subject_digest=subject,
+                subject_digest__in=fingerprint_candidates(
+                    subject, f"rate.{site.pk}.{kind}"
+                ),
                 created_at__gt=now - timedelta(seconds=seconds),
             ).count()
             >= limit
@@ -96,7 +98,15 @@ def consume_attempt(request: HttpRequest, site: Site, ip: str) -> None:
             )
     RateEvent.objects.bulk_create(
         [
-            RateEvent(site=site, kind="attempt_session", subject_digest=session),
-            RateEvent(site=site, kind="attempt_ip", subject_digest=address),
+            RateEvent(
+                site=site,
+                kind="attempt_session",
+                subject_digest=fingerprint(session, f"rate.{site.pk}.attempt_session"),
+            ),
+            RateEvent(
+                site=site,
+                kind="attempt_ip",
+                subject_digest=fingerprint(address, f"rate.{site.pk}.attempt_ip"),
+            ),
         ]
     )

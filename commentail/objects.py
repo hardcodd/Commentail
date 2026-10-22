@@ -45,40 +45,58 @@ def registry_errors(value: object) -> list[str]:
     errors: list[str] = []
     seen: set[str] = set()
     for label, path in value.items():
-        try:
-            if not isinstance(label, str) or not isinstance(path, str):
-                raise TypeError
-            model = apps.get_model(label)
-            if (
-                model is None
-                or issubclass(model, Page)
-                or model._meta.abstract
-                or model._meta.proxy
-                or model._meta.app_label in {"commentail", "contenttypes"}
-            ):
-                raise ValueError
-            if not isinstance(
-                model._meta.pk,
-                (
-                    models.IntegerField,
-                    models.UUIDField,
-                    models.CharField,
-                    models.TextField,
-                ),
-            ):
-                raise TypeError
-            if model._meta.label_lower in seen:
-                raise ValueError
-            seen.add(model._meta.label_lower)
-            adapter = import_string(path)
-            if not isinstance(adapter, type) or not all(
-                callable(getattr(adapter, method, None))
-                for method in ("get_site", "can_view", "get_url")
-            ):
-                raise ValueError
-        except (ValueError, TypeError, LookupError, ImportError, AttributeError):
-            errors.append(f"Invalid OBJECT_ADAPTERS entry: {label}")
+        reason = _registry_entry_error(label, path, seen)
+        if reason:
+            name = label if isinstance(label, str) else "<non-string label>"
+            errors.append(f"Invalid OBJECT_ADAPTERS entry: {name} ({reason})")
     return errors
+
+
+def _registry_entry_error(label: object, path: object, seen: set[str]) -> str:
+    if not isinstance(label, str):
+        return "model label must be a string"
+    if not isinstance(path, str):
+        return "adapter path must be a string"
+    try:
+        model = apps.get_model(label)
+    except ValueError:
+        return "expected app_label.ModelName"
+    except LookupError:
+        return "model not found"
+    if model is None:
+        return "model not found"
+    if issubclass(model, Page):
+        return "Page models use the Page integration"
+    if model._meta.abstract:
+        return "abstract models cannot be registered"
+    if model._meta.proxy:
+        return "proxy models cannot be registered"
+    if model._meta.app_label in {"commentail", "contenttypes"}:
+        return "internal models cannot be registered"
+    if not isinstance(
+        model._meta.pk,
+        (models.IntegerField, models.UUIDField, models.CharField, models.TextField),
+    ):
+        return "unsupported primary key; expected integer, UUID or string"
+    if model._meta.label_lower in seen:
+        return "duplicate model registration"
+    seen.add(model._meta.label_lower)
+
+    try:
+        adapter = import_string(path)
+        if not isinstance(adapter, type):
+            return "adapter must be a class"
+        missing = [
+            method
+            for method in ("get_site", "can_view", "get_url")
+            if not callable(getattr(adapter, method, None))
+        ]
+    except (ValueError, TypeError, LookupError, ImportError, AttributeError):
+        # Import/descriptor exceptions may carry private configuration payloads.
+        return "adapter import failed"
+    if missing:
+        return "missing callable methods: " + ", ".join(missing)
+    return ""
 
 
 def _adapter(model: type[models.Model]) -> ObjectAdapter:

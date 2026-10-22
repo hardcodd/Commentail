@@ -37,6 +37,11 @@ Wagtail Site identify a discussion independently. Unregistered models are denied
 The adapter's saved Site must match the Site resolved for the current request.
 Keep the host object's own view protected by the same access policy.
 
+System checks identify the failing model label and reason: missing model,
+unsupported primary key, duplicate registration, adapter import/type or missing
+callable methods (listed by name). Checks do not instantiate adapters or include
+arbitrary exception messages that could contain private configuration.
+
 Every direct comment request rechecks registration, target existence, Site and
 visitor access, including form replays and author edits. Adapter errors fail
 closed with neutral visitor output and type-only server diagnostics; stored

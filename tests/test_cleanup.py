@@ -12,9 +12,9 @@ from commentail.models import Discussion, FormTicket
 class PeriodicCleanupTests(TransactionTestCase):
     @override_settings(COMMENTAIL={"cleanup.invalid": {"AUTHOR_MIN_INTERVAL": 7200}})
     def test_cleanup_retains_events_needed_by_longer_site_limits(self):
+        from commentail.fingerprints import fingerprint
         from commentail.limits import consume
         from commentail.models import RateEvent
-        from commentail.security import digest
         from commentail.services import DomainError
 
         Locale.objects.get_or_create(language_code="en")
@@ -23,7 +23,9 @@ class PeriodicCleanupTests(TransactionTestCase):
         event = RateEvent.objects.create(
             site=site,
             kind="comment_author",
-            subject_digest=digest("guest:guest@example.invalid"),
+            subject_digest=fingerprint(
+                "guest:guest@example.invalid", f"rate.{site.pk}.comment_author"
+            ),
         )
         expired = RateEvent.objects.create(
             site=site, kind="comment_author", subject_digest="x" * 64

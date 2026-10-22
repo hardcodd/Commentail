@@ -232,18 +232,19 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             )
         )
     )
-    form_key = (
-        issue_form(
-            request,
-            discussion,
-            previous_key=form_values.get("key", ""),
-            previous_id=request.GET.get(
-                "reply_age" if reply_identifier else "form_age", ""
-            ),
-        )
-        if can_post
-        else ""
-    )
+    form_key = ""
+    if can_post:
+        try:
+            form_key = issue_form(
+                request,
+                discussion,
+                previous_key=form_values.get("key", ""),
+                previous_id=request.GET.get(
+                    "reply_age" if reply_identifier else "form_age", ""
+                ),
+            )
+        except DomainError as exc:
+            base["form_error"] = str(exc)
     grant = (
         remembered_guest(
             request.COOKIES.get(f"commentail_guest_{discussion.site_id}", ""),
@@ -259,6 +260,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
     task = None
     if (
         can_post
+        and form_key
         and not request.user.is_authenticated
         and captcha_required(request, discussion.site, email_confirmed)
     ):
@@ -277,11 +279,14 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             if valid_identifier(identifier)
             else None
         )
-    main_key = (
-        issue_form(request, discussion, previous_id=request.GET.get("form_age", ""))
-        if can_post and reply_to is not None
-        else ""
-    )
+    main_key = ""
+    if form_key and reply_to is not None:
+        try:
+            main_key = issue_form(
+                request, discussion, previous_id=request.GET.get("form_age", "")
+            )
+        except DomainError as exc:
+            base["form_error"] = str(exc)
     base.update(
         {
             "window_token": _next(discussion, snapshot, limit - 20),

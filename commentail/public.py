@@ -40,7 +40,11 @@ def _draft_redirect(
     if not is_document(request):
         return None
 
-    destination = save_draft(request, discussion, error)
+    try:
+        destination = save_draft(request, discussion, error)
+    except DomainError:
+        # Render the submitted values when recovery cannot issue another ticket.
+        return None
     if destination is None:
         raise Http404
 

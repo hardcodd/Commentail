@@ -1060,3 +1060,6 @@ msgstr "Количество ссылок достигло порога пров
 
 msgid "Retry check"
 msgstr "Повторить проверку"
+
+msgid "Too many form requests. Please wait and retry the check. Your draft is kept."
+msgstr "Слишком много запросов формы. Подождите и повторите проверку. Ваш черновик сохранён."

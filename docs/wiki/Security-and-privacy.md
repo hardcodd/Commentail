@@ -4,6 +4,8 @@
 
 Every request rechecks target existence, Site and visitor permission. Direct URLs
 do not bypass restricted Page/object access. Discussion identity includes the Site.
+Page targets must remain inside their saved Site's root tree, including capability
+access and queued email. Moving a Page outside that tree revokes this access.
 Protect your object's own view with the same policy as its adapter. Trusted Python
 services are not an HTTP admission API; use built-in views for untrusted forms.
 
@@ -28,6 +30,17 @@ are unaffected by these guest-only signals. An empty signal list disables them o
 Rate limits use the direct peer by default. Add only actual immediate proxy networks
 to `TRUSTED_PROXIES`; never trust every internet address. Forwarded headers influence
 client IP only through trusted peers. Quotas are Site-wide with independent counters.
+
+New form/recovery tickets are also limited for guests and signed-in readers:
+120 per IP/Site/minute and 1200 per hour by default. Navigation and recovery count
+as issuance. Refused requests create neither tickets nor CAPTCHA records; reading
+remains available and submitted values remain editable in the error response.
+Existing valid forms still submit. Configure `FORM_IP_LIMIT_PER_MINUTE` and
+`FORM_IP_LIMIT_PER_HOUR` for shared networks. No new recovery ticket is stored at
+the limit: use Retry check after waiting to restore a usable form without
+reloading. Keep the displayed draft before leaving the page. Schedule cleanup
+to remove expired tickets/challenges. These bounds do not replace proxy/server
+request limits, connection limits and protection against distributed traffic.
 
 ## Low-friction guest checks
 
@@ -107,6 +120,25 @@ analytics and error reporting. Widget responses use private/no-store; do not ser
 personalized HTML from shared caches. Preserve action documents' strict-origin policy.
 
 ## Stored information and deletion
+
+Predictable quota identities (email/account/session/IP) and submission actor/body
+fingerprints use purpose-scoped HMAC under Django's `SECRET_KEY`. Quota scope
+includes Site and event kind; submission scope includes the discussion. A database
+copy alone cannot test guesses against these fingerprints without the key. This
+does not encrypt comment bodies or private email fields. Random capability,
+form and browser-proof secrets retain SHA-256 storage.
+
+Migration `0018` wraps legacy SHA-256 fingerprints without recovering plaintext,
+preserving current quotas and accepted submission retries. It is irreversible:
+stop web/background writers, back up the database and key, retain the same key
+during migration and restore the matching backup for downgrade. Old backups and
+exports still contain their original hashes. See the [upgrade procedure](Deployment.md#private-fingerprint-migration-0018).
+
+For later key rotation, identity quotas and submission retries also match
+`SECRET_KEY_FALLBACKS`. Keep previous keys while matching retained records is
+required; submission records currently live with their comments. Removing the
+old key ends those matches. Duplicate-text signals use their existing separate
+HMAC and start a new history on rotation. Follow [Django's key rotation guidance](https://docs.djangoproject.com/en/5.2/ref/settings/#secret-key-fallbacks).
 
 Email is admin-only, not public and not supplied to avatar callbacks. Pending text
 and rejection reasons are author/admin-only. Reply mail contains no comment text.

@@ -3,14 +3,15 @@
 **Self-hosted comments for Wagtail CMS.** Add moderated discussions to Wagtail
 Pages and registered Django models using your site's accounts, templates and styles.
 
-> **1.3.0 Stable:** Wagtail 7.4.3+ / Django 5.2 or 6.0; Wagtail 8.0 / Django 5.2, 6.0 or 6.1; Python 3.12–3.14; file SQLite and PostgreSQL 16.
+> **1.3.1 Stable:** Wagtail 7.4.3+ / Django 5.2 or 6.0; Wagtail 8.0 / Django 5.2, 6.0 or 6.1; Python 3.12–3.14; file SQLite and PostgreSQL 16.
 > Published 0.1.0 retains Wagtail >=7.4.3,<7.5 and Django 5.2 support.
 
 Protect guest comments with local form checks, attempt budgets and review signals
 for repeated text and link bursts. Google reCAPTCHA v2 and Yandex SmartCaptcha
 are opt-in; arithmetic remains the default. Configure Django email delivery and
 one background schedule through the command or your existing task queue.
-See the [1.3.0 changes and upgrade guide](Release-1.3.0.md).
+See the [1.3.1 security update and upgrade guide](Release-1.3.1.md).
+Review its irreversible migration and shared-network form quotas.
 
 ## Find your guide
 
@@ -34,7 +35,7 @@ See the [1.3.0 changes and upgrade guide](Release-1.3.0.md).
 | Understand query costs and run load checks | [Performance](Performance.md) |
 | Diagnose a problem | [Troubleshooting](Troubleshooting.md) |
 | Run the example and tests | [Example and testing](Example-and-testing.md) |
-| Read the current release scope and upgrade steps | [Release 1.3.0](Release-1.3.0.md) |
+| Read the current release scope and upgrade steps | [Release 1.3.1](Release-1.3.1.md) |
 | Understand the stable contract | [Stability](Stability.md) |
 | Compare versions | [Changelog](Changelog.md) |
 | See planned work | [Roadmap](Roadmap.md) |
