@@ -170,4 +170,4 @@ customizations and deployment policies need their own acceptance checks.
 
 ---
 
-[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 1.3.0 →](Release-1.3.0.md)
+[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 1.3.1 →](Release-1.3.1.md)

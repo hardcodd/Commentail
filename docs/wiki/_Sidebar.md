@@ -28,7 +28,7 @@
 - [Release 1.1.0](Release-1.1.0.md)
 - [Release 1.2.0](Release-1.2.0.md)
 - [Release 1.3.0](Release-1.3.0.md)
-- [Security update 1.3.1 (unreleased)](Release-1.3.1.md)
+- [Security update 1.3.1](Release-1.3.1.md)
 - [Changelog](Changelog.md)
 - [Roadmap](Roadmap.md)
 - [Support](Support.md)

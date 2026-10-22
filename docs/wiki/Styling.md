@@ -1,6 +1,6 @@
 # Theme and CSS customization
 
-When upgrading an existing form override, see [upgrade guidance](Release-1.3.0.md).
+When upgrading an existing form override, see [upgrade guidance](Release-1.3.1.md).
 
 The widget inherits the containing element's text color, font, font size and
 line height. Its background is transparent; fields, buttons and separators use
