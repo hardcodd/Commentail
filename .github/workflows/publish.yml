@@ -35,18 +35,36 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh run list --repo "$GITHUB_REPOSITORY" --workflow tests.yml \
-            --commit "$GITHUB_SHA" --event push --limit 1 \
-            --json status,conclusion,headSha > "$RUNNER_TEMP/ci.json"
           python - <<'PY'
-          import json, os
-          from pathlib import Path
-          runs = json.loads((Path(os.environ["RUNNER_TEMP"]) / "ci.json").read_text())
-          if not runs or not (
-              runs[0]["headSha"] == os.environ["GITHUB_SHA"]
-              and runs[0]["status"] == "completed"
-              and runs[0]["conclusion"] == "success"
-          ):
+          import json, os, subprocess, time
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          sha = os.environ["GITHUB_SHA"]
+          for attempt in range(12):
+              runs = json.loads(subprocess.check_output([
+                  "gh", "run", "list", "--repo", repository,
+                  "--workflow", "tests.yml", "--commit", sha, "--event", "push",
+                  "--limit", "1", "--json", "databaseId,headSha",
+              ], text=True))
+              if runs and runs[0]["headSha"] == sha:
+                  # List summaries can lag behind a rerun; inspect its latest jobs.
+                  run = json.loads(subprocess.check_output([
+                      "gh", "run", "view", str(runs[0]["databaseId"]),
+                      "--repo", repository, "--json", "headSha,status,conclusion,jobs",
+                  ], text=True))
+                  if run["headSha"] != sha:
+                      raise SystemExit("CI commit does not match the publishing commit")
+                  print("CI:", run["status"], run["conclusion"], flush=True)
+                  if run["status"] == "completed":
+                      if run["conclusion"] != "success":
+                          raise SystemExit("The exact commit did not pass CI")
+                      jobs = run["jobs"]
+                      if jobs and all(job["conclusion"] == "success" for job in jobs):
+                          print(f"Verified {len(jobs)} successful CI jobs for {sha}")
+                          break
+              if attempt < 11:
+                  time.sleep(10)
+          else:
               raise SystemExit("The exact main commit must pass Tests and distributions first")
           PY
       - name: Validate release version
