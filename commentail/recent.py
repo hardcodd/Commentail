@@ -10,6 +10,7 @@ from django.utils import timezone
 from wagtail.models import Page, PageViewRestriction, Site
 
 from .models import Comment, Discussion, Mode, SiteCommentSettings
+from .page_access import site_page_paths
 
 
 class RecentComment(TypedDict):
@@ -103,6 +104,7 @@ def _page_access(request: HttpRequest, pages: dict[int, Page]) -> dict[int, bool
 def _target_data(
     request: HttpRequest,
     discussion: Discussion,
+    root_paths: tuple[str, ...],
     page_allowed: bool = True,
 ) -> tuple[str, str] | None:
     """Check a target and resolve its title and URL once, including widget removal."""
@@ -120,7 +122,7 @@ def _target_data(
         try:
             if (
                 not obj.live
-                or not obj.path.startswith(discussion.site.root_page.path)
+                or not obj.path.startswith(root_paths)
                 or not page_allowed
                 or not has_comments(obj, request)
             ):
@@ -161,12 +163,13 @@ def recent_comments(
     site = Site.find_for_request(request)
     if site is None:
         return []
+    root_paths = site_page_paths(site)
+    page_trees = Q()
+    for path in root_paths:
+        page_trees |= Q(page__path__startswith=path)
     discussions = (
         Discussion.objects.filter(site=site)
-        .filter(
-            Q(page__isnull=True)
-            | Q(page__live=True, page__path__startswith=site.root_page.path)
-        )
+        .filter(Q(page__isnull=True) | (Q(page__live=True) & page_trees))
         .exclude(mode=Mode.HIDDEN)
     )
     if page is not None:
@@ -237,7 +240,7 @@ def recent_comments(
                     continue
                 discussion.page = pages[discussion.page_id]
             data = _target_data(
-                request, discussion, allowed.get(discussion.page_id, True)
+                request, discussion, root_paths, allowed.get(discussion.page_id, True)
             )
             targets[discussion.pk] = data
             if data is None:

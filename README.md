@@ -6,11 +6,12 @@
 
 Moderated discussions, verified guests and inline replies — styled by your site.
 
-**Current release: [1.3.1](https://github.com/hardcodd/Commentail/releases/tag/v1.3.1)** · [PyPI](https://pypi.org/project/commentail/1.3.1/)
+**Current release: [1.3.2](https://github.com/hardcodd/Commentail/releases/tag/v1.3.2)** · [PyPI](https://pypi.org/project/commentail/1.3.2/)
 
-[1.3.1 is a security update](docs/releases/1.3.1.md). Upgrading requires an
-irreversible fingerprint data migration; review the backup, downtime and
-form-quota guidance before upgrading.
+[1.3.2 restores discussions under translated Site homepages](docs/releases/1.3.2.md).
+There is no new migration over 1.3.1. Upgrading from 1.3.0 or earlier includes
+the [irreversible 1.3.1 fingerprint migration](docs/releases/1.3.1.md);
+review its backup, downtime and form-quota guidance first.
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -147,11 +148,11 @@ The guides are in English; this README is also [available in Russian](README.ru.
 In your existing Wagtail site's virtual environment, install the published release:
 
 ```sh
-python -m pip install commentail==1.3.1
+python -m pip install commentail==1.3.2
 ```
 
 For the optional PostgreSQL driver, use
-`python -m pip install 'commentail[postgres]==1.3.1'`.
+`python -m pip install 'commentail[postgres]==1.3.2'`.
 For an existing installation, follow
 the [upgrade guide](docs/wiki/Installation.md#upgrading-and-restoring) for your target version.
 

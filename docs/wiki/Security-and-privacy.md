@@ -5,7 +5,12 @@
 Every request rechecks target existence, Site and visitor permission. Direct URLs
 do not bypass restricted Page/object access. Discussion identity includes the Site.
 Page targets must remain inside their saved Site's root tree, including capability
-access and queued email. Moving a Page outside that tree revokes this access.
+access and queued email. When `WAGTAIL_I18N_ENABLED` is true, this also includes
+the trees rooted at translations of that Site's homepage, following Wagtail's
+multilingual routing. Live-page checks and restrictions apply to the actual target
+in its own language tree. A translation of an individual article outside these
+home trees does not grant access. Moving a Page outside all allowed trees revokes
+access. The same boundaries apply to recent-comment selection.
 Protect your object's own view with the same policy as its adapter. Trusted Python
 services are not an HTTP admission API; use built-in views for untrusted forms.
 

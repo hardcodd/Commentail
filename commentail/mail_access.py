@@ -8,6 +8,7 @@ from django.utils.module_loading import import_string
 
 from .config import technical_settings
 from .models import Comment
+from .page_access import site_page_paths
 from .services import DomainError
 
 
@@ -69,7 +70,7 @@ def _can_receive(recipient: Comment) -> bool:
         return _guest_can_receive(recipient, target)
     page = recipient.discussion.page
     if not page.live or not page.path.startswith(
-        recipient.discussion.site.root_page.path
+        site_page_paths(recipient.discussion.site)
     ):
         return False
     restrictions = list(page.get_view_restrictions())

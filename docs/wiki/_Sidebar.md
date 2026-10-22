@@ -29,6 +29,7 @@
 - [Release 1.2.0](Release-1.2.0.md)
 - [Release 1.3.0](Release-1.3.0.md)
 - [Security update 1.3.1](Release-1.3.1.md)
+- [Translated Site roots 1.3.2](Release-1.3.2.md)
 - [Changelog](Changelog.md)
 - [Roadmap](Roadmap.md)
 - [Support](Support.md)

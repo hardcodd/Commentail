@@ -23,6 +23,7 @@ from .config import technical_settings
 from .fingerprints import fingerprint_candidates
 from .limits import client_ip, consume
 from .models import Access, Comment, Discussion, FormTicket, Mode, SubmissionRecord
+from .page_access import site_page_paths
 from .policies import editorial_settings, email_enabled
 from .security import digest, remembered_guest, verify_captcha
 from .services import DomainError, _text, confirm_email, submit_once
@@ -50,7 +51,7 @@ def can_view(request: HttpRequest, discussion: Discussion) -> bool:
     page = discussion.page
     return (
         page.live
-        and page.path.startswith(discussion.site.root_page.path)
+        and page.path.startswith(site_page_paths(discussion.site))
         and all(
             restriction.accept_request(request)
             for restriction in page.get_view_restrictions()

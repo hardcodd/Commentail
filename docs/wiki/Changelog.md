@@ -3,6 +3,13 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## [1.3.2] — 2026-10-23 · Translated Site roots
+
+- Restore Page discussions under translated Site homepages when Wagtail content
+  internationalization is enabled. Apply the same Site boundary to forms,
+  protected links, queued mail and recent comments while retaining live-page
+  and view-restriction checks. No data migration is required for this fix.
+
 ## [1.3.1] — 2026-10-23 · Security update
 
 - Key quota identities and submission actor/payload fingerprints with purpose-scoped
