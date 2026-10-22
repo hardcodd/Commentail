@@ -6,7 +6,6 @@ at least once, with a stable Message-ID, not an exactly-once delivery promise.
 """
 
 import uuid
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from smtplib import SMTPException, SMTPRecipientsRefused, SMTPResponseException
 from typing import TypedDict
@@ -17,25 +16,19 @@ from django.contrib.auth.models import AbstractBaseUser
 from django.core.mail import EmailMultiAlternatives, get_connection
 from django.core.mail.backends.smtp import EmailBackend
 from django.db import transaction
-from django.db.models import F, Model, Q
+from django.db.models import F, Q
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.template.loader import get_template, render_to_string
 from django.urls import NoReverseMatch, reverse
 from django.utils import timezone, translation
-from django.utils.module_loading import import_string
+from wagtail.models import Site
 
 from .config import technical_settings
+from .mail_access import GuestRecipient, _can_receive, _email
 from .models import ActionToken, Comment, CommentRevision, MailJob, ReplySubscription
 from .policies import editorial_settings, email_enabled
 from .security import digest, issue_token, token_secret
 from .services import DomainError, _permission
-
-
-@dataclass(frozen=True)
-class GuestRecipient:
-    email: str
-    name: str
-    confirmed_at: datetime | None
 
 
 class MailBackendError(Exception):
@@ -103,6 +96,7 @@ def _enqueue(
 
 
 def accepted(comment: Comment) -> None:
+    """Queue guest proof or final-state notices inside the submission transaction."""
     if comment.status == "awaiting_email":
         if not ActionToken.objects.filter(comment=comment, purpose="view").exists():
             issue_token(
@@ -149,7 +143,9 @@ def decided(comment: Comment, *, after_moderation: bool = False) -> None:
         _enqueue(comment, "rejected", f"rejected:{comment.pk}")
 
 
-def revision_decided(revision: CommentRevision, *, after_moderation: bool = False) -> None:
+def revision_decided(
+    revision: CommentRevision, *, after_moderation: bool = False
+) -> None:
     """Skip publication mail for instant edits; retain configured rejection notices."""
     options = editorial_settings(revision.comment.discussion)
     kind = "published" if revision.status == "approved" else "rejected"
@@ -161,92 +157,8 @@ def revision_decided(revision: CommentRevision, *, after_moderation: bool = Fals
         )
 
 
-def _email(recipient: Comment) -> str:
-    if recipient.account_deleted:
-        return ""
-    if recipient.user_id:
-        return (
-            str(getattr(recipient.user, "email", "") or "")
-            if recipient.user.is_active
-            else ""
-        )
-    return recipient.email
-
-
-def _can_receive(recipient: Comment) -> bool:
-    from .objects import ObjectAccessError, ObjectAdapterError, checked_site, target_for
-
-    if not recipient.discussion.page_id:
-        try:
-            target = target_for(recipient.discussion)
-            from django.contrib.auth.models import AnonymousUser
-            from django.contrib.sessions.backends.base import SessionBase
-            from django.http import HttpRequest
-
-            request = HttpRequest()
-            request.method = "GET"
-            site = recipient.discussion.site
-            request.META.update(
-                HTTP_HOST=site.hostname,
-                SERVER_NAME=site.hostname,
-                SERVER_PORT=str(site.port),
-            )
-            request.user = recipient.user if recipient.user_id else AnonymousUser()
-            request.session = SessionBase()
-            request.LANGUAGE_CODE = recipient.language
-            checked_site(
-                target, request, view=bool(recipient.user_id), expected_site=site
-            )
-            if recipient.user_id:
-                return recipient.user.is_active
-        except ObjectAdapterError as exc:
-            raise DomainError("Object mail access handler failed") from exc
-        except ObjectAccessError:
-            return False
-        return _guest_can_receive(recipient, target)
-    page = recipient.discussion.page
-    if not page.live:
-        return False
-    restrictions = list(page.get_view_restrictions())
-    if not restrictions:
-        return True
-    if recipient.user_id:
-        user = recipient.user
-        for rule in restrictions:
-            if rule.restriction_type == rule.LOGIN and not user.is_active:
-                return False
-            if rule.restriction_type == rule.GROUPS and not (
-                user.is_superuser or rule.groups.filter(user=user).exists()
-            ):
-                return False
-            if rule.restriction_type == rule.PASSWORD:
-                return False  # A mail worker cannot prove browser password entry.
-        return True
-    return _guest_can_receive(recipient, page.specific)
-
-
-def _guest_can_receive(recipient: Comment, target: Model) -> bool:
-    path = technical_settings(recipient.discussion.site)["CAN_SEND_GUEST_EMAIL"]
-    if not path:
-        return False
-    callback = import_string(path)
-    try:
-        return (
-            callback(
-                GuestRecipient(
-                    recipient.email, recipient.guest_name, recipient.email_confirmed_at
-                ),
-                target,
-                recipient.discussion.site,
-            )
-            is True
-        )
-    except Exception as exc:
-        # An extension failure is an explicit job error, never a permission grant.
-        raise DomainError("Guest mail access handler failed") from exc
-
-
 def _valid(job: MailJob) -> bool:
+    """Revalidate recipient access, original deadlines and current delivery state."""
     now = timezone.now()
     if (
         not email_enabled(job.comment.discussion.site_id)
@@ -301,50 +213,7 @@ class MailTemplateContext(TypedDict):
 def deliver(job: MailJob) -> None:
     """Render notification metadata only; comment/revision bodies never enter mail."""
     site = job.comment.discussion.site
-    from .objects import ObjectAccessError, target_url
-
-    try:
-        page_url = target_url(job.comment.discussion)
-    except ObjectAccessError as exc:
-        raise DomainError("Object URL handler failed") from exc
-    if page_url.startswith("/"):
-        page_url = site.root_url + page_url
-    parts = urlsplit(page_url)
-    query = dict(parse_qsl(parts.query))
-    query["target"] = str(job.comment_id)
-    target_url = urlunsplit(
-        (
-            parts.scheme,
-            parts.netloc,
-            parts.path,
-            urlencode(query),
-            f"commentail-{job.comment_id}",
-        )
-    )
-    action_url = ""
-    if job.token:
-        action_url = (
-            site.root_url
-            + reverse(
-                "commentail:action",
-                args=[job.token.purpose],
-                query={"token": token_secret(job.token)},
-            )
-        )
-    view_url = ""
-    if job.kind == "confirm":
-        view_token = ActionToken.objects.filter(
-            comment=job.comment, purpose="view", expires_at__gt=timezone.now()
-        ).first()
-        if view_token:
-            view_url = (
-                site.root_url
-                + reverse(
-                    "commentail:action",
-                    args=["view"],
-                    query={"token": token_secret(view_token)},
-                )
-            )
+    target_url, action_url, view_url = _mail_urls(job)
     reason = ""
     if job.kind == "rejected":
         reason = job.revision.reason if job.revision_id else job.comment.reason
@@ -363,40 +232,8 @@ def deliver(job: MailJob) -> None:
             "is_revision": job.revision_id is not None,
             "expires_at": job.expires_at,
         }
-        prefix = f"commentail/emails/{job.kind}"
-        subject = render_to_string(prefix + "_subject.txt", context).strip()
-        if not subject or "\n" in subject or "\r" in subject:
-            raise MailTemplateError("Invalid email subject")
-        message = EmailMultiAlternatives(
-            subject,
-            render_to_string(prefix + ".txt", context),
-            settings.DEFAULT_FROM_EMAIL,
-            [_email(job.recipient)],
-            headers={"Message-ID": f"<commentail-{job.pk}@{site.hostname}>"},
-        )
-        html_name = prefix + ".html"
-        try:
-            html_template = get_template(html_name)
-        except TemplateDoesNotExist as exc:
-            if not exc.args or exc.args[0] != html_name:
-                raise
-        else:
-            # Missing includes in an existing override are errors, not opt-outs.
-            message.attach_alternative(html_template.render(context), "text/html")
-        try:
-            connection = get_connection()
-            if isinstance(connection, EmailBackend):
-                ceiling = max(1, min(30, technical_settings(site)["MAIL_LEASE_SECONDS"] // 2))
-                connection.timeout = (
-                    ceiling if connection.timeout is None else min(ceiling, connection.timeout)
-                )
-            message.connection = connection
-            if message.send() != 1:
-                raise OSError("Backend did not report successful delivery")
-        except Exception as exc:
-            # Django backends may raise provider-specific exceptions. Only this
-            # transport boundary retries them; do not hide template/domain bugs.
-            raise MailBackendError(exc) from exc
+        message = _render_message(job, context)
+        _send_message(message, site)
 
 
 @transaction.atomic
@@ -499,7 +336,9 @@ def process_mail(limit: int = 100) -> int:
             owner.update(status="failed", error=type(exc).__name__, lease_until=None)
         except (MailBackendError, SMTPException, OSError, ValueError) as exc:
             failure = exc.error if isinstance(exc, MailBackendError) else exc
-            error = type(failure).__name__  # Never store a transport dump or secret URL.
+            error = type(
+                failure
+            ).__name__  # Never store a transport dump or secret URL.
             if _permanent(failure) or job.attempts > len(intervals):
                 owner.update(status="failed", error=error, lease_until=None)
             else:
@@ -519,6 +358,9 @@ def process_mail(limit: int = 100) -> int:
 @transaction.atomic
 def requeue(job_id: int, *, actor: AbstractBaseUser) -> None:
     # Lock before reading and permission checking; a failure rolls back the write.
+    """Reset a failed job only after a locked permission and eligibility recheck.
+
+    Retain its original capability and expiry; rejection rolls back the lock."""
     if not MailJob.objects.filter(pk=job_id).update(attempts=F("attempts")):
         raise DomainError("Mail job does not exist")
     job = MailJob.objects.select_related(
@@ -562,3 +404,118 @@ def resend_confirmation(comment_id: int) -> None:
     job.attempts = 0
     job.error = ""
     job.save(update_fields=["status", "next_attempt_at", "attempts", "error"])
+
+
+def _mail_urls(job: MailJob) -> tuple[str, str, str]:
+    """Resolve the host and purpose links before applying the recipient locale."""
+    site = job.comment.discussion.site
+    from .objects import ObjectAccessError, target_url
+
+    try:
+        page_url = target_url(job.comment.discussion)
+    except ObjectAccessError as exc:
+        raise DomainError("Object URL handler failed") from exc
+    if page_url.startswith("/"):
+        page_url = site.root_url + page_url
+    parts = urlsplit(page_url)
+    query = dict(parse_qsl(parts.query))
+    query["target"] = str(job.comment_id)
+    target_url = urlunsplit(
+        (
+            parts.scheme,
+            parts.netloc,
+            parts.path,
+            urlencode(query),
+            f"commentail-{job.comment_id}",
+        )
+    )
+    action_url = ""
+    if job.token:
+        action_url = site.root_url + reverse(
+            "commentail:action",
+            args=[job.token.purpose],
+            query={"token": token_secret(job.token)},
+        )
+    view_url = ""
+    if job.kind == "confirm":
+        view_token = ActionToken.objects.filter(
+            comment=job.comment, purpose="view", expires_at__gt=timezone.now()
+        ).first()
+        if view_token:
+            view_url = site.root_url + reverse(
+                "commentail:action",
+                args=["view"],
+                query={"token": token_secret(view_token)},
+            )
+    return target_url, action_url, view_url
+
+
+def _render_message(
+    job: MailJob, context: MailTemplateContext
+) -> EmailMultiAlternatives:
+    """Build multipart metadata mail; a missing HTML entry point opts into text only.
+
+    Missing includes in an existing HTML override remain errors, as do empty or
+    multiline subjects. Render without request/model-bearing context processors.
+    """
+    site = job.comment.discussion.site
+    prefix = f"commentail/emails/{job.kind}"
+    subject = render_to_string(prefix + "_subject.txt", context).strip()
+    if not subject or "\n" in subject or "\r" in subject:
+        raise MailTemplateError("Invalid email subject")
+    message = EmailMultiAlternatives(
+        subject,
+        render_to_string(prefix + ".txt", context),
+        settings.DEFAULT_FROM_EMAIL,
+        [_email(job.recipient)],
+        headers={"Message-ID": f"<commentail-{job.pk}@{site.hostname}>"},
+    )
+    html_name = prefix + ".html"
+    try:
+        html_template = get_template(html_name)
+    except TemplateDoesNotExist as exc:
+        if not exc.args or exc.args[0] != html_name:
+            raise
+    else:
+        # Missing includes in an existing override are errors, not opt-outs.
+        message.attach_alternative(html_template.render(context), "text/html")
+    return message
+
+
+def _send_message(message: EmailMultiAlternatives, site: Site) -> None:
+    """Bound SMTP timeout and isolate arbitrary backend exceptions for retries."""
+    try:
+        connection = get_connection()
+        if isinstance(connection, EmailBackend):
+            ceiling = max(
+                1, min(30, technical_settings(site)["MAIL_LEASE_SECONDS"] // 2)
+            )
+            connection.timeout = (
+                ceiling
+                if connection.timeout is None
+                else min(ceiling, connection.timeout)
+            )
+        message.connection = connection
+        if message.send() != 1:
+            raise OSError("Backend did not report successful delivery")
+    except Exception as exc:
+        # Django backends may raise provider-specific exceptions. Only this
+        # transport boundary retries them; do not hide template/domain bugs.
+        raise MailBackendError(exc) from exc
+
+
+__all__ = [
+    "GuestRecipient",
+    "MailBackendError",
+    "MailTemplateContext",
+    "MailTemplateError",
+    "_can_receive",
+    "accepted",
+    "claim_job",
+    "decided",
+    "deliver",
+    "process_mail",
+    "requeue",
+    "resend_confirmation",
+    "revision_decided",
+]

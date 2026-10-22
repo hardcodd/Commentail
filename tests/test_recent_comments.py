@@ -31,8 +31,11 @@ class RecentCommentsTests(TestCase):
         return Comment.objects.create(
             discussion=discussion or self.discussion,
             **{
-                "text": "Public text", "guest_name": "Guest",
-                "status": "published", "published_at": timezone.now(), **kwargs,
+                "text": "Public text",
+                "guest_name": "Guest",
+                "status": "published",
+                "published_at": timezone.now(),
+                **kwargs,
             },
         )
 
@@ -40,7 +43,8 @@ class RecentCommentsTests(TestCase):
         context = Context({"request": self.request, **values})
         Template(
             "{% load commentail_tags %}{% commentail_recent "
-            + arguments + " as comments %}"
+            + arguments
+            + " as comments %}"
         ).render(context)
         return context["comments"]
 
@@ -55,11 +59,15 @@ class RecentCommentsTests(TestCase):
         self.comment(published_at=now + timedelta(days=1))
         with CaptureQueriesContext(connection) as queries:
             rows = self.recent()
-        self.assertFalse(any(
-            q["sql"].lstrip().split()[0].upper() in {"INSERT", "UPDATE", "DELETE"}
-            for q in queries
-        ))
-        self.assertEqual([row["id"] for row in rows], [c.pk for c in comments[::-1]][:5])
+        self.assertFalse(
+            any(
+                q["sql"].lstrip().split()[0].upper() in {"INSERT", "UPDATE", "DELETE"}
+                for q in queries
+            )
+        )
+        self.assertEqual(
+            [row["id"] for row in rows], [c.pk for c in comments[::-1]][:5]
+        )
         self.assertEqual(self.recent("limit=1")[0]["id"], comments[-1].pk)
         self.assertEqual(self.recent("limit=8")[-1]["id"], old.pk)
         self.assertEqual(self.recent("limit=0"), [])
@@ -70,19 +78,29 @@ class RecentCommentsTests(TestCase):
         root = self.comment()
         reply = self.comment(root=root, reply_to=root)
         self.comment(other)
-        self.assertEqual([r["id"] for r in self.recent("page=page", page=self.page)], [reply.pk, root.pk])
         self.assertEqual(
-            [r["id"] for r in self.recent("page=page include_replies=False", page=self.page)],
+            [r["id"] for r in self.recent("page=page", page=self.page)],
+            [reply.pk, root.pk],
+        )
+        self.assertEqual(
+            [
+                r["id"]
+                for r in self.recent("page=page include_replies=False", page=self.page)
+            ],
             [root.pk],
         )
         for value in ("", 123, Page(title="Unsaved")):
             self.assertEqual(self.recent("page=page", page=value), [])
 
     def test_page_access_including_inherited_restrictions_and_live_state(self):
-        child = self.page.add_child(instance=Page(title="Restricted", slug="restricted"))
+        child = self.page.add_child(
+            instance=Page(title="Restricted", slug="restricted")
+        )
         discussion = Discussion.objects.create(site=self.site, page=child)
         comment = self.comment(discussion)
-        restriction = PageViewRestriction.objects.create(page=self.page, restriction_type="login")
+        restriction = PageViewRestriction.objects.create(
+            page=self.page, restriction_type="login"
+        )
         self.assertEqual(self.recent(), [])
         self.request.user = get_user_model().objects.create_user("reader")
         self.assertEqual(self.recent()[0]["id"], comment.pk)
@@ -106,7 +124,9 @@ class RecentCommentsTests(TestCase):
 
     def test_unavailable_candidates_do_not_consume_limit(self):
         visible = self.comment()
-        child = self.page.add_child(instance=Page(title="Hidden", slug="hidden", live=False))
+        child = self.page.add_child(
+            instance=Page(title="Hidden", slug="hidden", live=False)
+        )
         discussion = Discussion.objects.create(site=self.site, page=child)
         for _ in range(105):
             self.comment(discussion)
@@ -143,16 +163,22 @@ class RecentCommentsTests(TestCase):
     def test_access_decision_is_reused_only_within_one_selection(self):
         for _ in range(5):
             self.comment()
-        with patch("commentail.recent._page_access", return_value={self.page.pk: True}) as check:
+        with patch(
+            "commentail.recent._page_access", return_value={self.page.pk: True}
+        ) as check:
             self.assertEqual(len(self.recent()), 5)
             check.assert_called_once()
-        with patch("commentail.recent._page_access", return_value={self.page.pk: False}):
+        with patch(
+            "commentail.recent._page_access", return_value={self.page.pk: False}
+        ):
             self.assertEqual(self.recent(), [])
 
     def test_password_restriction_uses_current_session(self):
         comment = self.comment()
         restriction = PageViewRestriction.objects.create(
-            page=self.page, restriction_type="password", password="synthetic-password",
+            page=self.page,
+            restriction_type="password",
+            password="synthetic-password",
         )
         self.assertEqual(self.recent(), [])
         restriction.mark_as_passed(self.request)
@@ -164,7 +190,8 @@ class RecentCommentsTests(TestCase):
 
         product = Product.objects.create(site=self.site, title="Product")
         discussion = Discussion.objects.create(
-            site=self.site, content_type=ContentType.objects.get_for_model(product),
+            site=self.site,
+            content_type=ContentType.objects.get_for_model(product),
             object_id=str(product.pk),
         )
         comment = self.comment(discussion)
@@ -183,17 +210,26 @@ class RecentCommentsTests(TestCase):
         product.delete()
         self.assertEqual(self.recent(), [])
 
-    @override_settings(COMMENTAIL={"default": {"OBJECT_ADAPTERS": {
-        "commentail_test_targets.Product": "tests.test_object_adapters.BrokenAdapter",
-    }}})
+    @override_settings(
+        COMMENTAIL={
+            "default": {
+                "OBJECT_ADAPTERS": {
+                    "commentail_test_targets.Product": "tests.test_object_adapters.BrokenAdapter",
+                }
+            }
+        }
+    )
     def test_broken_adapter_fails_closed(self):
         from django.contrib.contenttypes.models import ContentType
 
         product = Product.objects.create(site=self.site, title="Private")
-        self.comment(Discussion.objects.create(
-            site=self.site, content_type=ContentType.objects.get_for_model(product),
-            object_id=str(product.pk),
-        ))
+        self.comment(
+            Discussion.objects.create(
+                site=self.site,
+                content_type=ContentType.objects.get_for_model(product),
+                object_id=str(product.pk),
+            )
+        )
         with self.assertLogs("commentail.objects", level="ERROR"):
             self.assertEqual(self.recent(), [])
 
@@ -204,14 +240,20 @@ class RecentCommentsTests(TestCase):
 
         product = Product.objects.create(site=self.site, title="Product")
         discussion = Discussion.objects.create(
-            site=self.site, content_type=ContentType.objects.get_for_model(product),
+            site=self.site,
+            content_type=ContentType.objects.get_for_model(product),
             object_id=str(product.pk),
         )
         comment = self.comment(discussion)
+
         def config(adapter):
-            return {"default": {"OBJECT_ADAPTERS": {
-                Product._meta.label: f"tests.test_object_adapters.{adapter}",
-            }}}
+            return {
+                "default": {
+                    "OBJECT_ADAPTERS": {
+                        Product._meta.label: f"tests.test_object_adapters.{adapter}",
+                    }
+                }
+            }
 
         with override_settings(COMMENTAIL=config("QueryUrlAdapter")):
             self.assertEqual(
@@ -222,7 +264,8 @@ class RecentCommentsTests(TestCase):
             with self.assertLogs("commentail.objects", level="ERROR"):
                 url = self.recent()[0]["url"]
             self.assertEqual(
-                url, reverse("commentail:object_discussion", args=[discussion.pk])
+                url,
+                reverse("commentail:object_discussion", args=[discussion.pk])
                 + f"?target={comment.pk}#commentail-{comment.pk}",
             )
         discussion.object_id = "999999999"
@@ -232,14 +275,23 @@ class RecentCommentsTests(TestCase):
     def test_safe_fields_custom_markup_permalink_and_private_cache(self):
         from django.http import HttpResponse
 
-        comment = self.comment(text='<script>alert("x")</script>', guest_name="<b>Guest</b>")
+        comment = self.comment(
+            text='<script>alert("x")</script>', guest_name="<b>Guest</b>"
+        )
         rows = self.recent()
-        self.assertEqual(set(rows[0]), {"id", "author_name", "text", "published_at", "target_title", "url"})
+        self.assertEqual(
+            set(rows[0]),
+            {"id", "author_name", "text", "published_at", "target_title", "url"},
+        )
         self.assertIn(f"target={comment.pk}#commentail-{comment.pk}", rows[0]["url"])
-        html = Template("{% for c in comments %}<p>{{ c.author_name }}: {{ c.text }}</p>{% endfor %}").render(Context({"comments": rows}))
+        html = Template(
+            "{% for c in comments %}<p>{{ c.author_name }}: {{ c.text }}</p>{% endfor %}"
+        ).render(Context({"comments": rows}))
         self.assertNotIn("<script>", html)
         self.assertIn("&lt;b&gt;Guest&lt;/b&gt;", html)
-        response = CapabilityHeadersMiddleware(lambda request: HttpResponse(html))(self.request)
+        response = CapabilityHeadersMiddleware(lambda request: HttpResponse(html))(
+            self.request
+        )
         self.assertEqual(response["Cache-Control"], "private, no-store")
 
     def test_name_hook_is_used(self):
@@ -249,10 +301,14 @@ class RecentCommentsTests(TestCase):
 
     def test_hook_html_is_still_plain_text(self):
         self.comment()
-        with patch("commentail.avatars.author_name", return_value=mark_safe("<b>Name</b>")):
+        with patch(
+            "commentail.avatars.author_name", return_value=mark_safe("<b>Name</b>")
+        ):
             rows = self.recent()
         self.assertIs(type(rows[0]["author_name"]), str)
-        html = Template("{{ comments.0.author_name }}").render(Context({"comments": rows}))
+        html = Template("{{ comments.0.author_name }}").render(
+            Context({"comments": rows})
+        )
         self.assertEqual(html, "&lt;b&gt;Name&lt;/b&gt;")
 
     def test_documented_markup_and_empty_state_render(self):
@@ -261,8 +317,8 @@ class RecentCommentsTests(TestCase):
         template = Template(
             "{% load commentail_tags %}{% commentail_recent limit=1 as comments %}"
             '<ul>{% for c in comments %}<li><a href="{{ c.url }}">'
-            '{{ c.author_name }}: {{ c.text|truncatechars:12 }}</a>'
-            '<time datetime="{{ c.published_at|date:\'c\' }}">'
+            "{{ c.author_name }}: {{ c.text|truncatechars:12 }}</a>"
+            "<time datetime=\"{{ c.published_at|date:'c' }}\">"
             '{{ c.published_at|date:"SHORT_DATETIME_FORMAT" }}</time></li>'
             "{% empty %}<li>No comments yet.</li>{% endfor %}</ul>"
         )
@@ -276,6 +332,16 @@ class RecentCommentsTests(TestCase):
         self.assertTrue(document.select_one("time")["datetime"])
 
     def test_invalid_arguments_fail_explicitly(self):
-        for arguments in ("limit=-1", "limit='5'", "limit=True", "limit=1.5", "include_replies='False'", "include_replies=0"):
-            with self.subTest(arguments=arguments), self.assertRaises(TemplateSyntaxError):
+        for arguments in (
+            "limit=-1",
+            "limit='5'",
+            "limit=True",
+            "limit=1.5",
+            "include_replies='False'",
+            "include_replies=0",
+        ):
+            with (
+                self.subTest(arguments=arguments),
+                self.assertRaises(TemplateSyntaxError),
+            ):
                 self.recent(arguments)

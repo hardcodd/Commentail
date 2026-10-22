@@ -34,6 +34,8 @@ CommentEntity = TypedDict(
 
 @dataclass(frozen=True)
 class CommentMarkup:
+    """Resolved metadata for one public rendered comment; contains no private fields."""
+
     identifier: str
     url: str
     target: str

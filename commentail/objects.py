@@ -39,6 +39,7 @@ class ObjectAdapter(Protocol):
 
 
 def registry_errors(value: object) -> list[str]:
+    """Validate saved-target model labels and importable adapter classes."""
     if not isinstance(value, dict):
         return ["OBJECT_ADAPTERS must be a model-label to adapter-class dictionary"]
     errors: list[str] = []
@@ -100,8 +101,10 @@ def object_key(obj: models.Model) -> str:
 
 
 def target_for(discussion: Discussion) -> models.Model:
+    """Resolve the current registered target or raise a closed access failure."""
     if discussion.page_id:
         return discussion.page.specific
+
     try:
         model = discussion.content_type.model_class()
         if model is None:
@@ -125,6 +128,10 @@ def checked_site(
     view: bool = True,
     expected_site: Site | None = None,
 ) -> Site:
+    """Require a saved matching Site and, by default, an explicit view grant.
+
+    Handler failures raise ObjectAdapterError; ordinary denial raises
+    ObjectAccessError. Neither failure exposes the handler payload."""
     try:
         if isinstance(obj, Page):
             raise ObjectAccessError
@@ -151,6 +158,10 @@ def checked_site(
 
 @transaction.atomic
 def get_object_discussion(request: HttpRequest, obj: models.Model) -> Discussion:
+    """Re-read and lock the saved target, authorize it and get/create its discussion.
+
+    Unsaved, unregistered, missing or denied targets raise ObjectAccessError
+    (including ObjectAdapterError); generic IDs alone never authorize access."""
     key = object_key(obj)
     # Resolve the stored object, never accept stale caller visibility/site fields.
     try:
@@ -161,6 +172,7 @@ def get_object_discussion(request: HttpRequest, obj: models.Model) -> Discussion
             logger.error("Object lookup failed (%s)", type(exc).__name__)
         raise ObjectAdapterError from None
     site = checked_site(obj, request)
+
     content_type = ContentType.objects.get_for_model(obj)
     discussion, _ = Discussion.objects.get_or_create(
         site=site, content_type=content_type, object_id=key
@@ -240,7 +252,9 @@ def _comment_url(
 ) -> str:
     """Compose reading state from a validated host URL or service fallback."""
     parts = urlsplit(destination)
-    values: dict[str, str | list[str]] = dict(parse_qsl(parts.query, keep_blank_values=True))
+    values: dict[str, str | list[str]] = dict(
+        parse_qsl(parts.query, keep_blank_values=True)
+    )
     for key in ("thread", "window", "replies", "reply_to", "target", "edit_comment"):
         if navigation and key in navigation:
             values[key] = (
@@ -257,7 +271,13 @@ def _comment_url(
         else "commentail"
     )
     return urlunsplit(
-        (parts.scheme, parts.netloc, parts.path, urlencode(values, doseq=True), fragment)
+        (
+            parts.scheme,
+            parts.netloc,
+            parts.path,
+            urlencode(values, doseq=True),
+            fragment,
+        )
     )
 
 

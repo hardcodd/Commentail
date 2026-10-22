@@ -61,9 +61,13 @@ class TransactionContractTests(TestCase):
             actor=self.admin,
         )
         before = self.mail_state()
-        with patch(
-            "commentail.outbox.accepted", side_effect=self.fail_after(outbox.accepted)
-        ), self.assertRaisesMessage(RuntimeError, "Synthetic enqueue failure"):
+        with (
+            patch(
+                "commentail.outbox.accepted",
+                side_effect=self.fail_after(outbox.accepted),
+            ),
+            self.assertRaisesMessage(RuntimeError, "Synthetic enqueue failure"),
+        ):
             submit(
                 self.discussion.pk,
                 text="Uncommitted reply",
@@ -81,9 +85,12 @@ class TransactionContractTests(TestCase):
         comment = self.guest()
         confirm_email(comment.pk)
         before = self.mail_state()
-        with patch(
-            "commentail.outbox.decided", side_effect=self.fail_after(outbox.decided)
-        ), self.assertRaisesMessage(RuntimeError, "Synthetic enqueue failure"):
+        with (
+            patch(
+                "commentail.outbox.decided", side_effect=self.fail_after(outbox.decided)
+            ),
+            self.assertRaisesMessage(RuntimeError, "Synthetic enqueue failure"),
+        ):
             moderate(comment.pk, "approve", actor=self.admin)
         comment.refresh_from_db()
         self.assertEqual(comment.status, "pending")
@@ -106,10 +113,13 @@ class TransactionContractTests(TestCase):
         )
         before = self.mail_state()
         events = ModerationEvent.objects.count()
-        with patch(
-            "commentail.outbox.revision_decided",
-            side_effect=self.fail_after(outbox.revision_decided),
-        ), self.assertRaisesMessage(RuntimeError, "Synthetic enqueue failure"):
+        with (
+            patch(
+                "commentail.outbox.revision_decided",
+                side_effect=self.fail_after(outbox.revision_decided),
+            ),
+            self.assertRaisesMessage(RuntimeError, "Synthetic enqueue failure"),
+        ):
             moderate_revision(revision.pk, "approve", actor=self.admin)
         comment.refresh_from_db()
         revision.refresh_from_db()

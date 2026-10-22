@@ -45,6 +45,8 @@ class SiteCommentSettings(BaseSiteSetting):
 
 
 class Discussion(models.Model):
+    """One Site-scoped Page or registered object, with nullable editorial overrides."""
+
     site = models.ForeignKey("wagtailcore.Site", on_delete=models.CASCADE)
     page = models.ForeignKey(
         "wagtailcore.Page", null=True, blank=True, on_delete=models.CASCADE
@@ -97,6 +99,12 @@ class Discussion(models.Model):
 
 
 class Comment(models.Model):
+    """Current text and lifecycle state, retaining erased/hidden thread placeholders.
+
+    Replies reference both their root and direct addressee. Domain services own
+    transitions and serialize related writes through the discussion version.
+    """
+
     class Status(models.TextChoices):
         AWAITING_EMAIL = "awaiting_email", _("Awaiting email")
         PENDING = "pending", _("Awaiting moderation")
@@ -146,11 +154,18 @@ class Comment(models.Model):
         indexes: ClassVar[list[models.Index]] = [
             models.Index(fields=["discussion", "status", "published_at", "id"]),
             models.Index(fields=["status", "created_at"]),
-            models.Index(fields=["status", "published_at", "id"], name="commentail_publication_order"),
-            models.Index(fields=["root", "status", "published_at", "id"], name="commentail_reply_order"),
+            models.Index(
+                fields=["status", "published_at", "id"],
+                name="commentail_publication_order",
+            ),
+            models.Index(
+                fields=["root", "status", "published_at", "id"],
+                name="commentail_reply_order",
+            ),
             models.Index(
                 fields=["discussion", "published_at", "id"],
-                condition=models.Q(root__isnull=True), name="commentail_root_order",
+                condition=models.Q(root__isnull=True),
+                name="commentail_root_order",
             ),
         ]
         constraints: ClassVar[list[models.BaseConstraint]] = [
@@ -176,6 +191,8 @@ class Comment(models.Model):
 
 
 class CommentRevision(models.Model):
+    """Author proposal; at most one pending revision retains text per comment."""
+
     class Status(models.TextChoices):
         PENDING = "pending", _("Awaiting moderation")
         APPROVED = "approved", _("Approved")
@@ -242,6 +259,8 @@ class ModerationEvent(models.Model):
 
 
 class ActionToken(models.Model):
+    """Purpose-bound proof with a hashed secret and a key-derived queue nonce."""
+
     nonce = models.UUIDField(default=uuid.uuid4, editable=False)
     digest = models.CharField(max_length=64, unique=True)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
@@ -280,7 +299,8 @@ class CaptchaChallenge(models.Model):
     class Meta:
         indexes: ClassVar[list[models.Index]] = [
             models.Index(
-                fields=["site", "session_digest"], condition=models.Q(used=False),
+                fields=["site", "session_digest"],
+                condition=models.Q(used=False),
                 name="commentail_active_captcha",
             ),
         ]
@@ -321,6 +341,12 @@ class ReplySubscription(models.Model):
 
 
 class MailJob(models.Model):
+    """Transactional notification metadata with a unique event key and worker lease.
+
+    The claim fences worker updates; ambiguous transport failures may still cause
+    at-least-once delivery. Comment/revision text is not copied into the queue.
+    """
+
     revision = models.ForeignKey(
         CommentRevision, null=True, blank=True, on_delete=models.CASCADE
     )

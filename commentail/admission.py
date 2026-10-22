@@ -1,4 +1,4 @@
-"""Request authorization boundary for the future server-rendered form adapter.
+"""Request authorization boundary shared by the server-rendered form endpoints.
 
 Do not bypass this boundary with direct calls to trusted domain services.
 Views must still enforce POST and CSRF through Django middleware/decorators.
@@ -25,12 +25,14 @@ from .services import DomainError, _text, confirm_email, submit_once
 
 
 def session_digest(request: HttpRequest) -> str:
+    """Create the browser session if needed and return its non-reversible binding."""
     if not request.session.session_key:
         request.session.create()
     return digest(request.session.session_key)
 
 
 def can_view(request: HttpRequest, discussion: Discussion) -> bool:
+    """Recheck current Page restrictions or explicit object-adapter access."""
     if not discussion.page_id:
         from .objects import ObjectAccessError, checked_site, target_for
 
@@ -60,6 +62,7 @@ def email_configured() -> bool:
 
 
 def issue_form(request: HttpRequest, discussion: Discussion) -> str:
+    """Persist a bounded-life session/Site-bound form ticket after target access."""
     if not can_view(request, discussion):
         raise DomainError("Page access is required")
     secret = secrets.token_urlsafe(32)
@@ -108,6 +111,7 @@ def accept_request(
         )
         if discussion is None or not can_view(request, discussion):
             raise DomainError("Page access is required")
+
         options = editorial_settings(discussion)
         if options.mode != Mode.OPEN:
             raise DomainError("Discussion is closed")
@@ -119,6 +123,7 @@ def accept_request(
         ).first()
         if ticket is None:
             raise DomainError("Invalid or expired form")
+
         user = request.user if request.user.is_authenticated else None
         if user is not None and not user.is_active:
             raise DomainError("Account cannot comment")
@@ -134,6 +139,7 @@ def accept_request(
         )
         if user is None and not mail_available:
             raise DomainError("Guest comments require configured email delivery")
+
         actor = (
             "user:" + str(user.pk)
             if user is not None
@@ -153,6 +159,7 @@ def accept_request(
                 subscribe=subscribe,
                 language=getattr(request, "LANGUAGE_CODE", settings.LANGUAGE_CODE),
             )
+
         _text(text, options)
         grant = (
             remembered_guest(
@@ -198,6 +205,7 @@ def accept_request(
             )
             if user is None and remembered:
                 result = confirm_email(result.pk)
+
     if failure:
         raise DomainError(failure)
     if result is None:

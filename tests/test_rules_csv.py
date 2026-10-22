@@ -55,14 +55,14 @@ class RuleCsvTests(TestCase):
 
     def test_invalid_import_exposes_focusable_error_summary_and_field_link(self):
         response = self.upload("phrase,action,enabled\nBad,unknown,1\n")
-        self.assertContains(response, 'data-commentail-error-focus')
+        self.assertContains(response, "data-commentail-error-focus")
         self.assertContains(response, 'tabindex="-1"')
         self.assertContains(response, 'href="#id_file"')
         self.assertContains(response, 'id="id_file_error"', count=1)
         self.assertContains(response, response.context["form"].errors["file"][0])
-        self.assertContains(response, '/static/commentail/admin.js')
+        self.assertContains(response, "/static/commentail/admin.js")
         initial = self.client.get(self.import_url)
-        self.assertNotContains(initial, 'data-commentail-error-focus')
+        self.assertNotContains(initial, "data-commentail-error-focus")
 
     def test_invalid_encoding_headers_and_duplicate_rows(self):
         for data in (

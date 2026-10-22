@@ -24,25 +24,55 @@ from commentail.services import (
 
 # Independent expected copy catches English fallback and pt/pt-br confusion.
 COPY = {
-    "de": ("Kommentar senden", "Freigeben", "E-Mail-Adresse bestätigen",
-           "Kommentar veröffentlicht", "Kommentar abgelehnt",
-           "Ihr Kommentar wurde veröffentlicht", "Neue Antwort auf Ihren Kommentar"),
-    "fr": ("Envoyer le commentaire", "Approuver", "Confirmez votre adresse e-mail",
-           "Commentaire publié", "Commentaire rejeté",
-           "Votre commentaire est publié", "Nouvelle réponse à votre commentaire"),
-    "es": ("Enviar comentario", "Aprobar", "Confirme su correo electrónico",
-           "Comentario publicado", "Comentario rechazado",
-           "Su comentario está publicado", "Nueva respuesta a su comentario"),
-    "pt-br": ("Enviar comentário", "Aprovar", "Confirme seu e-mail",
-              "Comentário publicado", "Comentário rejeitado",
-              "Seu comentário foi publicado", "Nova resposta ao seu comentário"),
+    "de": (
+        "Kommentar senden",
+        "Freigeben",
+        "E-Mail-Adresse bestätigen",
+        "Kommentar veröffentlicht",
+        "Kommentar abgelehnt",
+        "Ihr Kommentar wurde veröffentlicht",
+        "Neue Antwort auf Ihren Kommentar",
+    ),
+    "fr": (
+        "Envoyer le commentaire",
+        "Approuver",
+        "Confirmez votre adresse e-mail",
+        "Commentaire publié",
+        "Commentaire rejeté",
+        "Votre commentaire est publié",
+        "Nouvelle réponse à votre commentaire",
+    ),
+    "es": (
+        "Enviar comentario",
+        "Aprobar",
+        "Confirme su correo electrónico",
+        "Comentario publicado",
+        "Comentario rechazado",
+        "Su comentario está publicado",
+        "Nueva respuesta a su comentario",
+    ),
+    "pt-br": (
+        "Enviar comentário",
+        "Aprovar",
+        "Confirme seu e-mail",
+        "Comentário publicado",
+        "Comentário rejeitado",
+        "Seu comentário foi publicado",
+        "Nova resposta ao seu comentário",
+    ),
 }
 
 REVISION_SUBJECTS = {
     "de": ("Kommentaränderungen freigegeben", "Kommentaränderungen abgelehnt"),
-    "fr": ("Modifications du commentaire approuvées", "Modifications du commentaire rejetées"),
+    "fr": (
+        "Modifications du commentaire approuvées",
+        "Modifications du commentaire rejetées",
+    ),
     "es": ("Cambios del comentario aprobados", "Cambios del comentario rechazados"),
-    "pt-br": ("Alterações do comentário aprovadas", "Alterações do comentário rejeitadas"),
+    "pt-br": (
+        "Alterações do comentário aprovadas",
+        "Alterações do comentário rejeitadas",
+    ),
 }
 
 
@@ -56,12 +86,17 @@ class LocalizationTests(TestCase):
             "de": (REVISION_SUBJECTS["de"][0], "Ihre Änderungen wurden freigegeben."),
             "fr": (REVISION_SUBJECTS["fr"][0], "Vos modifications ont été approuvées."),
             "es": (REVISION_SUBJECTS["es"][0], "Sus cambios se han aprobado."),
-            "pt-br": (REVISION_SUBJECTS["pt-br"][0], "Suas alterações foram aprovadas."),
+            "pt-br": (
+                REVISION_SUBJECTS["pt-br"][0],
+                "Suas alterações foram aprovadas.",
+            ),
         }
         for language, (subject, explanation) in expected.items():
             with self.subTest(language=language):
                 comment = submit(
-                    self.discussion.pk, text="PRIVATE ORIGINAL", user=self.admin,
+                    self.discussion.pk,
+                    text="PRIVATE ORIGINAL",
+                    user=self.admin,
                     language=language,
                 )
                 moderate(comment.pk, "approve", actor=self.admin)
@@ -91,7 +126,10 @@ class LocalizationTests(TestCase):
             "locale-admin", "admin@example.invalid", "synthetic"
         )
 
-    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="127.0.0.1")
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+        EMAIL_HOST="127.0.0.1",
+    )
     def test_public_form_and_domain_errors_use_active_language(self) -> None:
         url = reverse("commentail:discussion", args=[self.site.root_page.pk])
         for language, copy in COPY.items():
@@ -100,7 +138,9 @@ class LocalizationTests(TestCase):
                 self.assertContains(response, copy[0])
                 self.assertContains(response, f'lang="{language}"')
                 self.assertNotContains(response, "Send comment")
-                self.assertNotEqual(str(DomainError("Permission denied")), "Permission denied")
+                self.assertNotEqual(
+                    str(DomainError("Permission denied")), "Permission denied"
+                )
                 self.assertNotIn("%(limit)s", response.content.decode())
 
     def test_admin_settings_rules_and_delivery_screens_are_localized(self) -> None:
@@ -108,8 +148,16 @@ class LocalizationTests(TestCase):
         headings = {
             "de": ("Moderationsfilter", "E-Mail-Versand", "Website-Einstellungen"),
             "fr": ("Règles de modération", "Envoi des e-mails", "Paramètres du site"),
-            "es": ("Reglas de moderación", "Envío de correos", "Configuración del sitio"),
-            "pt-br": ("Regras de moderação", "Envio de e-mails", "Configurações do site"),
+            "es": (
+                "Reglas de moderación",
+                "Envío de correos",
+                "Configuración del sitio",
+            ),
+            "pt-br": (
+                "Regras de moderação",
+                "Envio de e-mails",
+                "Configurações do site",
+            ),
         }
         for language, labels in headings.items():
             with self.subTest(language=language), override(language):
@@ -118,20 +166,27 @@ class LocalizationTests(TestCase):
                     ("mail", labels[1], []),
                     ("settings", labels[2], [self.site.pk]),
                 ):
-                    response = self.client.get(reverse(f"commentail_admin:{name}", args=args))
+                    response = self.client.get(
+                        reverse(f"commentail_admin:{name}", args=args)
+                    )
                     self.assertContains(response, label)
 
     def test_moderator_queue_and_decision_use_active_language(self) -> None:
         self.client.force_login(self.admin)
         for language, copy in COPY.items():
             with self.subTest(language=language), override(language):
-                comment = submit(self.discussion.pk, text="Untranslated user text", user=self.admin)
-                response = self.client.get(reverse("commentail_admin:detail", args=[comment.pk]))
+                comment = submit(
+                    self.discussion.pk, text="Untranslated user text", user=self.admin
+                )
+                response = self.client.get(
+                    reverse("commentail_admin:detail", args=[comment.pk])
+                )
                 self.assertContains(response, copy[1])
                 self.assertContains(response, comment.text)
                 response = self.client.post(
                     reverse("commentail_admin:action", args=[comment.pk]),
-                    {"action": "approve"}, follow=True,
+                    {"action": "approve"},
+                    follow=True,
                 )
                 self.assertEqual(response.status_code, 200)
                 comment.refresh_from_db()
@@ -141,9 +196,12 @@ class LocalizationTests(TestCase):
         for language, copy in COPY.items():
             with self.subTest(language=language):
                 guest = submit(
-                    self.discussion.pk, text="PRIVATE ORIGINAL TEXT",
-                    guest_name="Guest", guest_email="guest@example.invalid",
-                    language=language, subscribe=True,
+                    self.discussion.pk,
+                    text="PRIVATE ORIGINAL TEXT",
+                    guest_name="Guest",
+                    guest_email="guest@example.invalid",
+                    language=language,
+                    subscribe=True,
                 )
                 self._send(guest.pk, "confirm", copy[2])
                 confirm_email(guest.pk)
@@ -152,33 +210,58 @@ class LocalizationTests(TestCase):
                 from commentail.security import token_secret
 
                 revision = revise(
-                    guest.pk, "PRIVATE REVISION TEXT", site=self.site,
-                    edit_token=token_secret(MailJob.objects.get(comment=guest, kind="edit").token),
+                    guest.pk,
+                    "PRIVATE REVISION TEXT",
+                    site=self.site,
+                    edit_token=token_secret(
+                        MailJob.objects.get(comment=guest, kind="edit").token
+                    ),
                 )
                 moderate_revision(revision.pk, "approve", actor=self.admin)
                 self._send(guest.pk, "published", copy[3])
                 revision = revise(
-                    guest.pk, "PRIVATE SECOND REVISION", site=self.site,
-                    edit_token=token_secret(MailJob.objects.get(comment=guest, kind="edit").token),
+                    guest.pk,
+                    "PRIVATE SECOND REVISION",
+                    site=self.site,
+                    edit_token=token_secret(
+                        MailJob.objects.get(comment=guest, kind="edit").token
+                    ),
                 )
-                moderate_revision(revision.pk, "reject", actor=self.admin, reason="Original reason — unchanged")
-                self._send(guest.pk, "rejected", copy[4], body="Original reason — unchanged")
+                moderate_revision(
+                    revision.pk,
+                    "reject",
+                    actor=self.admin,
+                    reason="Original reason — unchanged",
+                )
+                self._send(
+                    guest.pk, "rejected", copy[4], body="Original reason — unchanged"
+                )
                 reply = submit(
-                    self.discussion.pk, text="PRIVATE REPLY TEXT", user=self.admin,
-                    reply_to=guest.pk, language="en",
+                    self.discussion.pk,
+                    text="PRIVATE REPLY TEXT",
+                    user=self.admin,
+                    reply_to=guest.pk,
+                    language="en",
                 )
                 moderate(reply.pk, "approve", actor=self.admin)
                 self._send(reply.pk, "reply", copy[6])
                 rejected = submit(
-                    self.discussion.pk, text="PRIVATE REJECTED TEXT", user=self.admin,
+                    self.discussion.pk,
+                    text="PRIVATE REJECTED TEXT",
+                    user=self.admin,
                     language=language,
                 )
                 moderate(rejected.pk, "reject", actor=self.admin)
                 self._send(rejected.pk, "rejected", copy[4])
 
     def _send(
-        self, comment_id: int, kind: str, subject: str, *,
-        also: tuple[str, str] | None = None, body: str = "",
+        self,
+        comment_id: int,
+        kind: str,
+        subject: str,
+        *,
+        also: tuple[str, str] | None = None,
+        body: str = "",
     ) -> None:
         pending = MailJob.objects.filter(status="pending")
         jobs = {job.kind: job for job in pending.filter(comment_id=comment_id)}
@@ -189,7 +272,10 @@ class LocalizationTests(TestCase):
             self.assertEqual(get_language(), "ru")
         messages = mail.outbox[before:]
         by_id = {message.extra_headers["Message-ID"]: message for message in messages}
-        for expected_kind, expected_subject in [(kind, subject), *([also] if also else [])]:
+        for expected_kind, expected_subject in [
+            (kind, subject),
+            *([also] if also else []),
+        ]:
             expected = jobs[expected_kind]
             if expected.revision_id:
                 expected_subject = REVISION_SUBJECTS[expected.language][
@@ -209,11 +295,18 @@ class LocalizationTests(TestCase):
         job.refresh_from_db()
         self.assertEqual(job.status, "sent")
 
-    def test_reply_mail_localizes_generated_author_names_for_the_recipient(self) -> None:
+    def test_reply_mail_localizes_generated_author_names_for_the_recipient(
+        self,
+    ) -> None:
         responder = get_user_model().objects.create_user("responder@example.invalid")
         for language, normal, deleted, subject in (
             ("en", "User", "Deleted user", "New reply to your comment"),
-            ("ru", "Пользователь", "Удалённый пользователь", "Новый ответ на ваш комментарий"),
+            (
+                "ru",
+                "Пользователь",
+                "Удалённый пользователь",
+                "Новый ответ на ваш комментарий",
+            ),
             ("de", "Benutzer", "Gelöschter Benutzer", COPY["de"][6]),
             ("fr", "Utilisateur", "Utilisateur supprimé", COPY["fr"][6]),
             ("es", "Usuario", "Usuario eliminado", COPY["es"][6]),
@@ -222,13 +315,19 @@ class LocalizationTests(TestCase):
             for account_deleted, label in ((False, normal), (True, deleted)):
                 with self.subTest(language=language, account_deleted=account_deleted):
                     parent = submit(
-                        self.discussion.pk, text="Parent", user=self.admin,
-                        language=language, subscribe=True,
+                        self.discussion.pk,
+                        text="Parent",
+                        user=self.admin,
+                        language=language,
+                        subscribe=True,
                     )
                     moderate(parent.pk, "approve", actor=self.admin)
                     reply = submit(
-                        self.discussion.pk, text="PRIVATE REPLY TEXT", user=responder,
-                        reply_to=parent.pk, language="en",
+                        self.discussion.pk,
+                        text="PRIVATE REPLY TEXT",
+                        user=responder,
+                        reply_to=parent.pk,
+                        language="en",
                     )
                     moderate(reply.pk, "approve", actor=self.admin)
                     if account_deleted:
@@ -237,10 +336,15 @@ class LocalizationTests(TestCase):
                         reply.save(update_fields=["account_deleted", "user"])
                     self._send(reply.pk, "reply", subject, body=label)
 
-    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="127.0.0.1")
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+        EMAIL_HOST="127.0.0.1",
+    )
     def test_untranslated_language_keeps_english_fallback(self) -> None:
         with override("ja"):
-            response = self.client.get(reverse("commentail:discussion", args=[self.site.root_page.pk]))
+            response = self.client.get(
+                reverse("commentail:discussion", args=[self.site.root_page.pk])
+            )
             self.assertContains(response, "Send comment")
 
 
@@ -248,8 +352,10 @@ class CatalogMetadataTests(SimpleTestCase):
     def test_plural_rules_cover_zero_one_and_multiple(self) -> None:
         root = Path(commentail.__file__).parent / "locale"
         for locale, expected in (
-            ("de", [1, 0, 1, 1]), ("es", [1, 0, 1, 1]),
-            ("fr", [0, 0, 1, 1]), ("pt_BR", [0, 0, 1, 1]),
+            ("de", [1, 0, 1, 1]),
+            ("es", [1, 0, 1, 1]),
+            ("fr", [0, 0, 1, 1]),
+            ("pt_BR", [0, 0, 1, 1]),
         ):
             with self.subTest(locale=locale):
                 with (root / locale / "LC_MESSAGES/django.mo").open("rb") as stream:

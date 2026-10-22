@@ -2,6 +2,7 @@
 
 from django.contrib import messages
 from django.db import transaction
+from django.forms import ModelForm
 from django.http import HttpRequest, HttpResponse
 from django.utils.translation import gettext_lazy as _
 from wagtail import hooks
@@ -38,6 +39,7 @@ class CommentsContextMixin:
         return super().run_hook(hook_name, *args, **kwargs)
 
     def prepare_comments(self) -> None:
+        """Attach a request-local settings form only for an authorized connected Page."""
         from . import detection
         from .forms import DiscussionSettingsForm
         from .models import Discussion
@@ -91,7 +93,8 @@ class CommentsContextMixin:
         self.prepare_comments()
         return super().post(request, *args, **kwargs)
 
-    def form_valid(self, form: object) -> HttpResponse:
+    def form_valid(self, form: ModelForm) -> HttpResponse:
+        """Validate both forms before saving Page and discussion settings atomically."""
         extra = getattr(self, "commentail_form", None)
         if extra is not None and extra.is_bound and not extra.is_valid():
             return self.form_invalid(form)

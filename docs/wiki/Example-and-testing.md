@@ -76,6 +76,32 @@ The minimum supported Wagtail patch is 7.4.3. Earlier 7.4 patches are excluded
 because of upstream security fixes; the test pin and installed environments use
 7.4.3. See the [Wagtail 7.4.3 release notes](https://docs.wagtail.org/en/stable/releases/7.4.3.html).
 
+## Code organization
+
+The public HTTP entry points remain in `public.py` and `views.py`; Wagtail
+administration routes remain available through `admin_views.py`. Internal
+modules separate authorization, selection, presentation and delivery:
+
+| Responsibility | Modules |
+| --- | --- |
+| Submission checks, quotas and author proof | `admission.py`, `limits.py`, `author_access.py`, `security.py` |
+| Atomic lifecycle transitions | `services.py` |
+| Widget context, escaped cards and reading windows | `widget.py`, `presentation.py`, `reading.py` |
+| Recent accessible comments | `recent.py` |
+| Moderation filters and settings/rule forms | `admin_queries.py`, `admin_settings.py` |
+| Transactional mail queue and recipient access | `outbox.py`, `mail_access.py` |
+| Host queue/command maintenance | `background.py` |
+
+Widget assembly assumes target access has already been checked. It may issue
+form tickets and CAPTCHA challenges, while private owner rows remain separate
+from public cards and structured data. Mail rendering passes only the documented
+metadata context to templates; transport exceptions are isolated from template
+and domain failures. Internal module names do not extend the stable Python API.
+
+Python formatting can be checked with `ruff format --check commentail tests
+example tools --exclude '**/migrations/**'`. Historical migrations are preserved;
+`ruff check commentail tests example tools` still includes them.
+
 ## Current development verification
 
 The 1.2.0 sources passed all 30 combinations on 22 October 2026,

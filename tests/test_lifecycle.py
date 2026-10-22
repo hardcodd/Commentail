@@ -370,13 +370,21 @@ class LifecycleTests(TestCase):
     def test_guest_name_rejects_over_limit_without_creating_comment(self):
         for name in ("a" * 41, " ", "e\u0301" * 41):
             with self.subTest(name=name), self.assertRaises(DomainError):
-                submit(self.discussion.pk, text="Guest", guest_name=name,
-                       guest_email="guest@example.invalid")
+                submit(
+                    self.discussion.pk,
+                    text="Guest",
+                    guest_name=name,
+                    guest_email="guest@example.invalid",
+                )
         self.assertFalse(Comment.objects.exists())
 
     def test_guest_name_accepts_full_name_and_graphemes(self):
         for name in ("Александр Константиновский", "e\u0301" * 40, "👍🏽" * 40):
             with self.subTest(name=name):
-                comment = submit(self.discussion.pk, text="Guest", guest_name=name,
-                                 guest_email="guest@example.invalid")
+                comment = submit(
+                    self.discussion.pk,
+                    text="Guest",
+                    guest_name=name,
+                    guest_email="guest@example.invalid",
+                )
                 self.assertEqual(comment.guest_name, name)

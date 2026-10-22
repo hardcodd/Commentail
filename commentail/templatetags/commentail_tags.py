@@ -20,14 +20,19 @@ register = template.Library()
 
 @register.simple_tag(takes_context=True)
 def commentail_recent(
-    context: Context, limit: int = 5, *, page: Page | None = None,
+    context: Context,
+    limit: int = 5,
+    *,
+    page: Page | None = None,
     include_replies: bool = True,
 ) -> list[RecentComment]:
     """Select recent accessible comments for host markup using `as variable`."""
     from commentail.recent import recent_comments
 
     if type(limit) is not int or limit < 0:
-        raise TemplateSyntaxError("commentail_recent limit must be a nonnegative integer")
+        raise TemplateSyntaxError(
+            "commentail_recent limit must be a nonnegative integer"
+        )
     if type(include_replies) is not bool:
         raise TemplateSyntaxError("commentail_recent include_replies must be a boolean")
     request = context.get("request")
@@ -37,7 +42,9 @@ def commentail_recent(
         not isinstance(page, Page) or page.pk is None or page._state.adding
     ):
         return []
-    return recent_comments(request, limit=limit, page=page, include_replies=include_replies)
+    return recent_comments(
+        request, limit=limit, page=page, include_replies=include_replies
+    )
 
 
 class CommentailNode(Node):

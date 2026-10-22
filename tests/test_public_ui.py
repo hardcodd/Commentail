@@ -29,7 +29,9 @@ class PublicInterfaceTests(TestCase):
         for script in BeautifulSoup(response.content, "html.parser").select("script"):
             self.assertEqual(script.get("type"), "application/ld+json")
             self.assertFalse(script.has_attr("src"))
-        self.assertContains(response, f'data-discussion="{self.discussion.pk}"', status_code=status)
+        self.assertContains(
+            response, f'data-discussion="{self.discussion.pk}"', status_code=status
+        )
 
     def test_service_returns_only_widget_fragment(self):
         self.assert_fragment(self.client.get(self.url))
@@ -43,25 +45,35 @@ class PublicInterfaceTests(TestCase):
         self.client.force_login(self.user)
         parent = submit(self.discussion.pk, text="Parent", user=self.admin)
         moderate(parent.pk, "approve", actor=self.admin)
-        response = self.client.get(self.url, {"reply_to": parent.pk, "target": parent.pk})
+        response = self.client.get(
+            self.url, {"reply_to": parent.pk, "target": parent.pk}
+        )
         self.assertContains(response, f'data-reply-to="{parent.pk}"')
         self.assertContains(response, 'class="commentail-main-template"')
-        self.assertContains(response, 'data-commentail-cancel')
+        self.assertContains(response, "data-commentail-cancel")
         self.assertContains(response, f'id="commentail-reply-length-{parent.pk}"')
-        self.assertNotEqual(response.context["form_key"], response.context["main_form_key"])
+        self.assertNotEqual(
+            response.context["form_key"], response.context["main_form_key"]
+        )
         keys = re.findall(r'name="key" value="([^"]+)"', response.content.decode())
         self.assertEqual(len(keys), 2)
         self.assertEqual(len(set(keys)), 2)
         # Both tickets must remain usable and deduplicate their own submission.
         first = self.client.post(
             reverse("commentail:submit", args=[self.site.root_page.pk]),
-            {"key": response.context["form_key"], "text": "Reply", "reply_to": parent.pk},
+            {
+                "key": response.context["form_key"],
+                "text": "Reply",
+                "reply_to": parent.pk,
+            },
         )
         self.assertEqual(first.status_code, 302)
         with patch("commentail.admission.consume"):
             main = accept_request(
-                response.wsgi_request, self.discussion.pk,
-                response.context["main_form_key"], text="Separate main comment",
+                response.wsgi_request,
+                self.discussion.pk,
+                response.context["main_form_key"],
+                text="Separate main comment",
             )
         self.assertIsNone(main.reply_to_id)
 
@@ -73,7 +85,9 @@ class PublicInterfaceTests(TestCase):
         self.client.force_login(self.user)
         parent = submit(self.discussion.pk, text="Parent", user=self.user)
         moderate(parent.pk, "approve", actor=self.admin)
-        child = submit(self.discussion.pk, text="Child", user=self.admin, reply_to=parent.pk)
+        child = submit(
+            self.discussion.pk, text="Child", user=self.admin, reply_to=parent.pk
+        )
         moderate(child.pk, "approve", actor=self.admin)
         submit_url = reverse("commentail:submit", args=[self.site.root_page.pk])
         for data in ({"text": " "}, {"refresh": "1", "text": "Draft"}):
@@ -81,7 +95,9 @@ class PublicInterfaceTests(TestCase):
                 key = self.client.get(self.url).context["form_key"]
                 response = self.client.post(submit_url, {"key": key, **data})
                 markup = BeautifulSoup(response.content, "html.parser")
-                navigation = markup.select("a[data-commentail-navigation], a[data-commentail-cancel]")
+                navigation = markup.select(
+                    "a[data-commentail-navigation], a[data-commentail-cancel]"
+                )
                 self.assertTrue(navigation)
                 for link in navigation:
                     self.assertEqual(urlsplit(link["href"]).path, "/")
@@ -90,7 +106,9 @@ class PublicInterfaceTests(TestCase):
         self.client.force_login(self.user)
         parent = submit(self.discussion.pk, text="Parent", user=self.admin)
         moderate(parent.pk, "approve", actor=self.admin)
-        child = submit(self.discussion.pk, text="Child", user=self.admin, reply_to=parent.pk)
+        child = submit(
+            self.discussion.pk, text="Child", user=self.admin, reply_to=parent.pk
+        )
         moderate(child.pk, "approve", actor=self.admin)
         form = self.client.get(self.url, {"reply_to": child.pk, "target": child.pk})
         response = self.client.post(
@@ -233,11 +251,15 @@ class PublicInterfaceTests(TestCase):
 
     def test_browser_navigation_to_service_url_redirects_to_article(self):
         response = self.client.get(
-            self.url, {"target": "11", "thread": "2", "replies": "signed-window"},
-            HTTP_SEC_FETCH_DEST="document"
+            self.url,
+            {"target": "11", "thread": "2", "replies": "signed-window"},
+            HTTP_SEC_FETCH_DEST="document",
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], "/?thread=2&replies=signed-window&target=11#commentail-11")
+        self.assertEqual(
+            response["Location"],
+            "/?thread=2&replies=signed-window&target=11#commentail-11",
+        )
 
     def test_browser_validation_returns_to_article_with_private_persistent_draft(self):
         from django.test import Client
@@ -261,7 +283,11 @@ class PublicInterfaceTests(TestCase):
         from bs4 import BeautifulSoup
 
         markup = BeautifulSoup(host.content, "html.parser")
-        cancel = next(link for link in markup.select(".commentail-form a") if link.text == "Cancel")
+        cancel = next(
+            link
+            for link in markup.select(".commentail-form a")
+            if link.text == "Cancel"
+        )
         cancelled = self.client.get(cancel["href"])
         self.assertNotContains(cancelled, 'name="reply_to"')
         self.assertNotContains(cancelled, 'name="subscribe"')
@@ -276,8 +302,13 @@ class PublicInterfaceTests(TestCase):
     def test_browser_captcha_refresh_returns_to_article_preserving_form(self):
         response = self.client.post(
             reverse("commentail:submit", args=[self.site.root_page.pk]),
-            {"refresh": "1", "text": "Guest draft stays here", "name": "Reader",
-             "email": "reader@example.invalid", "subscribe": "on"},
+            {
+                "refresh": "1",
+                "text": "Guest draft stays here",
+                "name": "Reader",
+                "email": "reader@example.invalid",
+                "subscribe": "on",
+            },
             HTTP_ACCEPT="text/html",
         )
         self.assertEqual(response.status_code, 303)
@@ -288,7 +319,9 @@ class PublicInterfaceTests(TestCase):
         self.assertContains(host, 'name="challenge"')
         from django.test import Client
 
-        self.assertNotContains(Client().get(response["Location"]), "Guest draft stays here")
+        self.assertNotContains(
+            Client().get(response["Location"]), "Guest draft stays here"
+        )
 
     def test_recovery_expires_and_successful_acceptance_clears_private_drafts(self):
         from datetime import timedelta
@@ -304,14 +337,17 @@ class PublicInterfaceTests(TestCase):
             key = self.client.get(self.url).context["form_key"]
             return self.client.post(
                 reverse("commentail:submit", args=[self.site.root_page.pk]),
-                {"key": key, "text": "Long private draft"}, HTTP_ACCEPT="text/html",
+                {"key": key, "text": "Long private draft"},
+                HTTP_ACCEPT="text/html",
             )
 
         expired = invalid_submission()
         FormTicket.objects.exclude(draft={}).update(
             expires_at=timezone.now() - timedelta(seconds=1)
         )
-        self.assertNotContains(self.client.get(expired["Location"]), "Long private draft")
+        self.assertNotContains(
+            self.client.get(expired["Location"]), "Long private draft"
+        )
         current = invalid_submission()
         host = self.client.get(current["Location"])
         self.assertContains(host, "Long private draft")
@@ -319,13 +355,19 @@ class PublicInterfaceTests(TestCase):
         # Use the actual freshly rendered form, never the private recovery ticket.
         from bs4 import BeautifulSoup
 
-        form = BeautifulSoup(host.content, "html.parser").select_one("form.commentail-form")
-        response = self.client.post(form["action"], {
-            "key": form.select_one('input[name="key"]')["value"], "text": "OK"
-        }, HTTP_ACCEPT="text/html")
+        form = BeautifulSoup(host.content, "html.parser").select_one(
+            "form.commentail-form"
+        )
+        response = self.client.post(
+            form["action"],
+            {"key": form.select_one('input[name="key"]')["value"], "text": "OK"},
+            HTTP_ACCEPT="text/html",
+        )
         self.assertEqual(response.status_code, 302)
         self.assertFalse(FormTicket.objects.exclude(draft={}).exists())
-        self.assertNotContains(self.client.get(current["Location"]), "Long private draft")
+        self.assertNotContains(
+            self.client.get(current["Location"]), "Long private draft"
+        )
 
     @override_settings(CSRF_FAILURE_VIEW="commentail.public.csrf_failure")
     def test_browser_csrf_error_returns_to_host_without_accepting_the_draft(self):
@@ -440,7 +482,9 @@ class PublicInterfaceTests(TestCase):
         self.discussion.save()
         comment.edit_locked = True
         comment.save()
-        self.assertNotContains(self.client.get(edit, follow=True), 'class="commentail-edit-form"')
+        self.assertNotContains(
+            self.client.get(edit, follow=True), 'class="commentail-edit-form"'
+        )
 
     def test_authenticated_edit_is_owner_only(self):
         comment = submit(self.discussion.pk, text="Original", user=self.user)
@@ -459,7 +503,9 @@ class PublicInterfaceTests(TestCase):
         self.client.logout()
         self.assertNotContains(self.client.get(self.url), "Own revision")
 
-    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="")
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST=""
+    )
     def test_guest_refresh_preserves_input_without_submission(self):
         response = self.client.get(self.url)
         self.assertIsNone(response.context["captcha"])
@@ -556,7 +602,8 @@ class PublicInterfaceTests(TestCase):
         self.assertIsNone(response.context["captcha"])
         self.assertContains(response, hint)
         self.assertNotContains(
-            response, "After submitting, we will email you a link to confirm your email address."
+            response,
+            "After submitting, we will email you a link to confirm your email address.",
         )
         response = self.client.post(
             reverse("commentail:submit", args=[self.site.root_page.pk]),
@@ -565,7 +612,8 @@ class PublicInterfaceTests(TestCase):
         self.assertIsNotNone(response.context["captcha"])
         self.assertNotContains(response, hint)
         self.assertContains(
-            response, "After submitting, we will email you a link to confirm your email address."
+            response,
+            "After submitting, we will email you a link to confirm your email address.",
         )
 
     @override_settings(
@@ -649,7 +697,6 @@ class PublicInterfaceTests(TestCase):
                 parser.feed(self.client.get(self.url).content.decode())
                 self.assertEqual(parser.language, language)
 
-
     def test_reading_state_retains_multiple_open_threads_and_reply_windows(self):
         from django.utils import timezone
 
@@ -662,16 +709,27 @@ class PublicInterfaceTests(TestCase):
             moderate(root.pk, "approve", actor=self.admin)
             roots.append(root)
             for number in range(22):
-                child = submit(self.discussion.pk, text=f"Child {index}-{number}", user=self.admin, reply_to=root.pk)
+                child = submit(
+                    self.discussion.pk,
+                    text=f"Child {index}-{number}",
+                    user=self.admin,
+                    reply_to=root.pk,
+                )
                 moderate(child.pk, "approve", actor=self.admin)
             children.append(child)
         snapshot = timezone.now().isoformat()
-        navigation = {"thread": [str(root.pk) for root in roots], "replies": [_next(self.discussion, snapshot, 20, root.pk) for root in roots]}
+        navigation = {
+            "thread": [str(root.pk) for root in roots],
+            "replies": [
+                _next(self.discussion, snapshot, 20, root.pk) for root in roots
+            ],
+        }
         response = self.client.get(self.url, navigation)
         for child in children:
             self.assertContains(response, f'id="commentail-{child.pk}"')
         redirected = self.client.get(self.url, navigation, HTTP_ACCEPT="text/html")
         from urllib.parse import parse_qs, urlsplit
+
         query = parse_qs(urlsplit(redirected["Location"]).query)
         self.assertEqual(query["thread"], navigation["thread"])
         self.assertEqual(query["replies"], navigation["replies"])
@@ -679,9 +737,13 @@ class PublicInterfaceTests(TestCase):
     def test_pending_reply_target_opens_parent_only_for_its_author(self):
         root = submit(self.discussion.pk, text="Root", user=self.admin)
         moderate(root.pk, "approve", actor=self.admin)
-        child = submit(self.discussion.pk, text="Child", user=self.admin, reply_to=root.pk)
+        child = submit(
+            self.discussion.pk, text="Child", user=self.admin, reply_to=root.pk
+        )
         moderate(child.pk, "approve", actor=self.admin)
-        pending = submit(self.discussion.pk, text="Private reply", user=self.user, reply_to=child.pk)
+        pending = submit(
+            self.discussion.pk, text="Private reply", user=self.user, reply_to=child.pk
+        )
         self.client.force_login(self.user)
         own = self.client.get(self.url, {"target": pending.pk})
         self.assertContains(own, f'id="commentail-{child.pk}"')
@@ -690,7 +752,6 @@ class PublicInterfaceTests(TestCase):
         other = self.client.get(self.url, {"target": pending.pk})
         self.assertNotContains(other, "Private reply")
         self.assertNotContains(other, f'id="commentail-{child.pk}"')
-
 
     def test_new_root_target_stays_first_without_discarding_loaded_snapshot(self):
         from django.utils import timezone
@@ -703,7 +764,9 @@ class PublicInterfaceTests(TestCase):
         latest = submit(self.discussion.pk, text="New main comment", user=self.admin)
         moderate(latest.pk, "approve", actor=self.admin)
         response = self.client.get(self.url, {"window": window, "target": latest.pk})
-        self.assertEqual([row["id"] for row in response.context["rows"]], [latest.pk, previous.pk])
+        self.assertEqual(
+            [row["id"] for row in response.context["rows"]], [latest.pk, previous.pk]
+        )
 
     def test_target_reply_after_snapshot_is_rendered_and_new_root_stays_first(self):
         from django.utils import timezone
@@ -715,13 +778,25 @@ class PublicInterfaceTests(TestCase):
         window = _next(self.discussion, timezone.now().isoformat(), 0)
         latest = submit(self.discussion.pk, text="Root after snapshot", user=self.admin)
         moderate(latest.pk, "approve", actor=self.admin)
-        reply = submit(self.discussion.pk, text="Targeted fresh reply", user=self.admin, reply_to=latest.pk)
+        reply = submit(
+            self.discussion.pk,
+            text="Targeted fresh reply",
+            user=self.admin,
+            reply_to=latest.pk,
+        )
         moderate(reply.pk, "approve", actor=self.admin)
-        other = submit(self.discussion.pk, text="Unrequested fresh reply", user=self.admin, reply_to=latest.pk)
+        other = submit(
+            self.discussion.pk,
+            text="Unrequested fresh reply",
+            user=self.admin,
+            reply_to=latest.pk,
+        )
         moderate(other.pk, "approve", actor=self.admin)
 
         response = self.client.get(self.url, {"window": window, "target": reply.pk})
         self.assertContains(response, f'id="commentail-{reply.pk}"')
         self.assertNotContains(response, f'id="commentail-{other.pk}"')
-        self.assertEqual([row["id"] for row in response.context["rows"]], [latest.pk, previous.pk])
+        self.assertEqual(
+            [row["id"] for row in response.context["rows"]], [latest.pk, previous.pk]
+        )
         self.assertEqual(response.context["rows"][0]["reply_count"], 1)

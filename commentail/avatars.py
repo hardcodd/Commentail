@@ -43,7 +43,11 @@ def default_avatar(name: str) -> tuple[str, str]:
         hashed = ((hashed ^ ord(letter)) * 16777619) & 0xFFFFFFFF
     hue = hashed % 360
     second = (hue + 45 + ((hashed >> 8) % 90)) % 360
-    gradient = f"linear-gradient(135deg, hsl({hue} {78 + hashed % 12}% {48 + ((hashed >> 12) % 8)}%), hsl({second} {80 + ((hashed >> 4) % 12)}% {50 + ((hashed >> 20) % 8)}%))"
+    gradient = (
+        f"linear-gradient(135deg, "
+        f"hsl({hue} {78 + hashed % 12}% {48 + ((hashed >> 12) % 8)}%), "
+        f"hsl({second} {80 + ((hashed >> 4) % 12)}% {50 + ((hashed >> 20) % 8)}%))"
+    )
     return initials, gradient
 
 

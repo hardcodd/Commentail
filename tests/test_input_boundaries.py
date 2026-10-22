@@ -12,7 +12,9 @@ from commentail.services import DomainError, submit
 class PublicInputBoundaryTests(TestCase):
     def setUp(self):
         self.site = Site.objects.get(is_default_site=True)
-        self.discussion = Discussion.objects.create(site=self.site, page=self.site.root_page)
+        self.discussion = Discussion.objects.create(
+            site=self.site, page=self.site.root_page
+        )
         self.user = get_user_model().objects.create_user("boundary-author")
         self.client.force_login(self.user)
         self.url = reverse("commentail:discussion", args=[self.site.root_page_id])
@@ -30,13 +32,17 @@ class PublicInputBoundaryTests(TestCase):
         admin = get_user_model().objects.create_superuser("boundary-admin", "", "test")
         self.client.force_login(admin)
         for route, field, status in (
-            ("list", "site", 200), ("list", "page", 200),
-            ("mail", "site", 200), ("objects", "site", 200),
-            ("rules", "id", 400), ("access", "id", 400),
+            ("list", "site", 200),
+            ("list", "page", 200),
+            ("mail", "site", 200),
+            ("objects", "site", 200),
+            ("rules", "id", 400),
+            ("access", "id", 400),
         ):
             with self.subTest(route=route, field=field):
                 response = self.client.get(
-                    reverse("commentail_admin:" + route), {field: "9" * 5000},
+                    reverse("commentail_admin:" + route),
+                    {field: "9" * 5000},
                 )
                 self.assertEqual(response.status_code, status)
 
@@ -52,8 +58,11 @@ class PublicInputBoundaryTests(TestCase):
     def test_null_bytes_are_rejected_before_persistence(self):
         for values in (
             {"text": "Text\x00suffix", "user": self.user},
-            {"text": "Text", "guest_name": "Guest\x00suffix",
-             "guest_email": "guest@example.invalid"},
+            {
+                "text": "Text",
+                "guest_name": "Guest\x00suffix",
+                "guest_email": "guest@example.invalid",
+            },
         ):
             with self.subTest(values=values), self.assertRaises(DomainError):
                 submit(self.discussion.pk, **values)
@@ -63,7 +72,9 @@ class PublicInputBoundaryTests(TestCase):
         email = "a" * 64 + "@" + ".".join(["b" * 60] * 3 + ["invalid"])
         self.assertEqual(len(email), 255)
         with self.assertRaises(DomainError):
-            submit(self.discussion.pk, text="Guest", guest_name="Guest", guest_email=email)
+            submit(
+                self.discussion.pk, text="Guest", guest_name="Guest", guest_email=email
+            )
         self.assertFalse(Comment.objects.exists())
 
     def test_native_invalid_draft_removes_null_bytes_before_json_storage(self):
@@ -72,7 +83,8 @@ class PublicInputBoundaryTests(TestCase):
         key = self.client.get(self.url).context["form_key"]
         response = self.client.post(
             reverse("commentail:submit", args=[self.site.root_page_id]),
-            {"key": key, "text": "Draft\x00suffix"}, HTTP_ACCEPT="text/html",
+            {"key": key, "text": "Draft\x00suffix"},
+            HTTP_ACCEPT="text/html",
         )
         self.assertEqual(response.status_code, 303)
         draft = FormTicket.objects.exclude(draft={}).get().draft

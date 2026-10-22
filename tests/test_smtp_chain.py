@@ -90,12 +90,17 @@ class SMTPGuestChainTests(TestCase):
 
                 self.assertEqual(page.status_code, 303)
                 page = browser.get(page["Location"])
-                form = BeautifulSoup(page.content, "html.parser").select_one(".commentail-edit-form")
+                form = BeautifulSoup(page.content, "html.parser").select_one(
+                    ".commentail-edit-form"
+                )
                 self.assertIsNotNone(form)
-                return browser.post(form["action"], {
-                    "csrfmiddlewaretoken": browser.cookies["csrftoken"].value,
-                    **data,
-                })
+                return browser.post(
+                    form["action"],
+                    {
+                        "csrfmiddlewaretoken": browser.cookies["csrftoken"].value,
+                        **data,
+                    },
+                )
             self.assertEqual(page.status_code, 200)
             return browser.post(
                 urlsplit(action_url).path,
@@ -212,4 +217,6 @@ class SMTPGuestChainTests(TestCase):
                     self.assertIn(link, parser.urls)
                 for part in (plain, html):
                     for text in (comment.text, revision.text, reply.text, another.text):
-                        self.assertNotIn(text, str(message["Subject"]) + part.get_content())
+                        self.assertNotIn(
+                            text, str(message["Subject"]) + part.get_content()
+                        )

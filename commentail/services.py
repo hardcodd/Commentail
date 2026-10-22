@@ -50,10 +50,12 @@ def _discussion(identifier: int) -> Discussion:
 
 def _comment(identifier: int) -> tuple[Comment, Discussion]:
     # Use a subquery in the first write, not a separate SELECT before locking.
+    """Lock the owning discussion before reading dependent comment state."""
     if not Discussion.objects.filter(comments__pk=identifier).update(
         version=F("version") + 1
     ):
         raise DomainError("Comment does not exist")
+
     comment = Comment.objects.filter(pk=identifier).first()
     if comment is None:
         raise DomainError("Comment does not exist")
@@ -79,6 +81,7 @@ def _permission(
     discussion: Discussion,
     action: Literal["moderate", "delete", "hide"],
 ) -> None:
+    """Enforce domain Site grants independently from the HTTP/admin boundary."""
     if not actor.is_active or not actor.is_authenticated:
         raise DomainError("Permission denied")
     if actor.is_superuser:
@@ -198,6 +201,7 @@ def confirm_email(comment_id: int) -> Comment:
     )
     if comment.status == Comment.Status.PUBLISHED:
         _publish(comment)
+
     comment.save()
     from .outbox import decided
 
@@ -206,7 +210,9 @@ def confirm_email(comment_id: int) -> Comment:
 
 
 def edit_block_reason(
-    comment: Comment, *, options: EditorialSettings | None = None,
+    comment: Comment,
+    *,
+    options: EditorialSettings | None = None,
     pending_revision: bool | None = None,
 ) -> str:
     """Read-only eligibility shared by forms and the locked author-write service."""
@@ -226,7 +232,9 @@ def edit_block_reason(
     ):
         return "Editing window expired"
     if pending_revision is None:
-        pending_revision = comment.revisions.filter(status=CommentRevision.Status.PENDING).exists()
+        pending_revision = comment.revisions.filter(
+            status=CommentRevision.Status.PENDING
+        ).exists()
     if pending_revision:
         return "A revision already awaits moderation"
     return ""
@@ -263,6 +271,7 @@ def revise(
         raise DomainError("Only the author can edit")
     if reason := edit_block_reason(comment):
         raise DomainError(reason)
+
     result = policy_result(
         text, options.moderation, guest=user is None, suspicious=comment.suspicious
     )
@@ -276,6 +285,7 @@ def revise(
         comment.text = text
         comment.edited_at = timezone.now()
         comment.save()
+
     if result != "pending":
         from .outbox import revision_decided
 
@@ -308,6 +318,7 @@ def moderate(
         return comment
     if comment.status != Comment.Status.PENDING:
         raise DomainError("Only pending comments can be decided")
+
     if action == "approve":
         _publish(comment)
     else:
@@ -352,10 +363,12 @@ def moderate_revision(
         return revision
     if revision.status != "pending" or comment.status not in {"published", "hidden"}:
         raise DomainError("Revision cannot be decided")
+
     if action == "approve":
         comment.text = revision.text
         comment.edited_at = timezone.now()
         comment.save()
+
     revision.text = ""
     revision.status = desired
     revision.reason = reason if action == "reject" else ""
@@ -434,17 +447,24 @@ def cleanup_unconfirmed() -> int:
     """
     count = 0
     now = timezone.now()
-    sites = Site.objects.filter(pk__in=Discussion.objects.filter(
-        comments__status=Comment.Status.AWAITING_EMAIL,
-    ).values("site_id"))
+    sites = Site.objects.filter(
+        pk__in=Discussion.objects.filter(
+            comments__status=Comment.Status.AWAITING_EMAIL,
+        ).values("site_id")
+    )
     for site in sites:
-        cutoff = now - timedelta(seconds=technical_settings(site)["EMAIL_CONFIRM_SECONDS"])
+        cutoff = now - timedelta(
+            seconds=technical_settings(site)["EMAIL_CONFIRM_SECONDS"]
+        )
         expired = Comment.objects.filter(
-            discussion__site=site, status=Comment.Status.AWAITING_EMAIL,
+            discussion__site=site,
+            status=Comment.Status.AWAITING_EMAIL,
             created_at__lte=cutoff,
         ).order_by("pk")
         cursor = 0
-        while identifiers := list(expired.filter(pk__gt=cursor).values_list("pk", flat=True)[:100]):
+        while identifiers := list(
+            expired.filter(pk__gt=cursor).values_list("pk", flat=True)[:100]
+        ):
             for identifier in identifiers:
                 with transaction.atomic():
                     try:
@@ -452,9 +472,14 @@ def cleanup_unconfirmed() -> int:
                     except DomainError:
                         continue
                     deadline = comment.created_at + timedelta(
-                        seconds=technical_settings(discussion.site)["EMAIL_CONFIRM_SECONDS"]
+                        seconds=technical_settings(discussion.site)[
+                            "EMAIL_CONFIRM_SECONDS"
+                        ]
                     )
-                    if comment.status == Comment.Status.AWAITING_EMAIL and timezone.now() >= deadline:
+                    if (
+                        comment.status == Comment.Status.AWAITING_EMAIL
+                        and timezone.now() >= deadline
+                    ):
                         comment.delete()
                         count += 1
             cursor = identifiers[-1]
@@ -515,6 +540,7 @@ def submit_once(
         if record.payload_digest != payload:
             raise DomainError("Submission key was already used with different content")
         return record.comment
+
     comment = submit(
         discussion_id,
         text=text,

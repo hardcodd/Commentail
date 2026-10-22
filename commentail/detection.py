@@ -1,6 +1,9 @@
+"""Detect widget tags in compiled templates without rendering user content."""
+
 from django.core.exceptions import ImproperlyConfigured
 from django.http import HttpRequest
 from django.template import Context, NodeList, TemplateDoesNotExist, TemplateSyntaxError
+from django.template.base import FilterExpression
 from django.template.loader import get_template
 from django.template.loader_tags import ExtendsNode, IncludeNode
 from django.utils.module_loading import import_string
@@ -15,6 +18,7 @@ class DetectionError(ValueError):
 
 
 def effective_settings(site: Site | None) -> dict[str, object]:
+    """Resolve template configuration, retaining project-only defaults without a Site."""
     if errors := configuration_errors():
         raise ImproperlyConfigured("; ".join(errors))
     if site:
@@ -51,7 +55,7 @@ def has_comments(page: Page, request: HttpRequest) -> bool:
         compiled = get_template(name).template
         return scan(compiled.nodelist)
 
-    def dependency(expression: object) -> bool:
+    def dependency(expression: FilterExpression) -> bool:
         if getattr(expression, "is_var", True):
             if resolver:
                 return False  # Resolver enumerates this dependency in names.

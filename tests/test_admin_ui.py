@@ -60,15 +60,29 @@ class AdminInterfaceTests(TestCase):
         self.assertNotContains(response, "FOREIGN PRIVATE CONTENT")
 
     def test_list_card_action_and_back_keep_the_complete_selection(self):
-        Comment.objects.bulk_create([
-            Comment(discussion=self.discussion, user=self.admin,
-                    text="Visible queue text", status="pending")
-            for _ in range(31)
-        ])
+        Comment.objects.bulk_create(
+            [
+                Comment(
+                    discussion=self.discussion,
+                    user=self.admin,
+                    text="Visible queue text",
+                    status="pending",
+                )
+                for _ in range(31)
+            ]
+        )
         day = self.comment.created_at.date().isoformat()
-        query = urlencode({"q": "Visible queue text", "site": self.site.pk,
-                           "page": self.site.root_page_id, "status": "pending",
-                           "from": day, "to": day, "p": 2})
+        query = urlencode(
+            {
+                "q": "Visible queue text",
+                "site": self.site.pk,
+                "page": self.site.root_page_id,
+                "status": "pending",
+                "from": day,
+                "to": day,
+                "p": 2,
+            }
+        )
         list_url = reverse("commentail_admin:list") + "?" + query
         response = self.client.get(list_url)
         self.assertEqual(response.context["comments"].number, 2)
@@ -79,9 +93,14 @@ class AdminInterfaceTests(TestCase):
         response = self.client.get(card_url)
         self.assertContains(response, f'href="{escape(list_url)}"')
         self.assertContains(response, f'name="return_query" value="{escape(query)}"')
-        response = self.client.post(reverse("commentail_admin:action", args=[comment.pk]), {
-            "action": "approve", "return_query": query,
-        }, follow=True)
+        response = self.client.post(
+            reverse("commentail_admin:action", args=[comment.pk]),
+            {
+                "action": "approve",
+                "return_query": query,
+            },
+            follow=True,
+        )
         self.assertEqual(response.redirect_chain, [(card_url, 302)])
         self.assertContains(response, f'href="{escape(list_url)}"')
         response = self.client.get(list_url)
@@ -92,21 +111,35 @@ class AdminInterfaceTests(TestCase):
         url = reverse("commentail_admin:detail", args=[self.comment.pk])
         response = self.client.get(url)
         self.assertContains(response, f'href="{reverse("commentail_admin:list")}"')
-        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
-            "action": "approve",
-        })
+        response = self.client.post(
+            reverse("commentail_admin:action", args=[self.comment.pk]),
+            {
+                "action": "approve",
+            },
+        )
         self.assertRedirects(response, url)
 
     def test_return_to_a_removed_last_page_keeps_filters_and_clamps_page(self):
-        Comment.objects.bulk_create([
-            Comment(discussion=self.discussion, user=self.admin,
-                    text="Visible queue text", status="pending")
-            for _ in range(30)
-        ])
+        Comment.objects.bulk_create(
+            [
+                Comment(
+                    discussion=self.discussion,
+                    user=self.admin,
+                    text="Visible queue text",
+                    status="pending",
+                )
+                for _ in range(30)
+            ]
+        )
         query = "q=Visible&status=pending&p=2"
-        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
-            "action": "reject", "return_query": query,
-        }, follow=True)
+        response = self.client.post(
+            reverse("commentail_admin:action", args=[self.comment.pk]),
+            {
+                "action": "reject",
+                "return_query": query,
+            },
+            follow=True,
+        )
         response = self.client.get(response.context["back_url"])
         self.assertEqual(response.context["comments"].number, 1)
         self.assertEqual(response.context["comments"].paginator.count, 30)
@@ -124,65 +157,116 @@ class AdminInterfaceTests(TestCase):
         self.client.get(response.context["cancel_url"])
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "pending")
-        response = self.client.post(url, {
-            "action": "delete", "return_query": query, "confirm_delete": "yes",
-        })
+        response = self.client.post(
+            url,
+            {
+                "action": "delete",
+                "return_query": query,
+                "confirm_delete": "yes",
+            },
+        )
         self.assertRedirects(response, card_url)
 
     def test_revision_decision_keeps_return_context(self):
         moderate(self.comment.pk, "approve", actor=self.admin)
         revision = revise(self.comment.pk, "New text", user=self.admin)
         query = "status=pending&q=Visible&p=2"
-        response = self.client.get(reverse("commentail_admin:detail", args=[self.comment.pk]),
-                                   {"return_query": query})
-        self.assertContains(response, f'name="return_query" value="{escape(query)}"', count=2)
-        response = self.client.post(reverse("commentail_admin:revision", args=[self.comment.pk]), {
-            "action": "approve", "revision": revision.pk, "return_query": query,
-        })
+        response = self.client.get(
+            reverse("commentail_admin:detail", args=[self.comment.pk]),
+            {"return_query": query},
+        )
+        self.assertContains(
+            response, f'name="return_query" value="{escape(query)}"', count=2
+        )
+        response = self.client.post(
+            reverse("commentail_admin:revision", args=[self.comment.pk]),
+            {
+                "action": "approve",
+                "revision": revision.pk,
+                "return_query": query,
+            },
+        )
         expected = reverse("commentail_admin:detail", args=[self.comment.pk])
-        self.assertRedirects(response, expected + "?" + urlencode({"return_query": query}))
+        self.assertRedirects(
+            response, expected + "?" + urlencode({"return_query": query})
+        )
 
     def test_return_context_is_tab_local_and_cannot_redirect_outside_admin(self):
         url = reverse("commentail_admin:detail", args=[self.comment.pk])
         first = "q=first&status=&p=2"
         self.client.get(url, {"return_query": first})
         self.client.get(url, {"return_query": "q=second&status=hidden"})
-        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
-            "action": "approve", "return_query": first,
-        })
+        response = self.client.post(
+            reverse("commentail_admin:action", args=[self.comment.pk]),
+            {
+                "action": "approve",
+                "return_query": first,
+            },
+        )
         self.assertRedirects(response, url + "?" + urlencode({"return_query": first}))
-        response = self.client.get(url, {"return_query": "//evil.invalid/path?x=1#fragment"})
-        self.assertTrue(response.context["back_url"].startswith(reverse("commentail_admin:list") + "?"))
+        response = self.client.get(
+            url, {"return_query": "//evil.invalid/path?x=1#fragment"}
+        )
+        self.assertTrue(
+            response.context["back_url"].startswith(
+                reverse("commentail_admin:list") + "?"
+            )
+        )
         self.assertNotContains(response, 'href="//evil.invalid')
 
     def test_invalid_return_context_is_rejected_before_mutation(self):
-        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
-            "action": "approve", "return_query": "&".join("q=value" for _ in range(1001)),
-        })
+        response = self.client.post(
+            reverse("commentail_admin:action", args=[self.comment.pk]),
+            {
+                "action": "approve",
+                "return_query": "&".join("q=value" for _ in range(1001)),
+            },
+        )
         self.assertEqual(response.status_code, 400)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "pending")
 
     def test_management_navigation_is_available_across_admin_pages(self):
         self.client.force_login(self.admin)
-        urls = [reverse("commentail_admin:" + name) for name in
-                ("list", "objects", "mail", "rules", "rules_import", "rule_add", "access")]
-        urls += [reverse("commentail_admin:settings", args=[self.site.pk]),
-                 reverse("commentail_admin:detail", args=[self.comment.pk])]
+        urls = [
+            reverse("commentail_admin:" + name)
+            for name in (
+                "list",
+                "objects",
+                "mail",
+                "rules",
+                "rules_import",
+                "rule_add",
+                "access",
+            )
+        ]
+        urls += [
+            reverse("commentail_admin:settings", args=[self.site.pk]),
+            reverse("commentail_admin:detail", args=[self.comment.pk]),
+        ]
         for url in urls:
             with self.subTest(url=url):
                 response = self.client.get(url)
-                self.assertContains(response, 'aria-controls="commentail-management-panel"', count=1)
+                self.assertContains(
+                    response, 'aria-controls="commentail-management-panel"', count=1
+                )
                 self.assertContains(response, 'data-management-link="comments"')
                 self.assertContains(response, 'data-management-link="access"')
                 self.assertContains(response, 'src="/static/commentail/admin.js')
-        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
-            "action": "delete",
-        })
-        self.assertContains(response, 'aria-controls="commentail-management-panel"', count=1)
+        response = self.client.post(
+            reverse("commentail_admin:action", args=[self.comment.pk]),
+            {
+                "action": "delete",
+            },
+        )
+        self.assertContains(
+            response, 'aria-controls="commentail-management-panel"', count=1
+        )
 
     def test_shared_management_navigation_limits_links_by_site_rights(self):
-        response = self.client.get(reverse("commentail_admin:detail", args=[self.comment.pk]))
+        response = self.client.get(
+            reverse("commentail_admin:detail", args=[self.comment.pk])
+        )
         self.assertContains(response, 'data-management-link="comments"')
         self.assertContains(response, 'data-management-link="mail"')
         self.assertNotContains(response, 'data-management-link="settings"')
@@ -191,34 +275,50 @@ class AdminInterfaceTests(TestCase):
         self.assertNotContains(response, self.other.hostname)
         self.permission.settings = True
         self.permission.save()
-        response = self.client.get(reverse("commentail_admin:settings", args=[self.site.pk]))
+        response = self.client.get(
+            reverse("commentail_admin:settings", args=[self.site.pk])
+        )
         self.assertContains(response, 'data-management-link="settings"')
         self.assertNotContains(response, self.other.hostname)
 
     def test_grouped_forms_render_each_editable_field_once(self):
         self.client.force_login(self.admin)
-        for url in (reverse("commentail_admin:settings", args=[self.site.pk]),
-                    reverse("commentail_admin:access"), reverse("commentail_admin:rule_add")):
+        for url in (
+            reverse("commentail_admin:settings", args=[self.site.pk]),
+            reverse("commentail_admin:access"),
+            reverse("commentail_admin:rule_add"),
+        ):
             with self.subTest(url=url):
                 response = self.client.get(url)
                 for field in response.context["form"]:
                     self.assertContains(response, f'name="{field.name}"', count=1)
-                    self.assertContains(response, f'for="{field.id_for_label}"', count=1)
+                    self.assertContains(
+                        response, f'for="{field.id_for_label}"', count=1
+                    )
                     if field.help_text:
                         self.assertContains(response, f'id="{field.auto_id}_helptext"')
-                        self.assertContains(response, f'aria-describedby="{field.auto_id}_helptext"')
+                        self.assertContains(
+                            response, f'aria-describedby="{field.auto_id}_helptext"'
+                        )
 
     def test_settings_layout_keeps_bound_values_and_validation_errors(self):
         self.client.force_login(self.admin)
-        response = self.client.post(reverse("commentail_admin:settings", args=[self.site.pk]), {
-            "mode": "open", "moderation": "all", "access": "all", "max_length": "0",
-            "email_enabled": "on", "highlight_staff": "on",
-        })
+        response = self.client.post(
+            reverse("commentail_admin:settings", args=[self.site.pk]),
+            {
+                "mode": "open",
+                "moderation": "all",
+                "access": "all",
+                "max_length": "0",
+                "email_enabled": "on",
+                "highlight_staff": "on",
+            },
+        )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'role="alert"')
         self.assertContains(response, 'name="max_length" value="0"')
         self.assertTrue(response.context["form"]["highlight_staff"].value())
-        self.assertContains(response, '<legend>')
+        self.assertContains(response, "<legend>")
         self.assertContains(response, 'aria-controls="commentail-management-panel"')
 
     def test_direct_mutation_cannot_cross_site(self):
@@ -238,7 +338,9 @@ class AdminInterfaceTests(TestCase):
         self.assertTrue(tabs[0]["active"])
 
     def test_page_filter_uses_chooser_without_loading_all_discussion_pages(self):
-        page = self.site.root_page.add_child(instance=Page(title="Unselected page", slug="unselected"))
+        page = self.site.root_page.add_child(
+            instance=Page(title="Unselected page", slug="unselected")
+        )
         discussion = Discussion.objects.create(site=self.site, page=page)
         submit(discussion.pk, text="Other page comment", user=self.admin)
         response = self.client.get(reverse("commentail_admin:list"))
@@ -251,7 +353,9 @@ class AdminInterfaceTests(TestCase):
         self.assertNotContains(response, "Visible queue text")
 
     def test_page_filter_does_not_resolve_an_unpermitted_page_title(self):
-        page = self.site.root_page.add_child(instance=Page(title="Unpermitted target title", slug="foreign-page"))
+        page = self.site.root_page.add_child(
+            instance=Page(title="Unpermitted target title", slug="foreign-page")
+        )
         Discussion.objects.create(site=self.other, page=page)
         response = self.client.get(reverse("commentail_admin:list"), {"page": page.pk})
         self.assertNotContains(response, "Unpermitted target title")
@@ -260,7 +364,9 @@ class AdminInterfaceTests(TestCase):
         moderate(self.comment.pk, "approve", actor=self.admin)
         revise(self.comment.pk, "Pending edit", user=self.admin)
         response = self.client.get(reverse("commentail_admin:list"))
-        self.assertEqual([tab["count"] for tab in response.context["status_tabs"]], [1, 1, 0, 1])
+        self.assertEqual(
+            [tab["count"] for tab in response.context["status_tabs"]], [1, 1, 0, 1]
+        )
         self.assertEqual(response.context["comments"].paginator.count, 1)
 
     def test_selection_requires_moderation_right_on_each_site(self):
@@ -274,8 +380,12 @@ class AdminInterfaceTests(TestCase):
         for status in Comment.Status.values:
             with self.subTest(status=status):
                 Comment.objects.filter(pk=self.comment.pk).update(status=status)
-                response = self.client.get(reverse("commentail_admin:list"), {"status": ""})
-                row = next(c for c in response.context["comments"] if c.pk == self.comment.pk)
+                response = self.client.get(
+                    reverse("commentail_admin:list"), {"status": ""}
+                )
+                row = next(
+                    c for c in response.context["comments"] if c.pk == self.comment.pk
+                )
                 expected = {
                     "pending": "approve reject delete",
                     "published": "hide delete",
@@ -287,7 +397,9 @@ class AdminInterfaceTests(TestCase):
                 self.assertEqual(row.bulk_actions, expected)
                 checkbox = f'name="ids" value="{self.comment.pk}"'
                 if expected:
-                    self.assertContains(response, checkbox + f' data-actions="{expected}"')
+                    self.assertContains(
+                        response, checkbox + f' data-actions="{expected}"'
+                    )
                 else:
                     self.assertNotContains(response, checkbox)
 
@@ -303,57 +415,89 @@ class AdminInterfaceTests(TestCase):
                     setattr(self.permission, field, field == capability)
                 self.permission.save()
                 Comment.objects.filter(pk=self.comment.pk).update(status=status)
-                response = self.client.get(reverse("commentail_admin:list"), {"status": ""})
+                response = self.client.get(
+                    reverse("commentail_admin:list"), {"status": ""}
+                )
                 row = next(iter(response.context["comments"]))
                 self.assertEqual(row.bulk_actions, expected)
-                self.assertEqual([a["value"] for a in response.context["bulk_actions"]], expected.split())
+                self.assertEqual(
+                    [a["value"] for a in response.context["bulk_actions"]],
+                    expected.split(),
+                )
 
     def test_selection_panel_explains_scope_and_action_eligibility(self):
         response = self.client.get(reverse("commentail_admin:list"))
-        self.assertContains(response, 'data-selection-summary hidden')
-        self.assertContains(response, 'data-selection-count')
+        self.assertContains(response, "data-selection-summary hidden")
+        self.assertContains(response, "data-selection-count")
         self.assertContains(response, 'type="button" data-select-clear')
         self.assertContains(response, "Selection applies only to this page.")
-        self.assertContains(response, "Requires pending comments and moderation permission")
+        self.assertContains(
+            response, "Requires pending comments and moderation permission"
+        )
         self.assertContains(response, 'aria-describedby="commentail-bulk-help-approve"')
-        self.assertLess(response.content.index(b'data-selection-summary'),
-                        response.content.index(b'class="commentail-admin-table"'))
-        self.assertNotContains(response, "Requires published comments and hide permission")
+        self.assertLess(
+            response.content.index(b"data-selection-summary"),
+            response.content.index(b'class="commentail-admin-table"'),
+        )
+        self.assertNotContains(
+            response, "Requires published comments and hide permission"
+        )
 
     def test_list_groups_management_and_keeps_advanced_filters_discoverable(self):
         response = self.client.get(reverse("commentail_admin:list"))
-        self.assertContains(response, 'class="commentail-list-management" data-disclosure')
+        self.assertContains(
+            response, 'class="commentail-list-management" data-disclosure'
+        )
         self.assertContains(response, 'aria-controls="commentail-management-panel"')
         self.assertContains(response, 'id="commentail-filters" data-panel')
         self.assertContains(response, 'type="search" name="q"')
         self.assertContains(response, 'aria-controls="commentail-availability-panel"')
-        response = self.client.get(reverse("commentail_admin:list"), {"site": self.site.pk})
+        response = self.client.get(
+            reverse("commentail_admin:list"), {"site": self.site.pk}
+        )
         self.assertContains(response, 'data-initial-open="true"')
         self.assertEqual(response.context["advanced_filter_count"], 1)
         self.assertContains(response, 'value="' + str(self.site.pk) + '" selected')
-        response = self.client.get(reverse("commentail_admin:list"), {"status": "hidden"})
+        response = self.client.get(
+            reverse("commentail_admin:list"), {"status": "hidden"}
+        )
         self.assertContains(response, 'data-initial-open="true"')
 
     def test_read_only_and_empty_lists_have_no_selection_panel(self):
         self.permission.moderate = False
         self.permission.save()
         response = self.client.get(reverse("commentail_admin:list"))
-        self.assertNotContains(response, 'data-selection-summary')
+        self.assertNotContains(response, "data-selection-summary")
         self.client.force_login(self.admin)
-        response = self.client.get(reverse("commentail_admin:list"), {"q": "no-match-at-all"})
-        self.assertNotContains(response, 'data-selection-summary')
+        response = self.client.get(
+            reverse("commentail_admin:list"), {"q": "no-match-at-all"}
+        )
+        self.assertNotContains(response, "data-selection-summary")
 
     def test_bulk_hide_restore_and_delete_keep_replies(self):
         self.client.force_login(self.admin)
         moderate(self.comment.pk, "approve", actor=self.admin)
-        reply = submit(self.discussion.pk, text="Reply", user=self.admin, reply_to=self.comment.pk)
-        for action, status in [("hide", "hidden"), ("restore", "published"), ("delete", "deleted")]:
+        reply = submit(
+            self.discussion.pk, text="Reply", user=self.admin, reply_to=self.comment.pk
+        )
+        for action, status in [
+            ("hide", "hidden"),
+            ("restore", "published"),
+            ("delete", "deleted"),
+        ]:
             with self.subTest(action=action):
-                response = self.client.post(reverse("commentail_admin:bulk"), {
-                    "action": action, "ids": [self.comment.pk], "return_query": "status=&q=Visible",
-                    "confirm_delete": "yes",
-                })
-                self.assertRedirects(response, reverse("commentail_admin:list") + "?status=&q=Visible")
+                response = self.client.post(
+                    reverse("commentail_admin:bulk"),
+                    {
+                        "action": action,
+                        "ids": [self.comment.pk],
+                        "return_query": "status=&q=Visible",
+                        "confirm_delete": "yes",
+                    },
+                )
+                self.assertRedirects(
+                    response, reverse("commentail_admin:list") + "?status=&q=Visible"
+                )
                 self.comment.refresh_from_db()
                 self.assertEqual(self.comment.status, status)
                 self.assertTrue(Comment.objects.filter(pk=reply.pk).exists())
@@ -362,10 +506,15 @@ class AdminInterfaceTests(TestCase):
     def test_bulk_delete_mixed_statuses_and_duplicate_ids(self):
         self.client.force_login(self.admin)
         moderate(self.foreign.pk, "approve", actor=self.admin)
-        response = self.client.post(reverse("commentail_admin:bulk"), {
-            "action": "delete", "ids": [self.comment.pk, self.foreign.pk, f"0{self.comment.pk}"],
-            "confirm_delete": "yes",
-        }, follow=True)
+        response = self.client.post(
+            reverse("commentail_admin:bulk"),
+            {
+                "action": "delete",
+                "ids": [self.comment.pk, self.foreign.pk, f"0{self.comment.pk}"],
+                "confirm_delete": "yes",
+            },
+            follow=True,
+        )
         self.assertContains(response, "Deleted: 2")
         self.assertEqual(Comment.objects.filter(status="deleted", text="").count(), 2)
 
@@ -375,7 +524,9 @@ class AdminInterfaceTests(TestCase):
         event_count = self.comment.events.count()
         response = self.client.post(url, {"action": "delete"})
         self.assertContains(response, "Comments to erase: 1")
-        self.assertContains(response, "This cannot be undone. Replies will be preserved.")
+        self.assertContains(
+            response, "This cannot be undone. Replies will be preserved."
+        )
         self.assertContains(response, 'name="confirm_delete" value="yes"')
         self.client.get(response.context["cancel_url"])
         self.comment.refresh_from_db()
@@ -388,13 +539,19 @@ class AdminInterfaceTests(TestCase):
 
     def test_bulk_confirmation_counts_unique_ids_and_cancel_retains_query(self):
         self.client.force_login(self.admin)
-        response = self.client.post(reverse("commentail_admin:bulk"), {
-            "action": "delete", "ids": [self.comment.pk, self.foreign.pk, f"0{self.comment.pk}"],
-            "return_query": "status=&q=Visible&p=2",
-        })
+        response = self.client.post(
+            reverse("commentail_admin:bulk"),
+            {
+                "action": "delete",
+                "ids": [self.comment.pk, self.foreign.pk, f"0{self.comment.pk}"],
+                "return_query": "status=&q=Visible&p=2",
+            },
+        )
         self.assertContains(response, "Comments to erase: 2")
-        self.assertEqual(response.context["cancel_url"],
-                         reverse("commentail_admin:list") + "?status=&q=Visible&p=2")
+        self.assertEqual(
+            response.context["cancel_url"],
+            reverse("commentail_admin:list") + "?status=&q=Visible&p=2",
+        )
         self.client.get(response.context["cancel_url"])
         self.assertFalse(Comment.objects.filter(status="deleted").exists())
 
@@ -405,9 +562,16 @@ class AdminInterfaceTests(TestCase):
         self.assertEqual(self.client.post(url, {"action": "delete"}).status_code, 200)
         self.permission.delete = False
         self.permission.save()
-        self.assertEqual(self.client.post(url, {
-            "action": "delete", "confirm_delete": "yes",
-        }).status_code, 403)
+        self.assertEqual(
+            self.client.post(
+                url,
+                {
+                    "action": "delete",
+                    "confirm_delete": "yes",
+                },
+            ).status_code,
+            403,
+        )
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.text, "Visible queue text")
 
@@ -415,8 +579,12 @@ class AdminInterfaceTests(TestCase):
         self.client.force_login(self.admin)
         moderate(self.comment.pk, "approve", actor=self.admin)
         revise(self.comment.pk, "Pending replacement", user=self.admin)
-        reply = submit(self.discussion.pk, text="Keep this reply", user=self.admin,
-                       reply_to=self.comment.pk)
+        reply = submit(
+            self.discussion.pk,
+            text="Keep this reply",
+            user=self.admin,
+            reply_to=self.comment.pk,
+        )
         url = reverse("commentail_admin:action", args=[self.comment.pk])
         self.client.post(url, {"action": "delete"})
         self.assertEqual(self.comment.revisions.count(), 1)
@@ -431,7 +599,10 @@ class AdminInterfaceTests(TestCase):
         self.permission.delete = True
         self.permission.save()
         other_permission = SiteGroupPermission.objects.create(
-            group=self.permission.group, site=self.other, view=True, delete=True,
+            group=self.permission.group,
+            site=self.other,
+            view=True,
+            delete=True,
         )
         data = {"action": "delete", "ids": [self.comment.pk, self.foreign.pk]}
         url = reverse("commentail_admin:bulk")
@@ -443,33 +614,51 @@ class AdminInterfaceTests(TestCase):
         self.assertFalse(Comment.objects.filter(status="deleted").exists())
 
     def test_delete_preview_rejects_invisible_and_deleted_comments(self):
-        response = self.client.post(reverse("commentail_admin:bulk"), {
-            "action": "delete", "ids": [self.comment.pk, self.foreign.pk],
-        })
+        response = self.client.post(
+            reverse("commentail_admin:bulk"),
+            {
+                "action": "delete",
+                "ids": [self.comment.pk, self.foreign.pk],
+            },
+        )
         self.assertEqual(response.status_code, 403)
         self.permission.delete = True
         self.permission.save()
-        response = self.client.post(reverse("commentail_admin:bulk"), {
-            "action": "delete", "ids": [self.comment.pk, self.foreign.pk],
-        })
+        response = self.client.post(
+            reverse("commentail_admin:bulk"),
+            {
+                "action": "delete",
+                "ids": [self.comment.pk, self.foreign.pk],
+            },
+        )
         self.assertEqual(response.status_code, 404)
         Comment.objects.filter(pk=self.comment.pk).update(status="deleted", text="")
         for name, args, data in [
             ("action", [self.comment.pk], {"action": "delete"}),
             ("bulk", [], {"action": "delete", "ids": [self.comment.pk]}),
         ]:
-            self.assertEqual(self.client.post(
-                reverse(f"commentail_admin:{name}", args=args), data,
-            ).status_code, 400)
+            self.assertEqual(
+                self.client.post(
+                    reverse(f"commentail_admin:{name}", args=args),
+                    data,
+                ).status_code,
+                400,
+            )
 
     def test_bulk_delete_rechecks_status_after_confirmation(self):
         self.client.force_login(self.admin)
         data = {"action": "delete", "ids": [self.comment.pk, self.foreign.pk]}
-        self.assertEqual(self.client.post(reverse("commentail_admin:bulk"), data).status_code, 200)
+        self.assertEqual(
+            self.client.post(reverse("commentail_admin:bulk"), data).status_code, 200
+        )
         Comment.objects.filter(pk=self.foreign.pk).update(status="deleted", text="")
-        response = self.client.post(reverse("commentail_admin:bulk"), {
-            **data, "confirm_delete": "yes",
-        })
+        response = self.client.post(
+            reverse("commentail_admin:bulk"),
+            {
+                **data,
+                "confirm_delete": "yes",
+            },
+        )
         self.assertEqual(response.status_code, 400)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.text, "Visible queue text")
@@ -478,9 +667,13 @@ class AdminInterfaceTests(TestCase):
         self.client.force_login(self.admin)
         moderate(self.comment.pk, "approve", actor=self.admin)
         event_count = self.comment.events.count()
-        response = self.client.post(reverse("commentail_admin:bulk"), {
-            "action": "hide", "ids": [self.comment.pk, self.foreign.pk],
-        })
+        response = self.client.post(
+            reverse("commentail_admin:bulk"),
+            {
+                "action": "hide",
+                "ids": [self.comment.pk, self.foreign.pk],
+            },
+        )
         self.assertEqual(response.status_code, 400)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "published")
@@ -491,7 +684,9 @@ class AdminInterfaceTests(TestCase):
         self.assertTemplateUsed(response, "commentail/admin/action_error.html")
         self.assertContains(response, "No changes were made.", status_code=status)
         self.assertContains(response, 'role="alert"', status_code=status)
-        self.assertContains(response, 'aria-controls="commentail-management-panel"', status_code=status)
+        self.assertContains(
+            response, 'aria-controls="commentail-management-panel"', status_code=status
+        )
         back_url = reverse("commentail_admin:list") + "?" + query
         self.assertContains(response, f'href="{escape(back_url)}"', status_code=status)
         self.assertNotContains(response, "FOREIGN PRIVATE CONTENT", status_code=status)
@@ -503,23 +698,35 @@ class AdminInterfaceTests(TestCase):
         SiteCommentSettings.objects.create(site=self.site, notify_publication=True)
         Comment.objects.filter(pk=self.foreign.pk).update(status="published")
         before = (ModerationEvent.objects.count(), MailJob.objects.count())
-        response = self.client.post(reverse("commentail_admin:bulk"), {
-            "action": "approve", "ids": [self.comment.pk, self.foreign.pk],
-            "return_query": "q=Visible&status=&p=2",
-        })
+        response = self.client.post(
+            reverse("commentail_admin:bulk"),
+            {
+                "action": "approve",
+                "ids": [self.comment.pk, self.foreign.pk],
+                "return_query": "q=Visible&status=&p=2",
+            },
+        )
         self.assert_action_error(response, 400)
-        self.assertContains(response, "The comments or available actions have changed.", status_code=400)
+        self.assertContains(
+            response, "The comments or available actions have changed.", status_code=400
+        )
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "pending")
-        self.assertEqual((ModerationEvent.objects.count(), MailJob.objects.count()), before)
+        self.assertEqual(
+            (ModerationEvent.objects.count(), MailJob.objects.count()), before
+        )
 
     def test_missing_or_invisible_bulk_item_rolls_back_prior_item(self):
         for identifier in (self.foreign.pk, 999999):
             with self.subTest(identifier=identifier):
-                response = self.client.post(reverse("commentail_admin:bulk"), {
-                    "action": "approve", "ids": [self.comment.pk, identifier],
-                    "return_query": "q=Visible&status=&p=2",
-                })
+                response = self.client.post(
+                    reverse("commentail_admin:bulk"),
+                    {
+                        "action": "approve",
+                        "ids": [self.comment.pk, identifier],
+                        "return_query": "q=Visible&status=&p=2",
+                    },
+                )
                 self.assert_action_error(response, 404)
                 self.assertNotContains(response, "other.invalid", status_code=404)
                 self.comment.refresh_from_db()
@@ -530,62 +737,109 @@ class AdminInterfaceTests(TestCase):
     def test_revoked_action_permission_explains_failure_with_return_selection(self):
         self.permission.moderate = False
         self.permission.save()
-        for name, args, extra in [("action", [self.comment.pk], {}),
-                                  ("bulk", [], {"ids": [self.comment.pk]})]:
-            response = self.client.post(reverse("commentail_admin:" + name, args=args), {
-                "action": "approve", "return_query": "q=Visible&status=&p=2", **extra,
-            })
+        for name, args, extra in [
+            ("action", [self.comment.pk], {}),
+            ("bulk", [], {"ids": [self.comment.pk]}),
+        ]:
+            response = self.client.post(
+                reverse("commentail_admin:" + name, args=args),
+                {
+                    "action": "approve",
+                    "return_query": "q=Visible&status=&p=2",
+                    **extra,
+                },
+            )
             self.assert_action_error(response, 403)
-            self.assertContains(response, "Your permissions no longer allow this action.", status_code=403)
+            self.assertContains(
+                response,
+                "Your permissions no longer allow this action.",
+                status_code=403,
+            )
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "pending")
 
-    def test_stale_single_action_and_revision_offer_results_without_repeating_write(self):
+    def test_stale_single_action_and_revision_offer_results_without_repeating_write(
+        self,
+    ):
         moderate(self.comment.pk, "approve", actor=self.admin)
-        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
-            "action": "restore", "return_query": "q=Visible&status=&p=2",
-        })
+        response = self.client.post(
+            reverse("commentail_admin:action", args=[self.comment.pk]),
+            {
+                "action": "restore",
+                "return_query": "q=Visible&status=&p=2",
+            },
+        )
         self.assert_action_error(response, 403)
-        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
-            "action": "reject", "return_query": "q=Visible&status=&p=2",
-        })
+        response = self.client.post(
+            reverse("commentail_admin:action", args=[self.comment.pk]),
+            {
+                "action": "reject",
+                "return_query": "q=Visible&status=&p=2",
+            },
+        )
         self.assert_action_error(response, 400)
         revision = revise(self.comment.pk, "New text", user=self.admin)
         moderate_revision(revision.pk, "reject", actor=self.admin)
         before = self.comment.events.count()
-        response = self.client.post(reverse("commentail_admin:revision", args=[self.comment.pk]), {
-            "action": "approve", "revision": revision.pk,
-            "return_query": "q=Visible&status=&p=2",
-        })
+        response = self.client.post(
+            reverse("commentail_admin:revision", args=[self.comment.pk]),
+            {
+                "action": "approve",
+                "revision": revision.pk,
+                "return_query": "q=Visible&status=&p=2",
+            },
+        )
         self.assert_action_error(response, 400)
         self.assertEqual(self.comment.events.count(), before)
 
     def test_service_failure_never_exposes_internal_error_text(self):
-        with patch("commentail.admin_views.moderate", side_effect=DomainError("INTERNAL PRIVATE DETAIL")):
-            response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
-                "action": "approve", "return_query": "q=Visible&status=&p=2",
-            })
+        with patch(
+            "commentail.admin_views.moderate",
+            side_effect=DomainError("INTERNAL PRIVATE DETAIL"),
+        ):
+            response = self.client.post(
+                reverse("commentail_admin:action", args=[self.comment.pk]),
+                {
+                    "action": "approve",
+                    "return_query": "q=Visible&status=&p=2",
+                },
+            )
         self.assert_action_error(response, 400)
         self.assertNotContains(response, "INTERNAL PRIVATE DETAIL", status_code=400)
 
     def test_localized_service_permission_failure_keeps_forbidden_status(self):
-        with translation.override("ru"), patch(
-            "commentail.admin_views.moderate", side_effect=DomainError("Permission denied"),
+        with (
+            translation.override("ru"),
+            patch(
+                "commentail.admin_views.moderate",
+                side_effect=DomainError("Permission denied"),
+            ),
         ):
-            response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
-                "action": "approve", "return_query": "q=Visible&status=&p=2",
-            })
+            response = self.client.post(
+                reverse("commentail_admin:action", args=[self.comment.pk]),
+                {
+                    "action": "approve",
+                    "return_query": "q=Visible&status=&p=2",
+                },
+            )
         self.assertEqual(response.status_code, 403)
         self.assertTemplateUsed(response, "commentail/admin/action_error.html")
 
     def test_invalid_selection_and_revision_requests_show_safe_recovery(self):
         for identifier in ("bad", "9" * 5000, "9999999999999999999"):
-            for name, args, extra in [("bulk", [], {"ids": [identifier]}),
-                                      ("revision", [self.comment.pk], {"revision": identifier})]:
+            for name, args, extra in [
+                ("bulk", [], {"ids": [identifier]}),
+                ("revision", [self.comment.pk], {"revision": identifier}),
+            ]:
                 with self.subTest(name=name, identifier_length=len(identifier)):
-                    response = self.client.post(reverse("commentail_admin:" + name, args=args), {
-                        "action": "approve", "return_query": "q=Visible&status=&p=2", **extra,
-                    })
+                    response = self.client.post(
+                        reverse("commentail_admin:" + name, args=args),
+                        {
+                            "action": "approve",
+                            "return_query": "q=Visible&status=&p=2",
+                            **extra,
+                        },
+                    )
                     self.assert_action_error(response, 400)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.status, "pending")
@@ -593,21 +847,35 @@ class AdminInterfaceTests(TestCase):
     def test_revoked_all_access_offers_dashboard_instead_of_inaccessible_list(self):
         self.permission.view = False
         self.permission.save()
-        response = self.client.post(reverse("commentail_admin:action", args=[self.comment.pk]), {
-            "action": "approve", "return_query": "q=Visible&status=&p=2",
-        })
+        response = self.client.post(
+            reverse("commentail_admin:action", args=[self.comment.pk]),
+            {
+                "action": "approve",
+                "return_query": "q=Visible&status=&p=2",
+            },
+        )
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, "commentail/admin/action_error.html")
-        self.assertContains(response, f'href="{reverse("wagtailadmin_home")}"', status_code=404)
+        self.assertContains(
+            response, f'href="{reverse("wagtailadmin_home")}"', status_code=404
+        )
         self.assertContains(response, "Back to dashboard", status_code=404)
 
     def test_new_bulk_actions_require_their_own_permission(self):
-        for action, status in [("hide", "published"), ("restore", "hidden"), ("delete", "pending")]:
+        for action, status in [
+            ("hide", "published"),
+            ("restore", "hidden"),
+            ("delete", "pending"),
+        ]:
             with self.subTest(action=action):
                 Comment.objects.filter(pk=self.comment.pk).update(status=status)
-                response = self.client.post(reverse("commentail_admin:bulk"), {
-                    "action": action, "ids": [self.comment.pk],
-                })
+                response = self.client.post(
+                    reverse("commentail_admin:bulk"),
+                    {
+                        "action": action,
+                        "ids": [self.comment.pk],
+                    },
+                )
                 self.assertEqual(response.status_code, 403)
                 self.comment.refresh_from_db()
                 self.assertEqual(self.comment.status, status)
@@ -615,10 +883,16 @@ class AdminInterfaceTests(TestCase):
     def test_bulk_delete_rolls_back_for_visible_site_without_delete_permission(self):
         self.permission.delete = True
         self.permission.save()
-        SiteGroupPermission.objects.create(group=self.permission.group, site=self.other, view=True)
-        response = self.client.post(reverse("commentail_admin:bulk"), {
-            "action": "delete", "ids": [self.comment.pk, self.foreign.pk],
-        })
+        SiteGroupPermission.objects.create(
+            group=self.permission.group, site=self.other, view=True
+        )
+        response = self.client.post(
+            reverse("commentail_admin:bulk"),
+            {
+                "action": "delete",
+                "ids": [self.comment.pk, self.foreign.pk],
+            },
+        )
         self.assertEqual(response.status_code, 403)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.text, "Visible queue text")
@@ -629,9 +903,13 @@ class AdminInterfaceTests(TestCase):
             for action in ("approve", "reject", "hide", "restore"):
                 with self.subTest(status=status, action=action):
                     Comment.objects.filter(pk=self.comment.pk).update(status=status)
-                    response = self.client.post(reverse("commentail_admin:bulk"), {
-                        "action": action, "ids": [self.comment.pk],
-                    })
+                    response = self.client.post(
+                        reverse("commentail_admin:bulk"),
+                        {
+                            "action": action,
+                            "ids": [self.comment.pk],
+                        },
+                    )
                     self.assertEqual(response.status_code, 400)
 
     def test_bulk_validates_request_boundary_without_mutation(self):
@@ -642,13 +920,24 @@ class AdminInterfaceTests(TestCase):
             {"action": "delete", "ids": [self.comment.pk] * 101},
         ]:
             with self.subTest(data=data):
-                self.assertEqual(self.client.post(reverse("commentail_admin:bulk"), data).status_code, 400)
-        self.assertEqual(self.client.get(reverse("commentail_admin:bulk")).status_code, 405)
+                self.assertEqual(
+                    self.client.post(
+                        reverse("commentail_admin:bulk"), data
+                    ).status_code,
+                    400,
+                )
+        self.assertEqual(
+            self.client.get(reverse("commentail_admin:bulk")).status_code, 405
+        )
         csrf_client = Client(enforce_csrf_checks=True)
         csrf_client.force_login(self.admin)
-        response = csrf_client.post(reverse("commentail_admin:bulk"), {
-            "action": "delete", "ids": [self.comment.pk],
-        })
+        response = csrf_client.post(
+            reverse("commentail_admin:bulk"),
+            {
+                "action": "delete",
+                "ids": [self.comment.pk],
+            },
+        )
         self.assertEqual(response.status_code, 403)
         self.comment.refresh_from_db()
         self.assertEqual(self.comment.text, "Visible queue text")
@@ -684,25 +973,30 @@ class AdminInterfaceTests(TestCase):
     def test_moderation_redirect_exposes_a_focusable_result_only_once(self):
         response = self.client.post(
             reverse("commentail_admin:action", args=[self.comment.pk]),
-            {"action": "approve"}, follow=True,
+            {"action": "approve"},
+            follow=True,
         )
         self.assertContains(response, "commentail-action-result")
         self.assertContains(response, f"Comment #{self.comment.pk}: Published")
         self.assertContains(response, "/static/commentail/admin.js")
-        response = self.client.get(reverse("commentail_admin:detail", args=[self.comment.pk]))
+        response = self.client.get(
+            reverse("commentail_admin:detail", args=[self.comment.pk])
+        )
         self.assertNotContains(response, "commentail-action-result")
 
     def test_bulk_and_revision_moderation_expose_results(self):
         response = self.client.post(
             reverse("commentail_admin:bulk"),
-            {"action": "approve", "ids": [self.comment.pk]}, follow=True,
+            {"action": "approve", "ids": [self.comment.pk]},
+            follow=True,
         )
         self.assertContains(response, "commentail-action-result")
         self.assertContains(response, "Approved: 1")
         revision = revise(self.comment.pk, "Revised text", user=self.admin)
         response = self.client.post(
             reverse("commentail_admin:revision", args=[self.comment.pk]),
-            {"action": "reject", "revision": revision.pk}, follow=True,
+            {"action": "reject", "revision": revision.pk},
+            follow=True,
         )
         self.assertContains(response, "commentail-action-result")
         self.assertContains(response, "Author revision: Rejected")

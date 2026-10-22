@@ -152,7 +152,9 @@ class LogSafetyTests(TestCase):
 
         for key in ("%74oken", "to%6ben", "%74%6F%6b%65%6e"):
             with self.subTest(key=key):
-                value = redact(f"GET /commentail/actions/edit/?{key}=private-secret&other=kept HTTP/1.1")
+                value = redact(
+                    f"GET /commentail/actions/edit/?{key}=private-secret&other=kept HTTP/1.1"
+                )
                 self.assertNotIn("private-secret", value)
                 self.assertIn("other=kept", value)
                 self.assertIn("[redacted]", value)

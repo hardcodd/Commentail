@@ -41,10 +41,14 @@ class AdmissionTests(TestCase):
         with self.assertRaises(DomainError):
             accept_request(self.request, self.discussion.pk, self.key, text="Message")
 
-    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="")
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST=""
+    )
     def test_unconfigured_delivery_blocks_guest_before_creation(self):
         self.request.user = AnonymousUser()
-        with self.assertRaisesMessage(DomainError, "Guest comments require configured email delivery"):
+        with self.assertRaisesMessage(
+            DomainError, "Guest comments require configured email delivery"
+        ):
             accept_request(
                 self.request,
                 self.discussion.pk,

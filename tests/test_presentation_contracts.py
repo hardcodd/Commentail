@@ -36,7 +36,9 @@ class PresentationContractTests(TestCase):
         request.user = AnonymousUser()
         for language, label in (("en", "Name"), ("ru", "Имя")):
             with self.subTest(language=language), override(language):
-                html = render_to_string("commentail/form.html", {"request": request, "remembered_email": ""})
+                html = render_to_string(
+                    "commentail/form.html", {"request": request, "remembered_email": ""}
+                )
                 self.assertIn(label + "<input", html)
                 self.assertIn('data-commentail-name-limit="40"', html)
                 self.assertIn("40", html)

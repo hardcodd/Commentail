@@ -22,14 +22,19 @@ QUERY_KEY = "commentail_draft"
 
 def is_document(request: HttpRequest) -> bool:
     """Fetch's default */* differs from a browser document navigation."""
-    return "text/html" in request.headers.get("Accept", "") or request.headers.get(
-        "Sec-Fetch-Dest"
-    ) == "document"
+    return (
+        "text/html" in request.headers.get("Accept", "")
+        or request.headers.get("Sec-Fetch-Dest") == "document"
+    )
 
 
 def save_draft(
     request: HttpRequest, discussion: Discussion, error: str = ""
 ) -> str | None:
+    """Store bounded browser recovery state and return its host URL.
+
+    Return None when the target URL is unavailable. The URL carries only an ID;
+    recovery additionally requires the session-held ticket secret."""
     try:
         destination = target_url(discussion)
     except ObjectAccessError:
@@ -39,9 +44,17 @@ def save_draft(
     ticket.draft = {
         # PostgreSQL text/JSON cannot represent U+0000. Retain the remaining
         # invalid draft for review without persisting an unsupported character.
-        "values": {key: request.POST.get(key, "").replace("\x00", "") for key in (
-            "text", "name", "email", "reply_to", "subscribe", "edit_comment"
-        )},
+        "values": {
+            key: request.POST.get(key, "").replace("\x00", "")
+            for key in (
+                "text",
+                "name",
+                "email",
+                "reply_to",
+                "subscribe",
+                "edit_comment",
+            )
+        },
         "error": error,
     }
     ticket.save(update_fields=["draft"])
@@ -61,10 +74,13 @@ def save_draft(
         query["edit_comment"] = identifier
         query["target"] = identifier
         fragment = f"commentail-{identifier}"
-    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), fragment))
+    return urlunsplit(
+        (parts.scheme, parts.netloc, parts.path, urlencode(query), fragment)
+    )
 
 
 def load_draft(request: HttpRequest, discussion: Discussion) -> tuple[QueryDict, str]:
+    """Recover values only for a live ticket bound to this browser and discussion."""
     values = QueryDict(mutable=True)
     identifier = request.GET.get(QUERY_KEY, "")
     secret = request.session.get(SESSION_KEY, {}).get(identifier)
@@ -84,6 +100,7 @@ def load_draft(request: HttpRequest, discussion: Discussion) -> tuple[QueryDict,
 
 
 def clear_drafts(request: HttpRequest, discussion: Discussion) -> None:
+    """Delete only this session's retained tickets for the accepted discussion."""
     tickets = dict(request.session.get(SESSION_KEY, {}))
     if not tickets:
         return

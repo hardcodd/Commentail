@@ -1,3 +1,6 @@
+"""Register checks/signals and install redaction once when Django loads the app."""
+
+import logging
 from importlib import import_module
 
 from django.apps import AppConfig
@@ -10,8 +13,6 @@ class CommentailConfig(AppConfig):
     def ready(self) -> None:
         import_module("commentail.checks")
         import_module("commentail.signals")
-        import logging
-
         from .logging import CapabilityFilter
 
         logger = logging.getLogger("django.server")

@@ -37,7 +37,10 @@ def commentail_form_groups(form: BaseForm) -> list[tuple[str, list[BoundField]]]
         layout = [
             (_("Discussion settings"), ("mode", "moderation", "access", "max_length")),
             (_("Appearance"), ("highlight_staff", "clickable_links")),
-            (_("Email delivery"), ("email_enabled", "notify_publication", "notify_rejection")),
+            (
+                _("Email delivery"),
+                ("email_enabled", "notify_publication", "notify_rejection"),
+            ),
         ]
     elif isinstance(form, SitePermissionForm):
         layout = [
@@ -47,5 +50,7 @@ def commentail_form_groups(form: BaseForm) -> list[tuple[str, list[BoundField]]]
         ]
     else:
         layout = [("", tuple(form.fields))]
-    return [(title, [form[name] for name in names if name in form.fields])
-            for title, names in layout]
+    return [
+        (title, [form[name] for name in names if name in form.fields])
+        for title, names in layout
+    ]

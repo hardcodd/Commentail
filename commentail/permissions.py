@@ -12,6 +12,7 @@ Capability = Literal["view", "moderate", "hide", "delete", "settings", "rules"]
 
 
 def sites_for(user: AbstractBaseUser, capability: Capability) -> QuerySet[Site]:
+    """Return Site grants only for active authenticated Wagtail administrators."""
     if (
         not user.is_authenticated
         or not user.is_active

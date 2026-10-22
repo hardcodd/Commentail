@@ -147,6 +147,7 @@ class ArithmeticCaptcha:
         # accepting an answer also consumes the challenge in this transaction.
         if not query.update(attempts=F("attempts") + 1):
             return False
+
         challenge = CaptchaChallenge.objects.get(pk=identifier)
         try:
             correct = int(answer.strip()) == challenge.answer
@@ -216,6 +217,7 @@ def create_captcha(request: HttpRequest, site: Site) -> CaptchaTask:
         ):
             raise ValueError("Invalid CAPTCHA task contract")
         get_template(task.template)
+
         with transaction.atomic():
             session = ArithmeticCaptcha()._session(request)
             CaptchaChallenge.objects.filter(
@@ -274,6 +276,7 @@ def verify_captcha(
     )
     if not query.update(attempts=F("attempts") + 1):
         return False
+
     challenge = CaptchaChallenge.objects.get(pk=identifier)
     try:
         backend: CaptchaBackend = import_string(path)()
@@ -285,6 +288,7 @@ def verify_captcha(
             "CAPTCHA verification failed (%s)", type(error).__name__
         )
         return False
+
     if accepted:
         CaptchaChallenge.objects.filter(pk=identifier, used=False).update(used=True)
     return accepted

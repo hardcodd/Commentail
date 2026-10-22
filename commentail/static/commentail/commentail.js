@@ -1,6 +1,19 @@
 /* Progressive HTML interactions; the same endpoints work without JavaScript. */
 (() => {
+  /** @typedef {Record<string, string | boolean>} DraftValues */
+  /**
+   * @typedef {Object} UpdateOptions
+   * @property {FormData} [body] A POST payload; absence selects reading navigation.
+   * @property {string} [focus] Field to focus after server errors/results take priority.
+   * @property {boolean} [keepDraft] Preserve both independent composers.
+   * @property {boolean} [reply] Preserve the main draft after replying.
+   * @property {boolean} [editing] Preserve other composers while saving an edit.
+   * @property {boolean} [editFocus] Prefer the inline editor's requested field.
+   * @property {HTMLElement} [anchor] Keep this article at its current viewport position.
+   */
+
   const announcements = new WeakMap();
+
   const announcementFor = (block) => {
     let node = announcements.get(block);
     if (!node) {
@@ -69,6 +82,7 @@
     if (editor?.dataset?.editComment && network) editor.prepend(network);
   };
   const draft = (block, reply = false) => {
+    /** @type {DraftValues} */
     const values = {};
     const selector = reply ? '.commentail-form[data-reply-to] [name]' : '.commentail-form:not([data-reply-to]) [name]';
     block.querySelectorAll(selector).forEach((field) => {
@@ -117,12 +131,9 @@
     const element = anchor && block.querySelector(`#${anchor.id}`);
     if (element) window.scrollBy({ top: element.getBoundingClientRect().top - anchor.top, behavior: "instant" });
   };
-  const update = async (block, url, { body, focus, keepDraft = false, reply = false, editing = false, editFocus = false, anchor } = {}) => {
-    if (block.getAttribute("aria-busy") === "true") return;
-    const destination = new URL(url, window.location.href);
-    if (destination.origin !== window.location.origin) return;
-    // A live region must already exist outside the replaced subtree.
-    const announcement = body ? announcementFor(block) : announcements.get(block);
+
+  /** Carry live composer state and every open signed window into one navigation. */
+  const readingDestination = (block, destination, body, editing) => {
     if (body) {
       const activeReply = block.querySelector(".commentail-form[data-reply-to]");
       if (editing && activeReply?.dataset?.replyTo) destination.searchParams.set("reply_to", activeReply.dataset.replyTo);
@@ -144,6 +155,41 @@
     destination.searchParams.delete("replies");
     threads.forEach((value) => destination.searchParams.append("thread", value));
     windows.forEach((value) => destination.searchParams.append("replies", value));
+  };
+
+  /** Copy drafts at response time, including typing that happened during fetch. */
+  const preserveDrafts = (block, next, { editing, keepDraft, reply }) => {
+    const previousEditor = block.querySelector(".commentail-edit-form");
+    const nextEditor = next.querySelector(".commentail-edit-form");
+    if (!editing && previousEditor?.dataset?.editComment && previousEditor.dataset.editComment === nextEditor?.dataset?.editComment) {
+      nextEditor.querySelector('[name="text"]').value = previousEditor.querySelector('[name="text"]').value;
+    }
+
+    if (keepDraft || reply || editing) restoreDraft(next, draft(block));
+    if (keepDraft) {
+      const previousReply = draft(block, true);
+      const main = draft(block);
+      restoreDraft(next, Object.keys(previousReply).length ? previousReply : {
+        name: main.name || "", email: main.email || "",
+      }, true);
+    }
+  };
+
+  /**
+   * Replace one same-origin widget with server HTML; never automatically replay a POST.
+   * @param {HTMLElement} block
+   * @param {string} url
+   * @param {UpdateOptions} options
+   */
+  const update = async (block, url, { body, focus, keepDraft = false, reply = false, editing = false, editFocus = false, anchor } = {}) => {
+    if (block.getAttribute("aria-busy") === "true") return;
+    const destination = new URL(url, window.location.href);
+    if (destination.origin !== window.location.origin) return;
+
+    // A live region must already exist outside the replaced subtree.
+    const announcement = body ? announcementFor(block) : announcements.get(block);
+    readingDestination(block, destination, body, editing);
+
     const previousMessages = new Set([...block.querySelectorAll(".commentail-comment")].map((item) => item.id));
     const previousPrivate = new Set([...block.querySelectorAll(".commentail-pending")].map((item) => item.id));
     block.setAttribute("aria-busy", "true");
@@ -168,25 +214,15 @@
       mountPendingReplies(next);
       mountReply(next);
       mountEditor(next);
-      const previousEditor = block.querySelector(".commentail-edit-form");
       const nextEditor = next.querySelector(".commentail-edit-form");
-      if (!editing && previousEditor?.dataset?.editComment && previousEditor.dataset.editComment === nextEditor?.dataset?.editComment) {
-        nextEditor.querySelector('[name="text"]').value = previousEditor.querySelector('[name="text"]').value;
-      }
-      // Preserve independent drafts, including typing during the fetch.
-      if (keepDraft || reply || editing) restoreDraft(next, draft(block));
-      if (keepDraft) {
-        const previousReply = draft(block, true);
-        const main = draft(block);
-        restoreDraft(next, Object.keys(previousReply).length ? previousReply : {
-          name: main.name || "", email: main.email || "",
-        }, true);
-      }
+      preserveDrafts(block, next, { editing, keepDraft, reply });
+
       const position = viewportAnchor(block, anchor);
       block.replaceWith(next);
       if (announcement) announcements.set(next, announcement);
       enhance(next);
       restorePosition(next, position);
+
       const error = next.querySelector('[role="alert"]:not([hidden])');
       const composer = next.querySelector(".commentail-reply-form");
       const active = (editing || editFocus) && nextEditor?.dataset?.editComment
@@ -202,6 +238,7 @@
       const submitted = exact || accepted || added;
       const notice = next.querySelector(".commentail-mail-notice");
       if (body && submitted && notice) (submitted.querySelector(".commentail-content") || submitted).append(notice);
+
       if (editing && response.status === 200 && !nextEditor) {
         const current = new URL(window.location.href);
         current.searchParams.delete("edit_comment");

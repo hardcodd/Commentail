@@ -47,6 +47,12 @@ def _action_error(request: HttpRequest, message: str, status: int) -> HttpRespon
 @sensitive_post_parameters("token")
 @sensitive_variables("secret")
 def action(request: HttpRequest, purpose: str) -> HttpResponse:
+    """Verify a purpose/Site-bound link before rendering or processing its action.
+
+    GET verifies access without confirming email or changing subscriptions.
+    Editing retains the capability in the session and delegates author writes
+    to the normal edit boundary. Invalid links reveal no target data.
+    """
     secret = (
         request.POST.get("token", "")
         if request.method == "POST"
@@ -60,6 +66,7 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
     for field in ["QUERY_STRING", "RAW_URI", "REQUEST_URI"]:
         if field in request.META:
             request.META[field] = redact(str(request.META[field]))
+
     site = Site.find_for_request(request)
     if site is None or purpose not in {"confirm", "edit", "unsubscribe", "view"}:
         return _action_error(request, _("Invalid or expired link"), 404)
@@ -67,6 +74,7 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
         token = verify_token(secret, purpose, site)
     except DomainError:
         return _action_error(request, _("Invalid or expired link"), 404)
+
     comment = token.comment
     if purpose != "unsubscribe" and not can_view(request, comment.discussion):
         return _action_error(request, _("Page access is required"), 403)
@@ -77,6 +85,7 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
             return _action_error(request, _("Page access is required"), 403)
     if purpose == "view" and request.method != "GET":
         return HttpResponse(status=405)
+
     if purpose == "edit":
         from .public import edit_view
 
@@ -91,6 +100,7 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
         response = edit_view(request, comment.pk)
         response["Referrer-Policy"] = "strict-origin"
         return response
+
     message = ""
     error = ""
     grant_secret = None
@@ -118,6 +128,7 @@ def action(request: HttpRequest, purpose: str) -> HttpResponse:
                 )
         except DomainError as exc:
             error = str(exc)
+
     response: HttpResponse
     if message and purpose == "confirm":
         response = redirect(comment_url(comment.discussion, comment.pk))

@@ -140,7 +140,8 @@ class SQLiteConcurrencyTests(TransactionTestCase):
         self.assertIn(revision.status, ["approved", "rejected"])
         self.assertEqual(revision.text, "")
         self.assertEqual(
-            comment.text, "Private draft" if revision.status == "approved" else "Original"
+            comment.text,
+            "Private draft" if revision.status == "approved" else "Original",
         )
         self.assertEqual(
             ModerationEvent.objects.filter(action__startswith="revision_").count(), 1

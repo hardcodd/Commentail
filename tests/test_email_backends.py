@@ -39,12 +39,18 @@ class ProviderError(Exception):
 
 
 class ConfigurationTests(SimpleTestCase):
-    @override_settings(EMAIL_BACKEND="tests.test_email_backends.StrictBackend", EMAIL_HOST="")
+    @override_settings(
+        EMAIL_BACKEND="tests.test_email_backends.StrictBackend", EMAIL_HOST=""
+    )
     def test_backend_availability_does_not_construct_or_contact_transport(self):
-        with patch.object(StrictBackend, "__init__", side_effect=AssertionError("No I/O on GET")):
+        with patch.object(
+            StrictBackend, "__init__", side_effect=AssertionError("No I/O on GET")
+        ):
             self.assertTrue(email_configured())
 
-    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="")
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST=""
+    )
     def test_smtp_still_requires_host(self):
         self.assertFalse(email_configured())
 
@@ -52,32 +58,53 @@ class ConfigurationTests(SimpleTestCase):
     def test_implicit_django_localhost_does_not_enable_smtp(self):
         self.assertFalse(email_configured())
 
-    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="smtp.invalid")
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+        EMAIL_HOST="smtp.invalid",
+    )
     def test_smtp_with_explicit_host_is_available(self):
         self.assertTrue(email_configured())
 
 
-@override_settings(EMAIL_BACKEND="tests.test_email_backends.StrictBackend", EMAIL_HOST="")
+@override_settings(
+    EMAIL_BACKEND="tests.test_email_backends.StrictBackend", EMAIL_HOST=""
+)
 class EmailBackendTests(TestCase):
     def setUp(self):
         self.site = Site.objects.get(is_default_site=True)
-        self.discussion = Discussion.objects.create(site=self.site, page=self.site.root_page)
+        self.discussion = Discussion.objects.create(
+            site=self.site, page=self.site.root_page
+        )
 
     def guest(self):
-        return submit(self.discussion.pk, text="Guest", guest_name="Guest", guest_email="guest@example.invalid")
+        return submit(
+            self.discussion.pk,
+            text="Guest",
+            guest_name="Guest",
+            guest_email="guest@example.invalid",
+        )
 
     def test_guest_form_submission_and_worker_use_non_smtp_backend(self):
-        response = self.client.get(reverse("commentail:discussion", args=[self.site.root_page.pk]))
+        response = self.client.get(
+            reverse("commentail:discussion", args=[self.site.root_page.pk])
+        )
         self.assertTrue(response.context["can_post"])
         challenge = response.context["captcha"]
         self.assertIsNotNone(challenge)
-        with patch.object(StrictBackend, "send_messages", wraps=StrictBackend().send_messages) as sending:
-            response = self.client.post(reverse("commentail:submit", args=[self.site.root_page.pk]), {
-                "key": response.context["form_key"], "text": "A guest using a provider backend",
-                "name": "Guest", "email": "guest@example.invalid",
-                "challenge": str(challenge.id),
-                "answer": str(CaptchaChallenge.objects.get(pk=challenge.id).answer),
-            })
+        with patch.object(
+            StrictBackend, "send_messages", wraps=StrictBackend().send_messages
+        ) as sending:
+            response = self.client.post(
+                reverse("commentail:submit", args=[self.site.root_page.pk]),
+                {
+                    "key": response.context["form_key"],
+                    "text": "A guest using a provider backend",
+                    "name": "Guest",
+                    "email": "guest@example.invalid",
+                    "challenge": str(challenge.id),
+                    "answer": str(CaptchaChallenge.objects.get(pk=challenge.id).answer),
+                },
+            )
             self.assertEqual(response.status_code, 302)
             sending.assert_not_called()
             self.assertEqual(process_mail(), 1)
@@ -95,8 +122,14 @@ class EmailBackendTests(TestCase):
         send = StrictBackend.send_messages
 
         def fail_first(backend, messages):
-            if messages[0].extra_headers["Message-ID"].startswith(f"<commentail-{job.pk}@"):
-                raise ProviderError("private api-key guest@example.invalid token=secret")
+            if (
+                messages[0]
+                .extra_headers["Message-ID"]
+                .startswith(f"<commentail-{job.pk}@")
+            ):
+                raise ProviderError(
+                    "private api-key guest@example.invalid token=secret"
+                )
             return send(backend, messages)
 
         with patch.object(StrictBackend, "send_messages", fail_first):
@@ -116,7 +149,9 @@ class EmailBackendTests(TestCase):
         self.guest()
         job = MailJob.objects.get()
         deadline = job.expires_at
-        with patch.object(StrictBackend, "send_messages", side_effect=ProviderError("private detail")):
+        with patch.object(
+            StrictBackend, "send_messages", side_effect=ProviderError("private detail")
+        ):
             for attempt in range(1, 5):
                 self.assertEqual(process_mail(), 0)
                 job.refresh_from_db()
@@ -139,7 +174,9 @@ class EmailBackendTests(TestCase):
 
     def test_backend_initialization_failure_is_retried_without_diagnostics(self):
         self.guest()
-        with patch.object(StrictBackend, "__init__", side_effect=ProviderError("private key")):
+        with patch.object(
+            StrictBackend, "__init__", side_effect=ProviderError("private key")
+        ):
             self.assertEqual(process_mail(), 0)
         job = MailJob.objects.get()
         self.assertEqual(job.status, "pending")
@@ -149,10 +186,13 @@ class EmailBackendTests(TestCase):
     def test_django_development_backends_work_without_smtp_settings(self):
         for backend in ("locmem", "console", "filebased", "dummy"):
             with self.subTest(backend=backend), TemporaryDirectory() as directory:
-                with override_settings(
-                    EMAIL_BACKEND=f"django.core.mail.backends.{backend}.EmailBackend",
-                    EMAIL_FILE_PATH=directory,
-                ), patch("sys.stdout", new_callable=StringIO) as console:
+                with (
+                    override_settings(
+                        EMAIL_BACKEND=f"django.core.mail.backends.{backend}.EmailBackend",
+                        EMAIL_FILE_PATH=directory,
+                    ),
+                    patch("sys.stdout", new_callable=StringIO) as console,
+                ):
                     self.assertTrue(email_configured())
                     comment = self.guest()
                     self.assertEqual(process_mail(), 1)
@@ -162,7 +202,10 @@ class EmailBackendTests(TestCase):
                         self.assertEqual(len(list(Path(directory).glob("*.log"))), 1)
                 self.assertEqual(MailJob.objects.get(comment=comment).status, "sent")
 
-    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="smtp.invalid")
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+        EMAIL_HOST="smtp.invalid",
+    )
     def test_smtp_timeout_remains_bounded_by_lease_and_respects_shorter_setting(self):
         from django.core.mail.backends.smtp import EmailBackend
 
@@ -183,14 +226,21 @@ class EmailBackendTests(TestCase):
                 self.assertEqual(process_mail(), 1)
                 self.assertEqual(observed[-1], 5)
 
-    @override_settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", EMAIL_HOST="smtp.invalid")
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+        EMAIL_HOST="smtp.invalid",
+    )
     def test_smtp_transport_errors_keep_permanent_and_temporary_classification(self):
         from django.core.mail.backends.smtp import EmailBackend
 
         for code, status in ((451, "pending"), (550, "failed")):
             with self.subTest(code=code):
                 comment = self.guest()
-                with patch.object(EmailBackend, "send_messages", side_effect=SMTPDataError(code, b"private detail")):
+                with patch.object(
+                    EmailBackend,
+                    "send_messages",
+                    side_effect=SMTPDataError(code, b"private detail"),
+                ):
                     self.assertEqual(process_mail(), 0)
                 job = MailJob.objects.get(comment=comment)
                 self.assertEqual(job.status, status)

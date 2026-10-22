@@ -11,6 +11,8 @@ StructuredDataMode = Literal["both", "json_ld", "microdata", "off"]
 
 
 class TechnicalSettings(TypedDict):
+    """Validated technical configuration after library/project/Site inheritance."""
+
     STRUCTURED_DATA: StructuredDataMode
     OBJECT_ADAPTERS: dict[str, str]
     RULES_CSV_MAX_BYTES: int
@@ -100,9 +102,14 @@ def configuration_errors() -> list[str]:
                 errors.append(f"Unknown COMMENTAIL key: {key}")
             elif key == "STRUCTURED_DATA":
                 if not isinstance(value, str) or value not in (
-                    "both", "json_ld", "microdata", "off"
+                    "both",
+                    "json_ld",
+                    "microdata",
+                    "off",
                 ):
-                    errors.append("STRUCTURED_DATA must be both, json_ld, microdata or off")
+                    errors.append(
+                        "STRUCTURED_DATA must be both, json_ld, microdata or off"
+                    )
             elif key == "OBJECT_ADAPTERS":
                 from .objects import registry_errors
 

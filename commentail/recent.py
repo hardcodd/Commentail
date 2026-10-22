@@ -42,21 +42,34 @@ def _page_access(request: HttpRequest, pages: dict[int, Page]) -> dict[int, bool
     }
     if not paths:
         return {}
-    aliases = list(Page.objects.filter(
-        path__in=paths, alias_of__isnull=False,
-    ).values_list("path", flat=True))
-    rules = list(PageViewRestriction.objects.filter(
-        page__path__in=paths,
-    ).select_related("page").prefetch_related("groups"))
+    aliases = list(
+        Page.objects.filter(
+            path__in=paths,
+            alias_of__isnull=False,
+        ).values_list("path", flat=True)
+    )
+    rules = list(
+        PageViewRestriction.objects.filter(
+            page__path__in=paths,
+        )
+        .select_related("page")
+        .prefetch_related("groups")
+    )
     native_pages = {
-        identifier for identifier, page in pages.items()
-        if getattr(type(page), "get_view_restrictions", None) is not Page.get_view_restrictions
+        identifier
+        for identifier, page in pages.items()
+        if getattr(type(page), "get_view_restrictions", None)
+        is not Page.get_view_restrictions
         or any(page.path.startswith(path) for path in aliases)
     }
     user = request.user
     original_cache = getattr(user, "_prefetched_objects_cache", None)
-    prefetch_groups = user.is_authenticated and not user.is_superuser and (
-        native_pages or any(rule.restriction_type == rule.GROUPS for rule in rules)
+    prefetch_groups = (
+        user.is_authenticated
+        and not user.is_superuser
+        and (
+            native_pages or any(rule.restriction_type == rule.GROUPS for rule in rules)
+        )
     )
     if prefetch_groups:
         # Native accept_request must retain host overrides. Its groups.all()
@@ -69,11 +82,13 @@ def _page_access(request: HttpRequest, pages: dict[int, Page]) -> dict[int, bool
         for identifier, page in pages.items():
             if identifier in native_pages:
                 result[identifier] = all(
-                    rule.accept_request(request) for rule in page.get_view_restrictions()
+                    rule.accept_request(request)
+                    for rule in page.get_view_restrictions()
                 )
             else:
                 result[identifier] = all(
-                    accepted[rule.pk] for rule in rules
+                    accepted[rule.pk]
+                    for rule in rules
                     if page.path.startswith(rule.page.path)
                 )
         return result
@@ -86,7 +101,9 @@ def _page_access(request: HttpRequest, pages: dict[int, Page]) -> dict[int, bool
 
 
 def _target_data(
-    request: HttpRequest, discussion: Discussion, page_allowed: bool = True,
+    request: HttpRequest,
+    discussion: Discussion,
+    page_allowed: bool = True,
 ) -> tuple[str, str] | None:
     """Check a target and resolve its title and URL once, including widget removal."""
     from .detection import DetectionError, has_comments
@@ -102,8 +119,10 @@ def _target_data(
         obj = discussion.page
         try:
             if (
-                not obj.live or not obj.path.startswith(discussion.site.root_page.path)
-                or not page_allowed or not has_comments(obj, request)
+                not obj.live
+                or not obj.path.startswith(discussion.site.root_page.path)
+                or not page_allowed
+                or not has_comments(obj, request)
             ):
                 return None
         except DetectionError:
@@ -142,24 +161,38 @@ def recent_comments(
     site = Site.find_for_request(request)
     if site is None:
         return []
-    discussions = Discussion.objects.filter(site=site).filter(
-        Q(page__isnull=True)
-        | Q(page__live=True, page__path__startswith=site.root_page.path)
-    ).exclude(mode=Mode.HIDDEN)
+    discussions = (
+        Discussion.objects.filter(site=site)
+        .filter(
+            Q(page__isnull=True)
+            | Q(page__live=True, page__path__startswith=site.root_page.path)
+        )
+        .exclude(mode=Mode.HIDDEN)
+    )
     if page is not None:
         discussions = discussions.filter(page=page)
-    default_mode = SiteCommentSettings.objects.filter(site=site).values_list(
-        "mode", flat=True,
-    ).first() or Mode.OPEN
+    default_mode = (
+        SiteCommentSettings.objects.filter(site=site)
+        .values_list(
+            "mode",
+            flat=True,
+        )
+        .first()
+        or Mode.OPEN
+    )
     if default_mode == Mode.HIDDEN:
         discussions = discussions.exclude(mode="")
     # Keep Site/Page eligibility in a subquery. Joining it into the ordered read
     # can make the planner sort a whole discussion before applying a small LIMIT.
-    comments = Comment.objects.filter(
-        discussion_id__in=discussions.values("pk"),
-        status=Comment.Status.PUBLISHED,
-        published_at__lte=timezone.now(),
-    ).select_related("user", "discussion__content_type").order_by("-published_at", "-pk")
+    comments = (
+        Comment.objects.filter(
+            discussion_id__in=discussions.values("pk"),
+            status=Comment.Status.PUBLISHED,
+            published_at__lte=timezone.now(),
+        )
+        .select_related("user", "discussion__content_type")
+        .order_by("-published_at", "-pk")
+    )
     if not include_replies:
         comments = comments.filter(root__isnull=True)
 
@@ -176,18 +209,21 @@ def recent_comments(
         if cursor is not None:
             timestamp, identifier = cursor
             candidates = candidates.filter(
-                Q(published_at__lt=timestamp) | Q(published_at=timestamp, pk__lt=identifier)
+                Q(published_at__lt=timestamp)
+                | Q(published_at=timestamp, pk__lt=identifier)
             )
         batch = list(candidates[:batch_size])
         if not batch:
             break
         new_discussions = {
-            item.discussion_id: item.discussion for item in batch
+            item.discussion_id: item.discussion
+            for item in batch
             if item.discussion_id not in targets
         }
         resolved.update(new_discussions)
         pages = {
-            item.pk: item for item in Page.objects.filter(
+            item.pk: item
+            for item in Page.objects.filter(
                 pk__in=[d.page_id for d in new_discussions.values() if d.page_id]
             ).specific()
         }
@@ -200,7 +236,9 @@ def recent_comments(
                     denied.append(discussion.pk)
                     continue
                 discussion.page = pages[discussion.page_id]
-            data = _target_data(request, discussion, allowed.get(discussion.page_id, True))
+            data = _target_data(
+                request, discussion, allowed.get(discussion.page_id, True)
+            )
             targets[discussion.pk] = data
             if data is None:
                 denied.append(discussion.pk)
@@ -210,14 +248,16 @@ def recent_comments(
             if data is None:
                 continue
             title, destination = data
-            rows.append({
-                "id": comment.pk,
-                "author_name": _plain_text(author_name(comment, request)),
-                "text": _plain_text(comment.text),
-                "published_at": comment.published_at,
-                "target_title": title,
-                "url": _comment_url(destination, comment.pk),
-            })
+            rows.append(
+                {
+                    "id": comment.pk,
+                    "author_name": _plain_text(author_name(comment, request)),
+                    "text": _plain_text(comment.text),
+                    "published_at": comment.published_at,
+                    "target_title": title,
+                    "url": _comment_url(destination, comment.pk),
+                }
+            )
             if len(rows) == limit:
                 return rows
         cursor = batch[-1].published_at, batch[-1].pk

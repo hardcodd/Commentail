@@ -128,7 +128,9 @@ class ActionViewTests(TestCase):
         confirm_email(self.comment.pk)
         admin = get_user_model().objects.create_superuser("edit-admin", "", "synthetic")
         moderate(self.comment.pk, "approve", actor=admin)
-        secret = issue_token(self.comment, "edit", timezone.now() + timedelta(minutes=15))
+        secret = issue_token(
+            self.comment, "edit", timezone.now() + timedelta(minutes=15)
+        )
         response = self.client.post(
             "/commentail/actions/edit/",
             {"token": secret, "text": "Revised guest text"},
@@ -170,7 +172,9 @@ class ActionViewTests(TestCase):
         response = self.client.get(self.url)
         self.assertTemplateUsed(response, "commentail/base.html")
         self.assertContains(response, 'class="commentail-document"')
-        self.assertContains(response, '<h1 id="commentail-page-title">Confirm email</h1>')
+        self.assertContains(
+            response, '<h1 id="commentail-page-title">Confirm email</h1>'
+        )
         self.assertContains(response, 'aria-labelledby="commentail-page-title"')
         self.assertContains(response, 'name="token"')
         self.assertContains(response, "Back to comments")
@@ -181,16 +185,22 @@ class ActionViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, "commentail/base.html")
         self.assertContains(response, 'role="alert"', status_code=404)
-        self.assertNotContains(response, '<form', status_code=404)
+        self.assertNotContains(response, "<form", status_code=404)
         self.assertNotContains(response, self.comment.text, status_code=404)
         self.assertNotContains(response, self.comment.email, status_code=404)
         self.assertIn("no-store", response["Cache-Control"])
 
     def test_unsubscribe_result_remains_styled_and_has_host_return(self):
-        secret = issue_token(self.comment, "unsubscribe", timezone.now() + timedelta(days=1))
-        response = self.client.post("/commentail/actions/unsubscribe/", {"token": secret})
+        secret = issue_token(
+            self.comment, "unsubscribe", timezone.now() + timedelta(days=1)
+        )
+        response = self.client.post(
+            "/commentail/actions/unsubscribe/", {"token": secret}
+        )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "commentail/base.html")
         self.assertContains(response, 'role="status"')
-        self.assertNotContains(response, '<form')
-        self.assertContains(response, f'/?target={self.comment.pk}#commentail-{self.comment.pk}')
+        self.assertNotContains(response, "<form")
+        self.assertContains(
+            response, f"/?target={self.comment.pk}#commentail-{self.comment.pk}"
+        )

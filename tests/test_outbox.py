@@ -87,7 +87,9 @@ class OutboxTests(TestCase):
         self.assertFalse(MailJob.objects.filter(comment=comment).exists())
         self.assertEqual(process_mail(), 0)
 
-    def test_immediate_guest_publication_keeps_edit_link_without_publication_notice(self):
+    def test_immediate_guest_publication_keeps_edit_link_without_publication_notice(
+        self,
+    ):
         self.options.moderation = "none"
         self.options.notify_publication = True
         self.options.save()
@@ -108,10 +110,14 @@ class OutboxTests(TestCase):
         confirm_email(guest.pk)
         for comment in (registered, guest):
             with self.subTest(guest=comment.user_id is None):
-                self.assertFalse(MailJob.objects.filter(comment=comment, kind="published").exists())
+                self.assertFalse(
+                    MailJob.objects.filter(comment=comment, kind="published").exists()
+                )
                 moderate(comment.pk, "approve", actor=self.admin)
                 moderate(comment.pk, "approve", actor=self.admin)
-                self.assertEqual(MailJob.objects.filter(comment=comment, kind="published").count(), 1)
+                self.assertEqual(
+                    MailJob.objects.filter(comment=comment, kind="published").count(), 1
+                )
 
     def test_immediate_revision_is_silent_but_moderated_revision_notifies_once(self):
         self.options.moderation = "none"
@@ -128,14 +134,20 @@ class OutboxTests(TestCase):
         self.assertFalse(MailJob.objects.filter(revision=pending).exists())
         moderate_revision(pending.pk, "approve", actor=self.admin)
         moderate_revision(pending.pk, "approve", actor=self.admin)
-        self.assertEqual(MailJob.objects.filter(revision=pending, kind="published").count(), 1)
+        self.assertEqual(
+            MailJob.objects.filter(revision=pending, kind="published").count(), 1
+        )
 
     def test_immediate_reply_notifies_parent_but_not_reply_author(self):
         self.options.moderation = "none"
         self.options.notify_publication = True
         self.options.save()
-        parent = submit(self.discussion.pk, text="Parent", user=self.author, subscribe=True)
-        reply = submit(self.discussion.pk, text="Reply", user=self.admin, reply_to=parent.pk)
+        parent = submit(
+            self.discussion.pk, text="Parent", user=self.author, subscribe=True
+        )
+        reply = submit(
+            self.discussion.pk, text="Reply", user=self.admin, reply_to=parent.pk
+        )
         job = MailJob.objects.get(comment=reply)
         self.assertEqual(job.kind, "reply")
         self.assertEqual(job.recipient, parent)
@@ -150,7 +162,9 @@ class OutboxTests(TestCase):
         comment = self.guest()
         confirm_email(comment.pk)
         secret = token_secret(MailJob.objects.get(comment=comment, kind="edit").token)
-        revision = revise(comment.pk, "Immediate guest edit", edit_token=secret, site=self.site)
+        revision = revise(
+            comment.pk, "Immediate guest edit", edit_token=secret, site=self.site
+        )
         self.assertEqual(revision.status, "approved")
         self.assertFalse(MailJob.objects.filter(kind="published").exists())
 
@@ -163,12 +177,16 @@ class OutboxTests(TestCase):
         moderate(comment.pk, "approve", actor=self.admin)
         revision = revise(comment.pk, "Reviewed edit", user=self.author)
         moderate_revision(revision.pk, "approve", actor=self.admin)
-        self.assertFalse(MailJob.objects.filter(comment=comment, kind="published").exists())
+        self.assertFalse(
+            MailJob.objects.filter(comment=comment, kind="published").exists()
+        )
         self.discussion.notify_publication = True
         self.discussion.save()
         revision = revise(comment.pk, "Another edit", user=self.author)
         moderate_revision(revision.pk, "approve", actor=self.admin)
-        self.assertEqual(MailJob.objects.filter(revision=revision, kind="published").count(), 1)
+        self.assertEqual(
+            MailJob.objects.filter(revision=revision, kind="published").count(), 1
+        )
 
     def test_reply_mail_has_no_text_and_unsubscribe(self):
         parent = submit(
@@ -260,7 +278,9 @@ class OutboxTests(TestCase):
         self.assertIsNone(job.lease_until)
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_uncertain_delivery_retry_keeps_message_id_and_original_deadline(self) -> None:
+    def test_uncertain_delivery_retry_keeps_message_id_and_original_deadline(
+        self,
+    ) -> None:
         self.guest()
         job = MailJob.objects.get()
         deadline = job.expires_at
@@ -279,17 +299,32 @@ class OutboxTests(TestCase):
         job.refresh_from_db()
         self.assertEqual(job.expires_at, deadline)
         self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(mail.outbox[0].extra_headers["Message-ID"], mail.outbox[1].extra_headers["Message-ID"])
+        self.assertEqual(
+            mail.outbox[0].extra_headers["Message-ID"],
+            mail.outbox[1].extra_headers["Message-ID"],
+        )
         self.assertEqual(mail.outbox[0].body, mail.outbox[1].body)
 
-    def test_smtp_response_classes_control_retry_without_private_diagnostics(self) -> None:
+    def test_smtp_response_classes_control_retry_without_private_diagnostics(
+        self,
+    ) -> None:
         for failure, status in [
             (SMTPAuthenticationError(535, b"private credentials detail"), "failed"),
             (SMTPServerDisconnected("private connection detail"), "pending"),
             (SMTPDataError(451, b"private transport detail"), "pending"),
             (SMTPDataError(550, b"private transport detail"), "failed"),
-            (SMTPRecipientsRefused({"guest@example.invalid": (450, b"private detail")}), "pending"),
-            (SMTPRecipientsRefused({"guest@example.invalid": (550, b"private detail")}), "failed"),
+            (
+                SMTPRecipientsRefused(
+                    {"guest@example.invalid": (450, b"private detail")}
+                ),
+                "pending",
+            ),
+            (
+                SMTPRecipientsRefused(
+                    {"guest@example.invalid": (550, b"private detail")}
+                ),
+                "failed",
+            ),
         ]:
             with self.subTest(failure=type(failure).__name__, status=status):
                 comment = self.guest()

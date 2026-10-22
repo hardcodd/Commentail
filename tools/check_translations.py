@@ -31,7 +31,10 @@ def message_keys(path: Path) -> set[str]:
             else:
                 active = ""
         if fields.get("msgid"):
-            keys.add((fields["msgctxt"] + "\x04" if "msgctxt" in fields else "") + fields["msgid"])
+            keys.add(
+                (fields["msgctxt"] + "\x04" if "msgctxt" in fields else "")
+                + fields["msgid"]
+            )
     return keys
 
 
@@ -52,18 +55,37 @@ def check(root: Path) -> None:
                 required.add(node.args[0].value)
     with tempfile.TemporaryDirectory(prefix="commentail-translations-") as directory:
         work = Path(directory)
-        shutil.copytree(app, work / "app", ignore=shutil.ignore_patterns("locale", "__pycache__"))
+        shutil.copytree(
+            app, work / "app", ignore=shutil.ignore_patterns("locale", "__pycache__")
+        )
         (work / "app/locale").mkdir()
         subprocess.run(
-            [sys.executable, "-I", "-m", "django", "makemessages", "-l", "en", "--no-wrap", "--no-location"],
-            cwd=work / "app", check=True,
-            env={key: value for key, value in os.environ.items() if key != "DJANGO_SETTINGS_MODULE"},
+            [
+                sys.executable,
+                "-I",
+                "-m",
+                "django",
+                "makemessages",
+                "-l",
+                "en",
+                "--no-wrap",
+                "--no-location",
+            ],
+            cwd=work / "app",
+            check=True,
+            env={
+                key: value
+                for key, value in os.environ.items()
+                if key != "DJANGO_SETTINGS_MODULE"
+            },
         )
         required |= message_keys(work / "app/locale/en/LC_MESSAGES/django.po")
         for po in sorted((app / "locale").glob("*/LC_MESSAGES/django.po")):
             locale = po.parents[1].name
             compiled = work / f"{locale}.mo"
-            subprocess.run(["msgfmt", "--check", str(po), "-o", str(compiled)], check=True)
+            subprocess.run(
+                ["msgfmt", "--check", str(po), "-o", str(compiled)], check=True
+            )
             if compiled.read_bytes() != po.with_suffix(".mo").read_bytes():
                 raise ValueError(f"{locale}: stale compiled catalog")
             with compiled.open("rb") as stream:
@@ -84,7 +106,9 @@ def check(root: Path) -> None:
                 target_slots = re.findall(r"%\([^)]+\)[a-zA-Z]", translated)
                 if sorted(source_slots) != sorted(target_slots):
                     raise ValueError(f"{locale}: changed placeholders: {key!r}")
-            print(f"{locale}: {len(source_keys)} complete messages; compiled catalog matches")
+            print(
+                f"{locale}: {len(source_keys)} complete messages; compiled catalog matches"
+            )
         print(f"Required source messages: {len(required)}")
 
 

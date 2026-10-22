@@ -21,16 +21,22 @@ class LinkParser(HTMLParser):
 class EmailPresentationTests(SimpleTestCase):
     def test_action_labels_and_copy_describe_available_actions(self) -> None:
         context = {
-            "site_name": "Example", "site_url": "https://example.invalid",
+            "site_name": "Example",
+            "site_url": "https://example.invalid",
             "target_url": "https://example.invalid/discussion/",
-            "action_url": "https://example.invalid/action/", "is_revision": False,
+            "action_url": "https://example.invalid/action/",
+            "is_revision": False,
             "author_name": "Мария",
         }
         with override("ru"):
             for suffix in (".html", ".txt"):
                 edit = render_to_string("commentail/emails/edit" + suffix, context)
-                self.assertIn(">Редактировать комментарий</a>" if suffix == ".html"
-                              else "\nРедактировать комментарий:\n", edit)
+                self.assertIn(
+                    ">Редактировать комментарий</a>"
+                    if suffix == ".html"
+                    else "\nРедактировать комментарий:\n",
+                    edit,
+                )
                 self.assertIn("даже если он ещё ожидает модерации", edit)
             reply = render_to_string("commentail/emails/reply.html", context)
             self.assertIn(">Отписаться</a>", reply)
@@ -44,15 +50,21 @@ class EmailPresentationTests(SimpleTestCase):
 
     def test_french_labels_and_author_names(self) -> None:
         context = {
-            "site_name": "Example", "site_url": "https://example.invalid",
+            "site_name": "Example",
+            "site_url": "https://example.invalid",
             "target_url": "https://example.invalid/discussion/",
             "action_url": "https://example.invalid/action/",
-            "view_url": "https://example.invalid/status/", "author_name": "Alex",
+            "view_url": "https://example.invalid/status/",
+            "author_name": "Alex",
         }
         with override("fr"):
             for kind in ("confirm", "edit", "published", "rejected"):
                 text = render_to_string(f"commentail/emails/{kind}.txt", context)
-                label = "Voir le commentaire" if kind == "published" else "Ouvrir la discussion"
+                label = (
+                    "Voir le commentaire"
+                    if kind == "published"
+                    else "Ouvrir la discussion"
+                )
                 self.assertIn(label + " :\n", text)
             for suffix in (".html", ".txt"):
                 reply = render_to_string("commentail/emails/reply" + suffix, context)
@@ -71,8 +83,13 @@ class EmailPresentationTests(SimpleTestCase):
         }
         for language in ("en", "ru", "de", "fr", "es", "pt-br"):
             for kind in ("confirm", "edit", "published", "rejected", "reply"):
-                for revision in (False, True) if kind in {"published", "rejected"} else (False,):
-                    with self.subTest(language=language, kind=kind, revision=revision), override(language):
+                for revision in (
+                    (False, True) if kind in {"published", "rejected"} else (False,)
+                ):
+                    with (
+                        self.subTest(language=language, kind=kind, revision=revision),
+                        override(language),
+                    ):
                         values = {**context, "kind": kind, "is_revision": revision}
                         prefix = f"commentail/emails/{kind}"
                         html = render_to_string(prefix + ".html", values)
@@ -81,7 +98,13 @@ class EmailPresentationTests(SimpleTestCase):
                         parser.feed(html)
                         self.assertIn(context["target_url"], parser.urls)
                         self.assertIn(context["target_url"], text)
-                        for field in ("action_url", "view_url") if kind == "confirm" else ("action_url",) if kind in {"edit", "reply"} else ():
+                        for field in (
+                            ("action_url", "view_url")
+                            if kind == "confirm"
+                            else ("action_url",)
+                            if kind in {"edit", "reply"}
+                            else ()
+                        ):
                             self.assertIn(context[field], parser.urls)
                             self.assertIn(context[field], text)
                         self.assertIn("&lt;img", html)
@@ -102,9 +125,13 @@ class EmailPresentationTests(SimpleTestCase):
 
     def test_revision_copy_differs_and_optional_links_are_omitted(self) -> None:
         context = {
-            "site_name": "Example", "site_url": "https://example.invalid",
-            "target_url": "https://example.invalid/article/", "action_url": "",
-            "view_url": "", "reason": "", "is_revision": False,
+            "site_name": "Example",
+            "site_url": "https://example.invalid",
+            "target_url": "https://example.invalid/article/",
+            "action_url": "",
+            "view_url": "",
+            "reason": "",
+            "is_revision": False,
         }
         with override("en"):
             for kind in ("published", "rejected"):

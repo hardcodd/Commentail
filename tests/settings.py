@@ -65,7 +65,11 @@ if os.environ.get("COMMENTAIL_TEST_POSTGRES") == "1":
         "PASSWORD": os.environ["PGPASSWORD"],
         "HOST": os.environ.get("PGHOST", "127.0.0.1"),
         "PORT": os.environ.get("PGPORT", "55432"),
-        "TEST": {"NAME": os.environ.get("COMMENTAIL_TEST_DB_NAME", "commentail_synthetic_tests")},
+        "TEST": {
+            "NAME": os.environ.get(
+                "COMMENTAIL_TEST_DB_NAME", "commentail_synthetic_tests"
+            )
+        },
     }
 
 WAGTAIL_SITE_NAME = "Commentail test"

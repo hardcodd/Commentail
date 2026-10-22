@@ -105,19 +105,25 @@ class ObjectAdapterTests(TestCase):
         url = reverse("commentail:object_discussion", args=[discussion.pk])
         submit_url = reverse("commentail:object_submit", args=[discussion.pk])
         for adapter in ("QueryUrlAdapter", "BrokenUrlAdapter"):
-            config = {"default": {"OBJECT_ADAPTERS": {
-                Product._meta.label: f"tests.test_object_adapters.{adapter}"
-            }}}
+            config = {
+                "default": {
+                    "OBJECT_ADAPTERS": {
+                        Product._meta.label: f"tests.test_object_adapters.{adapter}"
+                    }
+                }
+            }
             with self.subTest(adapter=adapter), override_settings(COMMENTAIL=config):
                 self.client.force_login(get_user_model().objects.create_user(adapter))
                 response = self.client.get(url)
                 self.assertTemplateUsed(response, "commentail/block.html")
                 self.assertNotContains(response, "<!doctype")
                 document = self.client.get(url, HTTP_ACCEPT="text/html")
-                self.assertEqual(document.status_code, 302 if adapter == "QueryUrlAdapter" else 404)
-                response = self.client.post(submit_url, {
-                    "key": response.context["form_key"], "text": adapter
-                })
+                self.assertEqual(
+                    document.status_code, 302 if adapter == "QueryUrlAdapter" else 404
+                )
+                response = self.client.post(
+                    submit_url, {"key": response.context["form_key"], "text": adapter}
+                )
                 comment = discussion.comments.get(text=adapter)
                 expected = (
                     f"/products/{self.product.pk}/?variant=blue&target={comment.pk}#commentail-{comment.pk}"
@@ -126,6 +132,7 @@ class ObjectAdapterTests(TestCase):
                 )
                 self.assertEqual(response["Location"], expected)
                 self.assertNotContains(self.client.get(url), "PRIVATE URL FAILURE")
+
     def test_unregistered_and_adapter_failure_never_disclose_content(self):
         discussion = self.discussion()
         submit(discussion.pk, text="PRIVATE CONTENT", user=self.user)

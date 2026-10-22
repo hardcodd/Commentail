@@ -24,6 +24,7 @@ class EditorialSettings:
 
 
 def editorial_settings(discussion: Discussion) -> EditorialSettings:
+    """Resolve discussion overrides against Site defaults, retaining explicit False."""
     site = SiteCommentSettings.objects.filter(site_id=discussion.site_id).first()
     defaults = site or SiteCommentSettings()
     return EditorialSettings(
@@ -48,13 +49,16 @@ def editorial_settings(discussion: Discussion) -> EditorialSettings:
 
 def email_enabled(site_id: int) -> bool:
     """Site-wide mail switch; pages cannot override it."""
-    value = SiteCommentSettings.objects.filter(site_id=site_id).values_list(
-        "email_enabled", flat=True
-    ).first()
+    value = (
+        SiteCommentSettings.objects.filter(site_id=site_id)
+        .values_list("email_enabled", flat=True)
+        .first()
+    )
     return value is not False
 
 
 def words(text: str) -> tuple[str, ...]:
+    """Normalize only comparison tokens; never change stored or rendered text."""
     return tuple(
         re.findall(r"[^\W_]+", text.casefold().replace("ё", "е"), flags=re.UNICODE)
     )
@@ -75,9 +79,14 @@ def _matching_rule(tokens: tuple[str, ...]) -> str:
     """
     root = _RuleNode()
     initial_words = set(tokens)
-    for text, action in ModerationRule.objects.filter(enabled=True).values_list(
-        "phrase", "action",
-    ).iterator(chunk_size=1000):
+    for text, action in (
+        ModerationRule.objects.filter(enabled=True)
+        .values_list(
+            "phrase",
+            "action",
+        )
+        .iterator(chunk_size=1000)
+    ):
         phrase = words(text)
         if not phrase or phrase[0] not in initial_words:
             continue
@@ -102,6 +111,7 @@ def _matching_rule(tokens: tuple[str, ...]) -> str:
 
 
 def policy_result(text: str, policy: str, *, guest: bool, suspicious: bool) -> str:
+    """Apply reject-before-review rules, then suspicious/guest moderation policy."""
     if policy not in Policy.values:
         raise ValueError("Unknown moderation policy")
     if policy == Policy.RULES and (result := _matching_rule(words(text))):

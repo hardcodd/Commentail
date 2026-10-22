@@ -3,70 +3,67 @@
 from difflib import SequenceMatcher
 from urllib.parse import urlencode
 
-from django.contrib.auth import get_user_model
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, Exists, F, OuterRef, Q, QuerySet
+from django.db.models import Count, F, Q
 from django.http import (
     Http404,
     HttpRequest,
     HttpResponse,
     QueryDict,
-    StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.dateparse import parse_date
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from wagtail.admin import messages
 from wagtail.admin.widgets import AdminPageChooser
-from wagtail.models import Page, Site
+from wagtail.models import Page
 
-from .forms import (
-    DiscussionSettingsForm,
-    RuleCsvImportForm,
-    RuleForm,
-    SitePermissionForm,
-    SiteSettingsForm,
+from .admin_queries import _comments, filtered_comments
+from .admin_settings import (
+    access,
+    object_settings,
+    objects_list,
+    rule_edit,
+    rules,
+    rules_export,
+    rules_import,
+    settings_view,
 )
 from .models import (
     Comment,
     CommentRevision,
-    Discussion,
     MailJob,
-    ModerationRule,
-    SiteCommentSettings,
 )
 from .outbox import requeue
 from .permissions import Capability, can, sites_for
-from .rules_csv import export_rules, import_rules
 from .services import DomainError, hide, moderate, moderate_revision, remove, restore
 from .validation import valid_identifier
 
 _ACTION_CAPABILITIES: dict[str, Capability] = {
-    "approve": "moderate", "reject": "moderate", "hide": "hide",
-    "restore": "hide", "delete": "delete",
+    "approve": "moderate",
+    "reject": "moderate",
+    "hide": "hide",
+    "restore": "hide",
+    "delete": "delete",
 }
 _BULK_STATUSES = {
-    "approve": {"pending"}, "reject": {"pending"},
-    "hide": {"published"}, "restore": {"hidden"},
+    "approve": {"pending"},
+    "reject": {"pending"},
+    "hide": {"published"},
+    "restore": {"hidden"},
     "delete": set(Comment.Status.values) - {"deleted"},
 }
 
 
-def _comments(request: HttpRequest) -> QuerySet[Comment]:
-    return Comment.objects.filter(
-        discussion__site__in=sites_for(request.user, "view")
-    ).select_related("discussion__site", "discussion__page", "discussion__content_type", "user")
-
-
 def index(request: HttpRequest) -> HttpResponse:
+    """Render the Site-scoped queue with filtered status totals and bulk eligibility."""
     sites = sites_for(request.user, "view")
     settings_sites = sites_for(request.user, "settings")
     if (
@@ -75,52 +72,16 @@ def index(request: HttpRequest) -> HttpResponse:
         and not sites_for(request.user, "rules").exists()
     ):
         raise PermissionDenied
-    query = _comments(request).annotate(
-        pending_revision=Exists(
-            CommentRevision.objects.filter(comment_id=OuterRef("pk"), status="pending")
-        )
-    )
-    if value := request.GET.get("site"):
-        query = (
-            query.filter(discussion__site_id=value)
-            if valid_identifier(value)
-            else query.none()
-        )
-    if value := request.GET.get("page"):
-        query = (
-            query.filter(discussion__page_id=value)
-            if valid_identifier(value)
-            else query.none()
-        )
+    query = filtered_comments(request)
     active_status = request.GET.get("status", "pending")
-    if value := request.GET.get("q"):
-        names = Q()
-        for field in (get_user_model().USERNAME_FIELD, "first_name", "last_name"):
-            if field in {item.name for item in get_user_model()._meta.fields}:
-                names |= Q(**{f"user__{field}__icontains": value})
-        query = query.filter(
-            names
-            | Q(text__icontains=value)
-            | Q(guest_name__icontains=value)
-            | Q(email__icontains=value)
-            | Q(user__email__icontains=value)
-        )
-    for key, lookup in [
-        ("from", "created_at__date__gte"),
-        ("to", "created_at__date__lte"),
-    ]:
-        if value := request.GET.get(key):
-            try:
-                day = parse_date(value)
-            except ValueError:
-                day = None
-            query = query.filter(**{lookup: day}) if day else query.none()
     status_tabs: list[dict[str, object]] = []
     # An IN subquery can be hashed once by PostgreSQL; an EXISTS in this aggregate
     # would otherwise probe the revision index for every historical comment.
-    pending = Q(status="pending") | Q(pk__in=CommentRevision.objects.filter(
-        status="pending",
-    ).values("comment_id"))
+    pending = Q(status="pending") | Q(
+        pk__in=CommentRevision.objects.filter(
+            status="pending",
+        ).values("comment_id")
+    )
     totals = query.aggregate(
         pending=Count("pk", filter=pending),
         published=Count("pk", filter=Q(status="published")),
@@ -153,29 +114,44 @@ def index(request: HttpRequest) -> HttpResponse:
         paginator.count = totals[active_status or "total"]
     page = paginator.get_page(request.GET.get("p"))
     action_sites = {
-        capability: set(sites_for(request.user, capability).values_list("pk", flat=True))
+        capability: set(
+            sites_for(request.user, capability).values_list("pk", flat=True)
+        )
         for capability in ("moderate", "hide", "delete")
     }
     available_actions: set[str] = set()
     for comment in page:
         actions = [
-            action for action, capability in _ACTION_CAPABILITIES.items()
+            action
+            for action, capability in _ACTION_CAPABILITIES.items()
             if comment.status in _BULK_STATUSES[action]
             and comment.discussion.site_id in action_sites[capability]
         ]
         comment.bulk_actions = " ".join(actions)
         available_actions.update(actions)
     action_labels = {
-        "approve": _("Approve"), "reject": _("Reject"),
-        "hide": _("Hide"), "restore": _("Restore"),
+        "approve": _("Approve"),
+        "reject": _("Reject"),
+        "hide": _("Hide"),
+        "restore": _("Restore"),
         "delete": _("Erase text"),
     }
     action_help = {
-        "approve": _("Requires pending comments and moderation permission for every selected comment."),
-        "reject": _("Requires pending comments and moderation permission for every selected comment."),
-        "hide": _("Requires published comments and hide permission for every selected comment."),
-        "restore": _("Requires hidden comments and hide permission for every selected comment."),
-        "delete": _("Requires comments whose text has not been erased and delete permission for every selected comment."),
+        "approve": _(
+            "Requires pending comments and moderation permission for every selected comment."
+        ),
+        "reject": _(
+            "Requires pending comments and moderation permission for every selected comment."
+        ),
+        "hide": _(
+            "Requires published comments and hide permission for every selected comment."
+        ),
+        "restore": _(
+            "Requires hidden comments and hide permission for every selected comment."
+        ),
+        "delete": _(
+            "Requires comments whose text has not been erased and delete permission for every selected comment."
+        ),
     }
     previous = request.GET.copy()
     previous["p"] = str(max(1, page.number - 1))
@@ -184,10 +160,13 @@ def index(request: HttpRequest) -> HttpResponse:
     selected_page = None
     if valid_identifier(identifier := request.GET.get("page", "")):
         selected_page = Page.objects.filter(
-            pk=identifier, discussion__site__in=sites,
+            pk=identifier,
+            discussion__site__in=sites,
         ).first()
     page_chooser = AdminPageChooser()
-    advanced_filter_count = sum(bool(request.GET.get(key)) for key in ("site", "page", "from", "to"))
+    advanced_filter_count = sum(
+        bool(request.GET.get(key)) for key in ("site", "page", "from", "to")
+    )
     if active_status not in {"pending", "published", "rejected", ""}:
         advanced_filter_count += 1
     return TemplateResponse(
@@ -202,7 +181,9 @@ def index(request: HttpRequest) -> HttpResponse:
             "advanced_filter_count": advanced_filter_count,
             "status_tabs": status_tabs,
             "page_chooser": page_chooser.render(
-                "page", selected_page, attrs={"id": "commentail-page-filter"},
+                "page",
+                selected_page,
+                attrs={"id": "commentail-page-filter"},
             ),
             "page_chooser_media": page_chooser.media,
             "mail_allowed": sites.exists(),
@@ -210,7 +191,8 @@ def index(request: HttpRequest) -> HttpResponse:
             "access_allowed": request.user.is_superuser,
             "bulk_actions": [
                 {"value": action, "label": label, "help_text": action_help[action]}
-                for action, label in action_labels.items() if action in available_actions
+                for action, label in action_labels.items()
+                if action in available_actions
             ],
             "return_query": request.GET.urlencode(),
             "previous_query": previous.urlencode(),
@@ -220,6 +202,7 @@ def index(request: HttpRequest) -> HttpResponse:
 
 
 def _diff(original: str, proposed: str) -> tuple[SafeString, SafeString]:
+    """Escape both texts and mark changed lines without altering stored content."""
     old: list[SafeString] = []
     new: list[SafeString] = []
     # Limit pathological diff work; full texts are still safely visible.
@@ -266,26 +249,39 @@ def _comment_url(identifier: int, query: str) -> str:
 
 
 def _action_error(
-    request: HttpRequest, *, status: int = 400, message: str | None = None,
+    request: HttpRequest,
+    *,
+    status: int = 400,
+    message: str | None = None,
 ) -> TemplateResponse:
     """Explain a failed write without exposing item data or replaying the POST."""
     explanations = {
         400: _("The comments or available actions have changed."),
         403: _("Your permissions no longer allow this action."),
-        404: _("Some comments are no longer available or you no longer have access to them."),
+        404: _(
+            "Some comments are no longer available or you no longer have access to them."
+        ),
     }
     query = _selection_query(request)
     list_url = reverse("commentail_admin:list") + (f"?{query}" if query else "")
-    has_access = any(sites_for(request.user, capability).exists()
-                     for capability in ("view", "settings", "rules"))
-    return TemplateResponse(request, "commentail/admin/action_error.html", {
-        "explanation": message or explanations[status],
-        "back_url": list_url if has_access else reverse("wagtailadmin_home"),
-        "has_commentail_access": has_access,
-    }, status=status)
+    has_access = any(
+        sites_for(request.user, capability).exists()
+        for capability in ("view", "settings", "rules")
+    )
+    return TemplateResponse(
+        request,
+        "commentail/admin/action_error.html",
+        {
+            "explanation": message or explanations[status],
+            "back_url": list_url if has_access else reverse("wagtailadmin_home"),
+            "has_commentail_access": has_access,
+        },
+        status=status,
+    )
 
 
 def detail(request: HttpRequest, identifier: int) -> HttpResponse:
+    """Show an authorized comment, pending revision, audit trail and failed mail."""
     comment = get_object_or_404(_comments(request), pk=identifier)
     query = _selection_query(request)
     back_url = reverse("commentail_admin:list") + (f"?{query}" if query else "")
@@ -325,6 +321,7 @@ def detail(request: HttpRequest, identifier: int) -> HttpResponse:
 
 
 def _mutate(request: HttpRequest, comment: Comment) -> None:
+    """Check the requested capability before invoking a locked domain transition."""
     action = request.POST.get("action", "")
     capability = _ACTION_CAPABILITIES.get(action)
     if capability is None:
@@ -345,19 +342,26 @@ def _mutate(request: HttpRequest, comment: Comment) -> None:
 
 
 def _delete_confirmation(
-    request: HttpRequest, identifiers: list[int], cancel_url: str,
+    request: HttpRequest,
+    identifiers: list[int],
+    cancel_url: str,
 ) -> TemplateResponse:
     """Preview a validated selection without erasing text or recording events."""
-    return TemplateResponse(request, "commentail/admin/confirm_delete.html", {
-        "identifiers": identifiers,
-        "count": len(identifiers),
-        "cancel_url": cancel_url,
-        "return_query": _selection_query(request),
-    })
+    return TemplateResponse(
+        request,
+        "commentail/admin/confirm_delete.html",
+        {
+            "identifiers": identifiers,
+            "count": len(identifiers),
+            "cancel_url": cancel_url,
+            "return_query": _selection_query(request),
+        },
+    )
 
 
 @require_POST
 def action(request: HttpRequest, identifier: int) -> HttpResponse:
+    """Apply one moderation action; text erasure requires a confirmation POST."""
     card_url = _comment_url(identifier, _selection_query(request))
     comment = _comments(request).filter(pk=identifier).first()
     if comment is None:
@@ -369,7 +373,8 @@ def action(request: HttpRequest, identifier: int) -> HttpResponse:
             return _action_error(request)
         if request.POST.get("confirm_delete") != "yes":
             return _delete_confirmation(
-                request, [comment.pk],
+                request,
+                [comment.pk],
                 card_url,
             )
     try:
@@ -377,7 +382,9 @@ def action(request: HttpRequest, identifier: int) -> HttpResponse:
     except PermissionDenied:
         return _action_error(request, status=403)
     except DomainError as exc:
-        return _action_error(request, status=403 if str(exc) == _("Permission denied") else 400)
+        return _action_error(
+            request, status=403 if str(exc) == _("Permission denied") else 400
+        )
     comment.refresh_from_db(fields=["status"])
     messages.success(
         request,
@@ -390,6 +397,10 @@ def action(request: HttpRequest, identifier: int) -> HttpResponse:
 @require_POST
 @transaction.atomic
 def bulk(request: HttpRequest) -> HttpResponse:
+    """Validate every selected comment and apply all transitions atomically.
+
+    Preview erasure without mutation. Execution locks before dependent reads;
+    stale state or lost access rolls back the entire selection."""
     identifiers = request.POST.getlist("ids")
     if (
         not identifiers
@@ -397,11 +408,19 @@ def bulk(request: HttpRequest) -> HttpResponse:
         or not all(valid_identifier(value) for value in identifiers)
         or request.POST.get("action") not in _BULK_STATUSES
     ):
-        return _action_error(request, message=_("Select between 1 and 100 comments and choose an available action."))
+        return _action_error(
+            request,
+            message=_(
+                "Select between 1 and 100 comments and choose an available action."
+            ),
+        )
     identifiers = sorted({int(value) for value in identifiers})
     query = QueryDict(request.POST.get("return_query", "")).urlencode()
     list_url = reverse("commentail_admin:list") + (f"?{query}" if query else "")
-    if request.POST["action"] == "delete" and request.POST.get("confirm_delete") != "yes":
+    if (
+        request.POST["action"] == "delete"
+        and request.POST.get("confirm_delete") != "yes"
+    ):
         # Check the whole selection before displaying its count. Execution below
         # revalidates access and state inside the existing atomic writer path.
         selected = []
@@ -426,16 +445,26 @@ def bulk(request: HttpRequest) -> HttpResponse:
                 return response
             _mutate(request, comment)
     except (DomainError, PermissionDenied, Http404) as exc:
-        status = 404 if isinstance(exc, Http404) else (
-            403 if isinstance(exc, PermissionDenied) or str(exc) == _("Permission denied") else 400
+        status = (
+            404
+            if isinstance(exc, Http404)
+            else (
+                403
+                if isinstance(exc, PermissionDenied)
+                or str(exc) == _("Permission denied")
+                else 400
+            )
         )
         # Build the permission-aware context before queries are blocked by rollback.
         response = _action_error(request, status=status)
         transaction.set_rollback(True)
         return response
     outcome = {
-        "approve": _("Approved"), "reject": _("Rejected"),
-        "hide": _("Hidden"), "restore": _("Published"), "delete": _("Deleted"),
+        "approve": _("Approved"),
+        "reject": _("Rejected"),
+        "hide": _("Hidden"),
+        "restore": _("Published"),
+        "delete": _("Deleted"),
     }[request.POST["action"]]
     messages.success(
         request,
@@ -447,12 +476,15 @@ def bulk(request: HttpRequest) -> HttpResponse:
 
 @require_POST
 def revision_action(request: HttpRequest, identifier: int) -> HttpResponse:
+    """Decide only a pending revision belonging to the authorized comment."""
     revision_id = request.POST.get("revision", "")
-    if (
-        not valid_identifier(revision_id)
-        or request.POST.get("action") not in {"approve", "reject"}
-    ):
-        return _action_error(request, message=_("Choose an available action for the author revision."))
+    if not valid_identifier(revision_id) or request.POST.get("action") not in {
+        "approve",
+        "reject",
+    }:
+        return _action_error(
+            request, message=_("Choose an available action for the author revision.")
+        )
     card_url = _comment_url(identifier, _selection_query(request))
     comment = _comments(request).filter(pk=identifier).first()
     if comment is None:
@@ -461,7 +493,9 @@ def revision_action(request: HttpRequest, identifier: int) -> HttpResponse:
         return _action_error(request, status=403)
     revision = comment.revisions.filter(pk=revision_id, status="pending").first()
     if revision is None:
-        return _action_error(request, message=_("This author revision is no longer awaiting moderation."))
+        return _action_error(
+            request, message=_("This author revision is no longer awaiting moderation.")
+        )
     try:
         moderate_revision(
             revision.pk,
@@ -470,7 +504,9 @@ def revision_action(request: HttpRequest, identifier: int) -> HttpResponse:
             reason=request.POST.get("reason", ""),
         )
     except DomainError as exc:
-        return _action_error(request, status=403 if str(exc) == _("Permission denied") else 400)
+        return _action_error(
+            request, status=403 if str(exc) == _("Permission denied") else 400
+        )
     revision.refresh_from_db(fields=["status"])
     messages.success(
         request,
@@ -480,141 +516,9 @@ def revision_action(request: HttpRequest, identifier: int) -> HttpResponse:
     return redirect(card_url)
 
 
-def settings_view(
-    request: HttpRequest, site_id: int, page_id: int | None = None
-) -> HttpResponse:
-    if not can(request.user, site_id, "settings"):
-        return HttpResponse("Permission denied", status=403)
-    site = get_object_or_404(Site, pk=site_id)
-    if page_id is None:
-        instance = SiteCommentSettings.objects.filter(
-            site=site
-        ).first() or SiteCommentSettings(site=site)
-        form_class = SiteSettingsForm
-    else:
-        from wagtail.models import Page
-
-        page = get_object_or_404(Page, pk=page_id).specific
-        if not page.permissions_for_user(request.user).can_edit():
-            raise PermissionDenied
-        from .detection import has_comments
-
-        if not has_comments(page, request):
-            raise PermissionDenied
-        instance = Discussion.objects.filter(
-            site=site, page=page
-        ).first() or Discussion(site=site, page=page)
-        form_class = DiscussionSettingsForm
-    form = form_class(
-        request.POST if request.method == "POST" else None, instance=instance
-    )
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        return redirect(request.path)
-    return TemplateResponse(
-        request,
-        "commentail/admin/form.html",
-        {
-            "form": form,
-            "title": _("Discussion settings") if page_id else _("Site settings"),
-            "site": site,
-        },
-    )
-
-
-def rules(request: HttpRequest) -> HttpResponse:
-    """List project-wide rules with bounded results and persistent filters."""
-    if not sites_for(request.user, "rules").exists():
-        raise PermissionDenied
-    if identifier := request.GET.get("id"):
-        if not valid_identifier(identifier):
-            return HttpResponse("Invalid rule identifier", status=400)
-        rule = get_object_or_404(ModerationRule, pk=identifier)
-        return redirect("commentail_admin:rule_edit", identifier=rule.pk)
-    query = ModerationRule.objects.all()
-    search = request.GET.get("q", "").strip()
-    action = request.GET.get("action", "")
-    enabled = request.GET.get("enabled", "")
-    if search:
-        query = query.filter(phrase__icontains=search)
-    if action in ModerationRule.Action.values:
-        query = query.filter(action=action)
-    if enabled in ("0", "1"):
-        query = query.filter(enabled=enabled == "1")
-    page = Paginator(query.order_by("phrase", "pk"), 25).get_page(request.GET.get("p"))
-    previous = request.GET.copy()
-    previous["p"] = str(max(1, page.number - 1))
-    following = request.GET.copy()
-    following["p"] = str(page.number + 1)
-    return TemplateResponse(
-        request,
-        "commentail/admin/rules.html",
-        {
-            "rules": page,
-            "actions": ModerationRule.Action.choices,
-            "search": search,
-            "active_action": action,
-            "active_enabled": enabled,
-            "previous_query": previous.urlencode(),
-            "next_query": following.urlencode(),
-        },
-    )
-
-
-def rule_edit(request: HttpRequest, identifier: int | None = None) -> HttpResponse:
-    if not sites_for(request.user, "rules").exists():
-        raise PermissionDenied
-    instance = get_object_or_404(ModerationRule, pk=identifier) if identifier else None
-    form = RuleForm(
-        request.POST if request.method == "POST" else None, instance=instance
-    )
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        return redirect("commentail_admin:rules")
-    return TemplateResponse(
-        request,
-        "commentail/admin/form.html",
-        {
-            "form": form,
-            "title": _("Edit rule") if instance else _("Add rule"),
-            "back_url": "commentail_admin:rules",
-            "back_label": _("Moderation rules"),
-        },
-    )
-
-
-def access(request: HttpRequest) -> HttpResponse:
-    if not request.user.is_superuser:
-        raise PermissionDenied
-    from .models import SiteGroupPermission
-
-    if request.GET.get("id") and not valid_identifier(request.GET["id"]):
-        return HttpResponse("Invalid permission identifier", status=400)
-
-    instance = (
-        get_object_or_404(SiteGroupPermission, pk=request.GET["id"])
-        if request.GET.get("id")
-        else None
-    )
-    form = SitePermissionForm(
-        request.POST if request.method == "POST" else None, instance=instance
-    )
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        return redirect("commentail_admin:access")
-    return TemplateResponse(
-        request,
-        "commentail/admin/form.html",
-        {
-            "form": form,
-            "title": _("Group access by site"),
-            "permissions": SiteGroupPermission.objects.select_related("group", "site"),
-        },
-    )
-
-
 @require_POST
 def retry_mail(request: HttpRequest, identifier: int) -> HttpResponse:
+    """Requeue a permitted failed job and return to its list or recipient card."""
     job = get_object_or_404(
         MailJob.objects.filter(
             recipient__discussion__site__in=sites_for(request.user, "view"),
@@ -630,46 +534,6 @@ def retry_mail(request: HttpRequest, identifier: int) -> HttpResponse:
     if request.POST.get("return_to") == "mail":
         return redirect("commentail_admin:mail")
     return redirect(card_url)
-
-
-def rules_export(request: HttpRequest) -> StreamingHttpResponse:
-    if not sites_for(request.user, "rules").exists():
-        raise PermissionDenied
-    return StreamingHttpResponse(
-        export_rules(),
-        content_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": 'attachment; filename="commentail-rules.csv"'},
-    )
-
-
-def rules_import(request: HttpRequest) -> HttpResponse:
-    if not sites_for(request.user, "rules").exists():
-        raise PermissionDenied
-    form = RuleCsvImportForm(
-        request.POST if request.method == "POST" else None,
-        request.FILES if request.method == "POST" else None,
-    )
-    if request.method == "POST" and form.is_valid():
-        try:
-            result = import_rules(form.cleaned_data["file"])
-        except ValidationError as error:
-            form.add_error("file", error)
-        else:
-            messages.success(
-                request,
-                _(
-                    "CSV imported: %(added)s added, %(updated)s updated, %(unchanged)s unchanged."
-                )
-                % {
-                    "added": result.added,
-                    "updated": result.updated,
-                    "unchanged": result.unchanged,
-                },
-            )
-            return redirect("commentail_admin:rules")
-    return TemplateResponse(
-        request, "commentail/admin/rules_import.html", {"form": form}
-    )
 
 
 def mail_queue(request: HttpRequest) -> HttpResponse:
@@ -737,69 +601,20 @@ def mail_queue(request: HttpRequest) -> HttpResponse:
     )
 
 
-def objects_list(request: HttpRequest) -> HttpResponse:
-    """Existing non-Page discussions; Site settings grants bound every row."""
-    sites = sites_for(request.user, "settings")
-    if not sites.exists():
-        raise PermissionDenied
-    query = Discussion.objects.filter(site__in=sites, page__isnull=True).select_related(
-        "site", "content_type"
-    )
-    if value := request.GET.get("q", "").strip():
-        query = query.filter(
-            Q(object_id__icontains=value) | Q(content_type__model__icontains=value)
-        )
-    if value := request.GET.get("site", ""):
-        query = query.filter(site_id=value) if valid_identifier(value) else query.none()
-    page = Paginator(
-        query.order_by("site_id", "content_type_id", "object_id", "pk"), 25
-    ).get_page(request.GET.get("p"))
-    previous = request.GET.copy()
-    previous["p"] = str(max(1, page.number - 1))
-    following = request.GET.copy()
-    following["p"] = str(page.number + 1)
-    return TemplateResponse(
-        request,
-        "commentail/admin/objects.html",
-        {
-            "discussions": page,
-            "sites": sites,
-            "previous_query": previous.urlencode(),
-            "next_query": following.urlencode(),
-        },
-    )
-
-
-def object_settings(request: HttpRequest, identifier: int) -> HttpResponse:
-    discussion = get_object_or_404(
-        Discussion.objects.select_related("site", "content_type"),
-        pk=identifier,
-        page__isnull=True,
-    )
-    if not can(request.user, discussion.site_id, "settings"):
-        return HttpResponse(_("Permission denied"), status=403)
-    # Administrative Site grant controls settings, independently of visitor access.
-    # Unavailable adapters must preserve stored settings and show a neutral error.
-    from .objects import ObjectAccessError, target_for
-
-    try:
-        target = target_for(discussion)
-    except ObjectAccessError:
-        return HttpResponse(_("Comments are unavailable."), status=503)
-    form = DiscussionSettingsForm(
-        request.POST if request.method == "POST" else None, instance=discussion
-    )
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        return redirect(request.path)
-    return TemplateResponse(
-        request,
-        "commentail/admin/form.html",
-        {
-            "form": form,
-            "title": _("Discussion settings"),
-            "site": discussion.site,
-            "target_label": str(target),
-            "objects_back": True,
-        },
-    )
+__all__ = [
+    "access",
+    "action",
+    "bulk",
+    "detail",
+    "index",
+    "mail_queue",
+    "object_settings",
+    "objects_list",
+    "retry_mail",
+    "revision_action",
+    "rule_edit",
+    "rules",
+    "rules_export",
+    "rules_import",
+    "settings_view",
+]

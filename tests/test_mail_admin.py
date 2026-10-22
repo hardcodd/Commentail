@@ -122,11 +122,18 @@ class MailAdminTests(TestCase):
         query = "status=&q=Synthetic&p=2"
         card_url = reverse("commentail_admin:detail", args=[self.comment.pk])
         response = self.client.get(card_url, {"return_query": query})
-        self.assertContains(response, f'name="return_query" value="{escape(query)}"', count=2)
-        response = self.client.post(reverse("commentail_admin:retry", args=[self.job.pk]), {
-            "return_query": query,
-        })
-        self.assertRedirects(response, card_url + "?" + urlencode({"return_query": query}))
+        self.assertContains(
+            response, f'name="return_query" value="{escape(query)}"', count=2
+        )
+        response = self.client.post(
+            reverse("commentail_admin:retry", args=[self.job.pk]),
+            {
+                "return_query": query,
+            },
+        )
+        self.assertRedirects(
+            response, card_url + "?" + urlencode({"return_query": query})
+        )
 
     def test_detail_hides_foreign_mail_and_expired_retry(self):
         self.foreign.recipient = self.comment

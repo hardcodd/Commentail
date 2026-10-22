@@ -42,26 +42,39 @@ class PerformanceTests(TestCase):
         SessionMiddleware(lambda r: None).process_request(self.request)
 
     def comments(self, count, discussion=None, **values):
-        return Comment.objects.bulk_create([
-            Comment(discussion=discussion or self.discussion, text="Synthetic",
-                    guest_name="Reader", status="published", published_at=timezone.now(),
-                    **values) for _ in range(count)
-        ])
+        return Comment.objects.bulk_create(
+            [
+                Comment(
+                    discussion=discussion or self.discussion,
+                    text="Synthetic",
+                    guest_name="Reader",
+                    status="published",
+                    published_at=timezone.now(),
+                    **values,
+                )
+                for _ in range(count)
+            ]
+        )
 
     def recent(self, limit=5):
-        return recent_comments(self.request, limit=limit, page=None, include_replies=True)
+        return recent_comments(
+            self.request, limit=limit, page=None, include_replies=True
+        )
 
     @override_settings(COMMENTAIL=CONFIG)
     def test_object_resolution_does_not_grow_with_comments(self):
         product = Product.objects.create(site=self.site, title="Target")
         discussion = Discussion.objects.create(
-            site=self.site, content_type=ContentType.objects.get_for_model(product),
+            site=self.site,
+            content_type=ContentType.objects.get_for_model(product),
             object_id=str(product.pk),
         )
         self.comments(25, discussion)
         with CaptureQueriesContext(connection) as queries:
             self.assertEqual(len(self.recent(20)), 20)
-        lookups = [q for q in queries if 'FROM "commentail_test_targets_product"' in q["sql"]]
+        lookups = [
+            q for q in queries if 'FROM "commentail_test_targets_product"' in q["sql"]
+        ]
         self.assertEqual(len(lookups), 1)
 
     def test_many_pages_have_batched_access_checks(self):
@@ -74,18 +87,24 @@ class PerformanceTests(TestCase):
 
     def test_recent_queries_are_limited_and_skip_unpublished_comments_in_sql(self):
         expected = self.comments(1)[0]
-        page = self.page.add_child(instance=Page(title="Draft", slug="draft", live=False))
+        page = self.page.add_child(
+            instance=Page(title="Draft", slug="draft", live=False)
+        )
         self.comments(250, Discussion.objects.create(site=self.site, page=page))
         with CaptureQueriesContext(connection) as queries:
             self.assertEqual(self.recent(1)[0]["id"], expected.pk)
-        candidates = [q["sql"] for q in queries if 'FROM "commentail_comment"' in q["sql"]]
+        candidates = [
+            q["sql"] for q in queries if 'FROM "commentail_comment"' in q["sql"]
+        ]
         self.assertTrue(candidates)
         self.assertTrue(all("LIMIT" in sql for sql in candidates))
         self.assertTrue(all('"live"' in sql for sql in candidates))
 
     def test_sqlite_recent_order_uses_index_with_collected_statistics(self):
         if connection.vendor != "sqlite":
-            self.skipTest("SQLite planner regression; PostgreSQL plans are in the benchmark")
+            self.skipTest(
+                "SQLite planner regression; PostgreSQL plans are in the benchmark"
+            )
         self.comments(1000)
         with connection.cursor() as cursor:
             cursor.execute("ANALYZE")
@@ -121,7 +140,9 @@ class PerformanceTests(TestCase):
         self.request.user.groups.add(group)
         for n in range(12):
             page = self.page.add_child(instance=Page(title=str(n), slug=f"group{n}"))
-            restriction = PageViewRestriction.objects.create(page=page, restriction_type="groups")
+            restriction = PageViewRestriction.objects.create(
+                page=page, restriction_type="groups"
+            )
             restriction.groups.add(group)
             self.comments(1, Discussion.objects.create(site=self.site, page=page))
         with CaptureQueriesContext(connection) as queries:
@@ -134,7 +155,9 @@ class PerformanceTests(TestCase):
         group = Group.objects.create(name="Readers")
         self.request.user = get_user_model().objects.create_user("member")
         self.request.user.groups.add(group)
-        restriction = PageViewRestriction.objects.create(page=self.page, restriction_type="groups")
+        restriction = PageViewRestriction.objects.create(
+            page=self.page, restriction_type="groups"
+        )
         restriction.groups.add(group)
         self.comments(1)
         with patch.object(PageViewRestriction, "accept_request", return_value=False):
@@ -179,10 +202,13 @@ class PerformanceTests(TestCase):
 
         fresh = Comment.objects.create(discussion=self.discussion, text="Fresh")
         old = Comment.objects.create(discussion=self.discussion, text="Expired")
-        Comment.objects.filter(pk=old.pk).update(created_at=timezone.now() - timedelta(days=7))
-        with patch("commentail.services._comment", wraps=__import__(
-            "commentail.services", fromlist=["_comment"]
-        )._comment) as lock:
+        Comment.objects.filter(pk=old.pk).update(
+            created_at=timezone.now() - timedelta(days=7)
+        )
+        with patch(
+            "commentail.services._comment",
+            wraps=__import__("commentail.services", fromlist=["_comment"])._comment,
+        ) as lock:
             self.assertEqual(cleanup_unconfirmed(), 1)
         self.assertEqual([call.args[0] for call in lock.call_args_list], [old.pk])
         self.assertTrue(Comment.objects.filter(pk=fresh.pk).exists())
@@ -190,33 +216,49 @@ class PerformanceTests(TestCase):
     def test_rule_prefixes_duplicates_and_disabled_entries_keep_priority(self):
         from commentail.policies import policy_result
 
-        ModerationRule.objects.bulk_create([
-            ModerationRule(phrase="one two", action="review"),
-            ModerationRule(phrase="two three", action="reject"),
-            ModerationRule(phrase="one", action="review"),
-            ModerationRule(phrase="one two three", action="reject"),
-            ModerationRule(phrase="one two", action="reject", enabled=False),
-            ModerationRule(phrase="duplicate", action="reject"),
-            ModerationRule(phrase="duplicate", action="review"),
-            ModerationRule(phrase="!!!", action="reject"),
-        ])
+        ModerationRule.objects.bulk_create(
+            [
+                ModerationRule(phrase="one two", action="review"),
+                ModerationRule(phrase="two three", action="reject"),
+                ModerationRule(phrase="one", action="review"),
+                ModerationRule(phrase="one two three", action="reject"),
+                ModerationRule(phrase="one two", action="reject", enabled=False),
+                ModerationRule(phrase="duplicate", action="reject"),
+                ModerationRule(phrase="duplicate", action="review"),
+                ModerationRule(phrase="!!!", action="reject"),
+            ]
+        )
         for text, expected in [
-            ("one two", "pending"), ("one two three", "rejected"),
-            ("other two three", "rejected"), ("someone", "published"),
-            ("DUPLICATE", "rejected"), ("one. unmatched", "pending"),
+            ("one two", "pending"),
+            ("one two three", "rejected"),
+            ("other two three", "rejected"),
+            ("someone", "published"),
+            ("DUPLICATE", "rejected"),
+            ("one. unmatched", "pending"),
         ]:
             with self.subTest(text=text):
-                self.assertEqual(policy_result(text, "rules", guest=False, suspicious=False), expected)
+                self.assertEqual(
+                    policy_result(text, "rules", guest=False, suspicious=False),
+                    expected,
+                )
 
     def test_claim_loads_mail_author_and_revision_without_followup_queries(self):
         from commentail.outbox import claim_job
 
         user = get_user_model().objects.create_user("author")
-        comment = Comment.objects.create(discussion=self.discussion, user=user, text="Source")
-        revision = CommentRevision.objects.create(comment=comment, text="Revision", reason="Reason")
+        comment = Comment.objects.create(
+            discussion=self.discussion, user=user, text="Source"
+        )
+        revision = CommentRevision.objects.create(
+            comment=comment, text="Revision", reason="Reason"
+        )
         job = MailJob.objects.create(
-            comment=comment, recipient=comment, revision=revision, event_key="performance",
-            kind="rejected", expires_at=timezone.now() + timedelta(hours=1),
+            comment=comment,
+            recipient=comment,
+            revision=revision,
+            event_key="performance",
+            kind="rejected",
+            expires_at=timezone.now() + timedelta(hours=1),
         )
         claimed = claim_job(job.pk)
         with self.assertNumQueries(0):

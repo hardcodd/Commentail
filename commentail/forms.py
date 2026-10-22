@@ -57,6 +57,8 @@ class SiteSettingsForm(forms.ModelForm):
 
 
 class DiscussionSettingsForm(forms.ModelForm):
+    """Expose nullable overrides without confusing inheritance with explicit False."""
+
     class Meta:
         model = Discussion
         fields = EDITORIAL_FIELDS
@@ -122,6 +124,8 @@ class SitePermissionForm(forms.ModelForm):
 
 
 class RuleCsvImportForm(forms.Form):
+    """Bound and parse uploads before any moderation-rule mutation."""
+
     file = forms.FileField(
         label=_("CSV file"),
         widget=forms.ClearableFileInput(attrs={"accept": ".csv,text/csv"}),
