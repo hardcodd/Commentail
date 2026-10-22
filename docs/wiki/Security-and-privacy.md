@@ -30,6 +30,8 @@ are unaffected by these guest-only signals. An empty signal list disables them o
 Rate limits use the direct peer by default. Add only actual immediate proxy networks
 to `TRUSTED_PROXIES`; never trust every internet address. Forwarded headers influence
 client IP only through trusted peers. Quotas are Site-wide with independent counters.
+For nginx installations and upgrades, follow the
+[configuration example and forwarded-header checks](Deployment.md#client-ip-behind-nginx).
 
 New form/recovery tickets are also limited for guests and signed-in readers:
 120 per IP/Site/minute and 1200 per hour by default. Navigation and recovery count

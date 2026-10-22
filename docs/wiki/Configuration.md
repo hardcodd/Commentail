@@ -118,7 +118,7 @@ own settings, rather than keys in `COMMENTAIL`; see [email configuration](Email-
 | `RESEND_IP_LIMIT_PER_HOUR` | `20` | Resends per IP/Site/hour. |
 | `CAPTCHA_IP_LIMIT_PER_MINUTE` | `10` | Challenge creations per IP/Site/minute. |
 | `CAPTCHA_IP_LIMIT_PER_HOUR` | `100` | Challenge creations per IP/Site/hour. |
-| `TRUSTED_PROXIES` | `[]` | Trusted immediate proxy networks; [] uses the direct peer. |
+| `TRUSTED_PROXIES` | `[]` | Trusted proxy networks; [] uses the direct peer and ignores forwarded IPs. Configure explicitly behind nginx; see the [example and trust boundaries](Deployment.md#client-ip-behind-nginx). |
 | `GUEST_REQUEST_CHECKS` | `['missing_user_agent', 'cross_site']` | Supplemental guest header signals; [] disables these signals only. |
 | `MAIL_RETENTION_SECONDS` | `604800` | Queued notification lifetime. |
 | `MAIL_LEASE_SECONDS` | `300` | Outbox worker claim lease. |

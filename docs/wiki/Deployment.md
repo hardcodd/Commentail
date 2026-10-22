@@ -4,7 +4,8 @@
 
 - Install a supported version in a test environment; back up your database.
 - Run migrations, system checks and collectstatic; serve the static assets.
-- Check Wagtail Site host/port, HTTPS scheme, ALLOWED_HOSTS, cookies and proxy settings.
+- Check Wagtail Site host/port, HTTPS scheme, ALLOWED_HOSTS, cookies and
+  [trusted proxy settings](#client-ip-behind-nginx).
 - Enforce request-body, request-rate and connection limits at the web server/proxy;
   application quotas do not replace protection against distributed traffic.
 - Configure [email delivery](Email-and-worker.md) through secrets/environment and
@@ -17,6 +18,47 @@
 - Keep personalized widget/action responses out of shared caches.
 - Check [database/query costs and load-test guidance](Performance.md) against your
   expected traffic; account for index-building time when upgrading large tables.
+
+## Client IP behind nginx
+
+For a site behind nginx, explicitly configure `TRUSTED_PROXIES` if Django sees
+nginx as the connection's direct peer. By default it is empty: Commentail uses
+`REMOTE_ADDR` and ignores `X-Forwarded-For`. Without this configuration, visitors
+can share nginx's IP quota, including the form/recovery ticket limits of 120 per
+minute and 1200 per hour per IP/Site.
+
+For example, if Django's actual `REMOTE_ADDR` for nginx is `127.0.0.1`, merge this
+setting into your existing `COMMENTAIL` dictionary without replacing other options:
+
+```python
+COMMENTAIL = {
+    "default": {
+        "TRUSTED_PROXIES": ["127.0.0.1/32"],
+    },
+}
+```
+
+Use only the verified proxy addresses in your deployment. Add `::1/128` only if
+nginx actually connects over IPv6 loopback; for containers or a separate proxy
+host, use its actual address or a narrowly scoped, controlled proxy network.
+Check hostname-specific Commentail overrides too, since they take precedence over
+`default`.
+
+At the public-facing proxy, strip or overwrite client-supplied `X-Forwarded-For`
+with the verified client address. For multiple proxy hops, review the complete
+header chain and trust only controlled proxy hops. Commentail processes the
+forwarded chain from right to left and stops at the first untrusted address.
+Restrict direct access to the application backend to the intended proxies.
+
+Never use `0.0.0.0/0` or `::/0`: trusting every address lets clients supply a forged
+forwarded IP and evade IP quotas. Trusting loopback automatically is also
+inappropriate for deployments where the actual peer or header handling differs.
+
+After installation or upgrade, run `python manage.py check` and verify through
+the real proxy that requests from two distinct client IPs resolve to their
+respective addresses. Also verify that a client-supplied forwarded address
+cannot override the actual address. A passing system check validates settings,
+not nginx's header handling or the live network path.
 
 ## Host acceptance
 

@@ -62,6 +62,11 @@ urlpatterns = [
 
 ## 3. Database and assets
 
+If the site runs behind nginx, explicitly configure Commentail's
+[`TRUSTED_PROXIES`](Deployment.md#client-ip-behind-nginx) before opening it to
+visitors. The guide includes a local nginx example and explains how to prevent
+forwarded-IP spoofing. Otherwise visitors can share the proxy's IP quotas.
+
 ```sh
 python manage.py migrate
 python manage.py check
@@ -115,6 +120,12 @@ Review the notes for your target version and every intervening release:
 For every upgrade, run `migrate`, `check` and `collectstatic --noinput`, refresh
 cached assets and restart application/background processes through your normal
 deployment procedure. Framework upgrades can require their own migrations.
+
+For sites behind nginx, also review
+[`TRUSTED_PROXIES` and forwarded-header handling](Deployment.md#client-ip-behind-nginx),
+including existing installations that have never configured them. Verify distinct
+client IPs through the real proxy before resuming traffic; shared proxy quotas
+can otherwise throttle visitors together, including new form/recovery tickets.
 
 Rehearse the upgrade on a restored copy of your site's database before changing
 the live installation. Keep the previous package and exact dependency versions,
