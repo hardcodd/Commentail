@@ -1,0 +1,78 @@
+# Commentail 1.3.0
+
+**Stable · 22 October 2026**
+
+Install with `python -m pip install commentail==1.3.0`.
+
+## Changes
+
+- Connect Google reCAPTCHA v2 checkbox or Yandex SmartCaptcha through Python
+  settings. Arithmetic remains the default, and existing custom backends keep
+  their interface. External checks require JavaScript, with a clear explanation
+  and no fallback that bypasses the selected provider.
+- Add hidden-field and server-owned form-age signals, guest attempt budgets
+  before external verification/mail, adaptive or always-check CAPTCHA policy
+  and private, translated moderator explanations. Fast submission is a review
+  signal, not a forced wait or automatic rejection.
+- Review repeated normalized guest text of at least 80 characters within one
+  hour per Site, or three explicit HTTP(S)/www links. Both checks cover guest
+  author revisions, retain the submitted text and have configurable thresholds.
+  Short common replies and one or two links do not trigger the default checks.
+- Keep independent forms valid across tabs, preserve draft age through recovery
+  and navigation, and retain editable drafts during provider errors. External
+  widgets show Retry check after errors instead of a routine Refresh task button.
+- Keep the bundled external check's local binding valid for the form lifetime
+  so writing does not spend its deadline before the widget is solved. Provider
+  token expiry/single use remain enforced; no background renewal is added.
+- Bound external response/token sizes, timeouts and endpoints, reject redirects
+  and mismatched host claims, and reserve concurrent proofs without keeping the
+  Site quota lock during network work. Retain rate events for configured windows
+  longer than one hour so cleanup cannot reset their protection early.
+
+## Upgrade from 1.2.0
+
+1. Rehearse on a restored test database with local mail. Back up the database,
+   settings, templates, media, `SECRET_KEY` and exact installed dependency versions.
+2. Install `commentail==1.3.0`, run `migrate` and `check`. Migrations `0016` and
+   `0017` add proof state, server-owned form age and private comment/revision
+   signal lists. Existing content and queued mail are retained.
+3. Run `collectstatic --noinput`, refresh cached assets and restart application
+   and background processes through your normal deployment procedure.
+4. Compare overridden form/CAPTCHA templates with the installed versions. Keep
+   CSRF, submission keys, challenge/answer fields and draft-age/provider hooks.
+   Older forms that omit the honeypot still work but do not supply that signal.
+5. Review the new [guest protection settings](Configuration.md) for your
+   traffic. Default short attempt budgets are shared per Site/session and IP;
+   configure actual trusted proxies and account for shared networks. A zero
+   duplicate window/link threshold disables that content check; a zero form-age
+   threshold disables timing. Existing accepted-comment quotas remain active.
+6. External providers are optional. To enable one, create matching site-owned
+   keys, register actual domains and follow [provider setup](Callbacks.md#ready-to-use-providers).
+   Keep the secret in server settings. Review privacy disclosures and CSP, test
+   real host/token verification and explain the JavaScript requirement to guests.
+   The adaptive remembered-email exemption remains; strict mode checks every guest.
+7. Verify guest/account submissions, errors and draft recovery, independent tabs,
+   replies, email confirmation, moderation reasons and guest revisions on your
+   actual templates/themes. Keep one background schedule and monitor its queue.
+
+No dependency changes are required. Current SMTP/other Django mail backends and
+host task queues retain their contracts. Content fingerprints start with new
+accepted guest submissions; old comment bodies are not scanned or backfilled.
+These signals request review, not automatic deletion. Early rejection by hard
+word rules before email confirmation remains future work.
+
+For an earlier starting version, also follow the intervening
+[1.2.0](Release-1.2.0.md), [1.1.0](Release-1.1.0.md), [1.0.0](Release-1.0.0.md),
+[0.2.0](Release-0.2.0.md) and [0.1.1](Release-0.1.1.md) notes.
+See [restoration guidance](Installation.md#upgrading-and-restoring).
+
+## Verification boundaries
+
+The unchanged runtime passed the complete local 30-combination matrix: 456 tests
+per combination, with only the SQLite-specific plan test skipped on PostgreSQL.
+All 49 JavaScript tests, translations, lint, migrations and package/example checks
+passed. Both external providers accepted real localhost proofs using disposable
+registrations, which were then deleted. Delayed submission was tested with a
+simulated 20-minute writing interval. These checks do not measure real-world spam
+reduction, provider availability, inbox delivery or the capacity of a deployed site.
+Exact-commit hosted CI and public-archive verification remain separate release gates.

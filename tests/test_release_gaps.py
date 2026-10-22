@@ -244,7 +244,12 @@ class GuestRequestSettingsTests(TestCase):
             with (
                 self.subTest(checks=checks, headers=headers),
                 override_settings(
-                    COMMENTAIL={"default": {"GUEST_REQUEST_CHECKS": checks}}
+                    COMMENTAIL={
+                        "default": {
+                            "GUEST_REQUEST_CHECKS": checks,
+                            "GUEST_FORM_MIN_SECONDS": 0,
+                        }
+                    }
                 ),
             ):
                 request = RequestFactory().post(
@@ -257,10 +262,18 @@ class GuestRequestSettingsTests(TestCase):
                 request.COOKIES[f"commentail_guest_{self.site.pk}"] = remember_guest(
                     self.site, email
                 )
+                from commentail.models import CaptchaChallenge
+                from commentail.security import ArithmeticCaptcha
+
+                # Risk signals now require proof even for a remembered guest.
+                challenge = ArithmeticCaptcha().create(request, self.site)
+                answer = str(CaptchaChallenge.objects.get(pk=challenge.id).answer)
                 comment = accept_request(
                     request,
                     self.discussion.pk,
                     issue_form(request, self.discussion),
+                    challenge_id=str(challenge.id),
+                    answer=answer,
                     text="Message",
                     guest_name="Guest",
                     guest_email=email,

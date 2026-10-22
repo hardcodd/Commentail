@@ -84,7 +84,7 @@ modules separate authorization, selection, presentation and delivery:
 
 | Responsibility | Modules |
 | --- | --- |
-| Submission checks, quotas and author proof | `admission.py`, `limits.py`, `author_access.py`, `security.py` |
+| Submission checks, quotas and author proof | `admission.py`, `antispam.py`, `content_checks.py`, `limits.py`, `author_access.py`, `security.py`, `captcha_providers.py` |
 | Atomic lifecycle transitions | `services.py` |
 | Widget context, escaped cards and reading windows | `widget.py`, `presentation.py`, `reading.py` |
 | Recent accessible comments | `recent.py` |
@@ -104,12 +104,16 @@ example tools --exclude '**/migrations/**'`. Historical migrations are preserved
 
 ## Current development verification
 
-The 1.2.0 sources passed all 30 combinations on 22 October 2026,
-using Wagtail 7.4.3/8.0.1 and Django 5.2.18/6.0.9/6.1.2 with the updated
-certifi/Pillow test pins. Each run discovered 395 tests; PostgreSQL skipped one
-SQLite-only plan check. All 42 JavaScript tests and the other checks above passed.
-Real API delivery and a Redis/Celery host queue were exercised separately.
-These local results do not replace CI for the publishing commit or host acceptance.
+The 1.3.0 runtime passed all 30 local combinations on 22 October 2026,
+using Wagtail 7.4.3/8.0.1 and Django 5.2.18/6.0.9/6.1.2 on Python 3.12–3.14.
+Each run discovered 456 tests; PostgreSQL skipped only the SQLite-specific plan
+check. All 49 JavaScript tests, translations, lint, migrations, archive checks
+and the runnable source example passed. Upgrade checks preserved existing data
+through migrations 0016/0017. Both bundled CAPTCHA providers were exercised with
+real disposable localhost keys; SMTP delivery and real-world spam reduction
+were not established by those checks. Real API mail and Redis/Celery acceptance
+belong to the earlier 1.2.0 checks. These local results do not replace CI for the
+publishing commit or each integrating site's own acceptance.
 
 ## Reported live-site verification: 0.2.0
 
@@ -166,4 +170,4 @@ customizations and deployment policies need their own acceptance checks.
 
 ---
 
-[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 1.1.0 →](Release-1.1.0.md)
+[← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 1.3.0 →](Release-1.3.0.md)

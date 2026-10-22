@@ -4,6 +4,7 @@ import ipaddress
 from datetime import timedelta
 from typing import Literal
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import F
 from django.http import HttpRequest
@@ -14,6 +15,25 @@ from .config import technical_settings
 from .models import RateEvent
 from .security import digest
 from .services import DomainError
+
+
+def retention_seconds() -> int:
+    """Keep the ledger for the longest configured interval, including Site overrides."""
+    options = technical_settings(None)
+    horizon = max(
+        3600,
+        options["AUTHOR_MIN_INTERVAL"],
+        options["RESEND_MIN_INTERVAL"],
+        options["GUEST_DUPLICATE_WINDOW_SECONDS"],
+    )
+    for section in getattr(settings, "COMMENTAIL", {}).values():
+        horizon = max(
+            horizon,
+            section.get("AUTHOR_MIN_INTERVAL", 0),
+            section.get("RESEND_MIN_INTERVAL", 0),
+            section.get("GUEST_DUPLICATE_WINDOW_SECONDS", 0),
+        )
+    return horizon
 
 
 def client_ip(request: HttpRequest, site: Site) -> str:

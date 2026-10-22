@@ -12,6 +12,101 @@
    * @property {HTMLElement} [anchor] Keep this article at its current viewport position.
    */
 
+  // Providers are loaded only when an explicitly configured form needs them.
+  const providerLoads = new Map();
+  const providerWidgets = new WeakMap();
+  const providers = {
+    google: { global: "grecaptcha", callback: "commentailGoogleCaptchaReady", src: "https://www.google.com/recaptcha/api.js?render=explicit&onload=commentailGoogleCaptchaReady" },
+    yandex: { global: "smartCaptcha", callback: "commentailYandexCaptchaReady", src: "https://smartcaptcha.cloud.yandex.ru/captcha.js?render=onload&onload=commentailYandexCaptchaReady" },
+  };
+  const loadProvider = (name) => {
+    const spec = providers[name];
+    if (!spec) return Promise.reject(new Error("Unknown CAPTCHA provider"));
+    if (window[spec.global]?.render) return Promise.resolve(window[spec.global]);
+    if (providerLoads.has(name)) return providerLoads.get(name);
+    const promise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      let settled = false;
+      const finish = (ok) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        delete window[spec.callback];
+        if (ok && window[spec.global]?.render) resolve(window[spec.global]);
+        else {
+          script.remove();
+          providerLoads.delete(name);
+          reject(new Error("CAPTCHA unavailable"));
+        }
+      };
+      const timeout = setTimeout(() => finish(false), 15000);
+      window[spec.callback] = () => finish(true);
+      script.src = spec.src;
+      script.async = true;
+      script.onerror = () => finish(false);
+      document.head.append(script);
+    });
+    providerLoads.set(name, promise);
+    return promise;
+  };
+  const releaseCaptchas = (root) => {
+    root.querySelectorAll("[data-commentail-provider]").forEach((node) => {
+      const widget = providerWidgets.get(node);
+      if (!widget) return;
+      widget.active = false;
+      if (widget.id !== undefined) {
+        try {
+          if (node.dataset.commentailProvider === "yandex") widget.api.destroy(widget.id);
+          else widget.api.reset(widget.id);
+        } catch (_error) {
+          // A provider cleanup failure must not prevent local draft recovery.
+        }
+      }
+      providerWidgets.delete(node);
+    });
+  };
+  const mountCaptchas = (root) => {
+    root.querySelectorAll("[data-commentail-provider]").forEach((node) => {
+      if (providerWidgets.has(node)) return;
+      const state = { active: true };
+      providerWidgets.set(node, state);
+      const answer = node.querySelector('[name="answer"]');
+      const status = node.querySelector("[data-commentail-provider-status]");
+      const retry = node.querySelector("[data-commentail-provider-retry]");
+      const prompt = status.textContent;
+      const clear = (message, failed = false) => {
+        if (!state.active) return;
+        answer.value = "";
+        status.textContent = message;
+        if (retry) retry.hidden = !failed;
+      };
+      loadProvider(node.dataset.commentailProvider).then((api) => {
+        if (!state.active || !node.isConnected) return;
+        state.api = api;
+        const options = {
+          sitekey: node.dataset.sitekey,
+          callback: (token) => {
+            if (!state.active) return;
+            answer.value = token;
+            status.textContent = "";
+            if (retry) retry.hidden = true;
+          },
+        };
+        if (node.dataset.commentailProvider === "google") {
+          options.size = node.clientWidth > 0 && node.clientWidth < 304 ? "compact" : "normal";
+          options["expired-callback"] = () => clear(prompt);
+          options["error-callback"] = () => clear(node.dataset.error, true);
+        }
+        state.id = api.render(node.querySelector("[data-commentail-provider-widget]"), options);
+        if (node.dataset.commentailProvider === "yandex") {
+          api.subscribe(state.id, "token-expired", () => clear(prompt));
+          api.subscribe(state.id, "network-error", () => clear(node.dataset.error, true));
+          api.subscribe(state.id, "javascript-error", () => clear(node.dataset.error, true));
+        }
+      }).catch(() => clear(node.dataset.error, true));
+    });
+  };
+
   const announcements = new WeakMap();
 
   const announcementFor = (block) => {
@@ -29,6 +124,7 @@
     return node;
   };
   const enhance = (root) => {
+    mountCaptchas(root);
     root.querySelectorAll("input[data-commentail-name-limit]").forEach((field) => {
       // Native maxlength counts UTF-16 units and would reject valid Unicode names.
       // Older browsers retain the authoritative server validation.
@@ -134,6 +230,11 @@
 
   /** Carry live composer state and every open signed window into one navigation. */
   const readingDestination = (block, destination, body, editing) => {
+    // Public ticket IDs carry only server-checked age, never submission keys.
+    for (const [selector, parameter] of [[".commentail-form:not([data-reply-to])", "form_age"], [".commentail-form[data-reply-to]", "reply_age"]]) {
+      const age = block.querySelector(`${selector} [name="form_age"]`);
+      if (age?.value) destination.searchParams.set(parameter, age.value);
+    }
     if (body) {
       const activeReply = block.querySelector(".commentail-form[data-reply-to]");
       if (editing && activeReply?.dataset?.replyTo) destination.searchParams.set("reply_to", activeReply.dataset.replyTo);
@@ -218,6 +319,7 @@
       preserveDrafts(block, next, { editing, keepDraft, reply });
 
       const position = viewportAnchor(block, anchor);
+      releaseCaptchas(block);
       block.replaceWith(next);
       if (announcement) announcements.set(next, announcement);
       enhance(next);
@@ -255,6 +357,7 @@
         focusContent(submitted);
         if (announcement && author && status) announcement.textContent = `${author}. ${status}`;
       }
+      else if (field?.type === "hidden" && focus === "answer") focusContent(active.querySelector("[data-commentail-provider-status]"));
       else if (field) reveal(field);
       else if (exact) focusContent(exact);
       else focusContent(added || next.querySelector(".commentail-header h2"));
@@ -330,6 +433,7 @@
           const network = form.querySelector(".commentail-network-error");
           if (network) { network.hidden = true; block.prepend(network); }
           const position = viewportAnchor(block, form.closest(".commentail-comment"));
+          releaseCaptchas(form);
           form.remove();
           restorePosition(block, position);
           const current = new URL(window.location.href);
@@ -363,6 +467,11 @@
       event.preventDefault();
       const body = new FormData(form);
       const button = event.submitter;
+      const provider = form.querySelector("[data-commentail-provider]");
+      if (button?.name !== "refresh" && provider && !provider.querySelector('[name="answer"]').value) {
+        focusContent(provider.querySelector("[data-commentail-provider-status]"));
+        return;
+      }
       if (button && button.name) body.append(button.name, button.value);
       update(block, form.action, { body, editing: Boolean(form.dataset?.editComment), keepDraft: Boolean(form.dataset?.editComment), reply: Boolean(form.dataset?.replyTo), anchor: form.closest(".commentail-comment"), focus: button?.name === "refresh" ? "answer" : "text" });
     });

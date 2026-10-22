@@ -36,6 +36,7 @@ from .admin_settings import (
     rules_import,
     settings_view,
 )
+from .antispam import signal_labels
 from .models import (
     Comment,
     CommentRevision,
@@ -303,6 +304,10 @@ def detail(request: HttpRequest, identifier: int) -> HttpResponse:
         "commentail/admin/detail.html",
         {
             "comment": comment,
+            "spam_signals": signal_labels(comment.spam_signals),
+            "revision_spam_signals": signal_labels(revision.spam_signals)
+            if revision
+            else [],
             "return_query": query,
             "back_url": back_url,
             "revision": revision,

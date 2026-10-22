@@ -1,0 +1,7 @@
+{% load i18n %}<div class="commentail-captcha" data-commentail-provider="{{ captcha.data.provider }}" data-sitekey="{{ captcha.data.site_key }}" data-error="{% trans 'CAPTCHA is unavailable. Please try again later.' %}">
+  <div data-commentail-provider-widget></div>
+  <input type="hidden" name="answer" value="">
+  <p class="commentail-muted" data-commentail-provider-status role="status">{% trans "Complete the spam check before sending." %}</p>
+  <noscript><p>{% trans "This site's spam check requires JavaScript. Enable JavaScript in your browser, complete the check, then send your comment." %}</p></noscript>
+  <button class="commentail-button" type="submit" name="refresh" value="1" data-commentail-provider-retry hidden formnovalidate>{% trans "Retry check" %}</button>
+</div>

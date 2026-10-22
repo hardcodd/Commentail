@@ -79,7 +79,7 @@ class SMTPGuestChainTests(TestCase):
         site = Site.objects.get(is_default_site=True)
         discussion = Discussion.objects.create(site=site, page=site.root_page)
         admin = get_user_model().objects.create_superuser("smtp-admin", "", "synthetic")
-        browser = Client(enforce_csrf_checks=True)
+        browser = Client(enforce_csrf_checks=True, HTTP_USER_AGENT="Synthetic browser")
         visitor = Client()
         url = reverse("commentail:discussion", args=[site.root_page.pk])
 

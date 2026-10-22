@@ -27,6 +27,7 @@
 - [Release 1.0.0](Release-1.0.0.md)
 - [Release 1.1.0](Release-1.1.0.md)
 - [Release 1.2.0](Release-1.2.0.md)
+- [Release 1.3.0](Release-1.3.0.md)
 - [Changelog](Changelog.md)
 - [Roadmap](Roadmap.md)
 - [Support](Support.md)

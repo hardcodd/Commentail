@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.transaction import TransactionManagementError
 from django.utils import timezone
 
+from .limits import retention_seconds
 from .models import CaptchaChallenge, FormTicket, GuestGrant, RateEvent
 from .outbox import process_mail
 from .services import cleanup_unconfirmed
@@ -41,5 +42,7 @@ def process_pending(*, mail_limit: int = 100) -> ProcessingResult:
     CaptchaChallenge.objects.filter(expires_at__lte=now).delete()
     GuestGrant.objects.filter(expires_at__lte=now).delete()
     FormTicket.objects.filter(expires_at__lte=now).delete()
-    RateEvent.objects.filter(created_at__lt=now - timedelta(hours=1)).delete()
+    RateEvent.objects.filter(
+        created_at__lt=now - timedelta(seconds=retention_seconds())
+    ).delete()
     return {"sent": sent, "removed": removed}

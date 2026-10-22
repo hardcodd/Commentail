@@ -144,6 +144,7 @@ class Comment(models.Model):
     )
     edit_locked = models.BooleanField(default=False)
     suspicious = models.BooleanField(default=False)
+    spam_signals = models.JSONField(default=list, blank=True)
     language = models.CharField(max_length=20, default="en")
     reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -206,6 +207,7 @@ class CommentRevision(models.Model):
         max_length=16, choices=Status.choices, default=Status.PENDING
     )
     reason = models.TextField(blank=True)
+    spam_signals = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     decided_at = models.DateTimeField(null=True, blank=True)
 
@@ -295,6 +297,7 @@ class CaptchaChallenge(models.Model):
     expires_at = models.DateTimeField(db_index=True)
     attempts = models.PositiveIntegerField(default=0)
     used = models.BooleanField(default=False)
+    verifying = models.BooleanField(default=False)
 
     class Meta:
         indexes: ClassVar[list[models.Index]] = [
@@ -382,4 +385,5 @@ class FormTicket(models.Model):
     discussion = models.ForeignKey(Discussion, on_delete=models.CASCADE)
     session_digest = models.CharField(max_length=64)
     expires_at = models.DateTimeField(db_index=True)
+    issued_at = models.DateTimeField(default=timezone.now)
     draft = models.JSONField(default=dict, blank=True)

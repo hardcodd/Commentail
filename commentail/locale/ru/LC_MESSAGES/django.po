@@ -1027,3 +1027,36 @@ msgstr "Попросите администратора проверить ва�
 
 msgid "Back to dashboard"
 msgstr "В панель управления"
+
+msgid "Spam prevention signals"
+msgstr "Причины проверки на спам"
+
+msgid "Complete the spam check before sending."
+msgstr "Пройдите проверку перед отправкой."
+
+msgid "This site's spam check requires JavaScript. Enable JavaScript in your browser, complete the check, then send your comment."
+msgstr "Для проверки на этом сайте нужен JavaScript. Включите JavaScript в браузере, пройдите проверку и затем отправьте комментарий."
+
+msgid "Too many attempts. Please wait and try again. Your draft is kept."
+msgstr "Слишком много попыток. Подождите и попробуйте снова. Черновик сохранён."
+
+msgid "The hidden form field was filled in."
+msgstr "Заполнено скрытое поле формы."
+
+msgid "The form was submitted unusually quickly."
+msgstr "Форма отправлена необычно быстро."
+
+msgid "The browser identification header was missing."
+msgstr "Отсутствовал заголовок с идентификацией браузера."
+
+msgid "The request came from another site."
+msgstr "Запрос пришёл с другого сайта."
+
+msgid "The same text was recently submitted on this site."
+msgstr "Такой же текст недавно уже отправляли на этом сайте."
+
+msgid "The link count reached the review threshold."
+msgstr "Количество ссылок достигло порога проверки."
+
+msgid "Retry check"
+msgstr "Повторить проверку"

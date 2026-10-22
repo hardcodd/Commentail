@@ -9,6 +9,7 @@ from commentail.services import moderate, submit
 
 class PublicInterfaceTests(TestCase):
     def setUp(self):
+        self.client.defaults["HTTP_USER_AGENT"] = "Synthetic browser"
         self.site = Site.objects.get(is_default_site=True)
         self.discussion = Discussion.objects.create(
             site=self.site, page=self.site.root_page
@@ -128,7 +129,7 @@ class PublicInterfaceTests(TestCase):
         from django.middleware.csrf import get_token
         from django.test import Client
 
-        browser = Client(enforce_csrf_checks=True)
+        browser = Client(enforce_csrf_checks=True, HTTP_USER_AGENT="Synthetic browser")
         original = browser.get(self.url)
         old_token = get_token(original.wsgi_request)
         login = browser.post(
@@ -170,7 +171,7 @@ class PublicInterfaceTests(TestCase):
         from django.middleware.csrf import get_token
         from django.test import Client
 
-        browser = Client(enforce_csrf_checks=True)
+        browser = Client(enforce_csrf_checks=True, HTTP_USER_AGENT="Synthetic browser")
         browser.force_login(self.user)
         original = browser.get(self.url)
         response = browser.post(
@@ -189,7 +190,7 @@ class PublicInterfaceTests(TestCase):
     def test_host_csrf_failure_outside_submission_keeps_default_behavior(self):
         from django.test import Client
 
-        browser = Client(enforce_csrf_checks=True)
+        browser = Client(enforce_csrf_checks=True, HTTP_USER_AGENT="Synthetic browser")
         response = browser.post(reverse("commentail:action", args=["confirm"]), {})
         self.assertEqual(response.status_code, 403)
         self.assertNotContains(response, 'name="key"', status_code=403)
@@ -373,7 +374,7 @@ class PublicInterfaceTests(TestCase):
     def test_browser_csrf_error_returns_to_host_without_accepting_the_draft(self):
         from django.test import Client
 
-        browser = Client(enforce_csrf_checks=True)
+        browser = Client(enforce_csrf_checks=True, HTTP_USER_AGENT="Synthetic browser")
         browser.force_login(self.user)
         key = browser.get(self.url).context["form_key"]
         response = browser.post(
@@ -626,7 +627,7 @@ class PublicInterfaceTests(TestCase):
         from commentail.models import CaptchaChallenge, MailJob
         from commentail.security import token_secret
 
-        browser = Client(enforce_csrf_checks=True)
+        browser = Client(enforce_csrf_checks=True, HTTP_USER_AGENT="Synthetic browser")
         response = browser.get(self.url)
         task = response.context["captcha"]
         data = {

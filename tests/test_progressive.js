@@ -22,7 +22,7 @@ function harness(fetchImpl, next = null) {
     replaceWith: (value) => { block.replacement = value; },
     before: (value) => { block.announcement = value; },
   };
-  const form = { action: "https://local.invalid/comments/submit/", matches: () => true, closest: () => block };
+  const form = { action: "https://local.invalid/comments/submit/", matches: () => true, closest: () => block, querySelector: () => null };
   class Data {
     constructor() { this.values = { text: field.value, key: key.value }; }
     append(name, value) { this.values[name] = value; }
@@ -37,7 +37,7 @@ function harness(fetchImpl, next = null) {
     listeners.submit?.(event);
     return event;
   };
-  return { listeners, field, key, block, button, alert, send };
+  return { listeners, field, key, block, form, button, alert, send };
 }
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -72,17 +72,41 @@ test("unavailable fetch leaves ordinary form submission alone", () => {
   assert.equal(h.send().prevented, false);
 });
 
+test("an incomplete external check keeps the draft locally without spending an attempt", async () => {
+  let calls = 0;
+  const h = harness(async () => { calls++; return { status: 500 }; });
+  const token = { value: "" };
+  const provider = { querySelector: (s) => s.includes("answer") ? token : h.alert };
+  h.form.querySelector = () => provider;
+  h.send(); await settle();
+  assert.equal(calls, 0);
+  assert.equal(h.alert.focused, true);
+  assert.equal(h.field.value, "Unsent draft");
+  h.send({name: "refresh", value: "1"}); await settle();
+  assert.equal(calls, 1);
+  token.value = "proof";
+  h.send(); await settle();
+  assert.equal(calls, 2);
+});
+
 test("navigation preserves the latest draft and cannot target a foreign origin", async () => {
   const newField = { name: "text", value: "" };
-  const next = { dataset: { discussion: "17" }, querySelectorAll: (selector) => selector.includes("[name]") ? [newField] : [], querySelector: () => null };
+  const newKey = { name: "key", value: "fresh-key" };
+  const age = {value: "52"};
+  let destination;
+  const next = { dataset: { discussion: "17" }, querySelectorAll: (selector) => selector.includes("[name]") ? [newField, newKey] : [], querySelector: () => null };
   let calls = 0;
-  const h = harness(async () => { calls++; return { status: 200, text: async () => "trusted HTML" }; }, next);
+  const h = harness(async (url) => { destination = url; calls++; return { status: 200, text: async () => "trusted HTML" }; }, next);
+  h.block.querySelector = (s) => s.includes('[name="form_age"]') ? age : null;
   const click = (href) => h.listeners.click({ button: 0, target: { closest: () => ({ href, dataset: {}, closest: () => h.block }) }, preventDefault() {} });
   click("https://foreign.invalid/"); assert.equal(calls, 0);
   click("https://local.invalid/?thread=2");
   h.field.value = "Typed while loading";
   await settle();
   assert.equal(newField.value, "Typed while loading");
+  assert.equal(newKey.value, "fresh-key");
+  assert.equal(destination.searchParams.get("form_age"), "52");
+  assert.equal(destination.search.includes("original-session-key"), false);
   assert.equal(h.block.replacement, next);
 });
 
@@ -106,7 +130,7 @@ test("reply submission keeps the unsent main draft after acceptance", async () =
   const next = {dataset: {discussion: "17"}, querySelector: () => null,
     querySelectorAll: (s) => s.includes("[name]") ? [newMain] : []};
   const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
-  h.listeners.submit({target: {dataset: {replyTo: "7"}, action: "https://local.invalid/comments/submit/", matches: () => true, closest: () => h.block}, preventDefault() {}});
+  h.listeners.submit({target: {dataset: {replyTo: "7"}, action: "https://local.invalid/comments/submit/", matches: () => true, closest: () => h.block, querySelector: () => null}, preventDefault() {}});
   await settle();
   assert.equal(newMain.value, "Unsent draft");
 });
@@ -199,6 +223,16 @@ test("CAPTCHA refresh focuses its answer while keeping the draft", async () => {
   const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
   h.send({name: "refresh", value: "1"}); await settle();
   assert.equal(answer.focused, true);
+});
+
+test("external CAPTCHA refresh focuses the visible instruction instead of a hidden token", async () => {
+  const answer = {...focusTarget(), type: "hidden"}, status = focusTarget();
+  const next = {dataset: {discussion: "17"}, querySelectorAll: () => [],
+    querySelector: (selector) => selector.includes('name="answer"') ? answer : selector.includes("provider-status") ? status : null};
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.send({name: "refresh", value: "1"}); await settle();
+  assert.equal(status.focused, true);
+  assert.equal(answer.focused, undefined);
 });
 
 test("network error receives keyboard focus without losing the draft", async () => {
@@ -349,7 +383,7 @@ test("saving an edit keeps the independent reply composer in the navigation", as
   const h = harness(async (url) => {destination = url; return {status: 500};});
   h.block.querySelector = (s) => s === ".commentail-network-error" ? h.alert
     : s === ".commentail-form[data-reply-to]" ? {dataset: {replyTo: "8"}} : null;
-  h.listeners.submit({target: {dataset: {editComment: "7"}, action: "https://local.invalid/comments/7/edit/", matches: () => true, closest: () => h.block}, preventDefault() {}});
+  h.listeners.submit({target: {dataset: {editComment: "7"}, action: "https://local.invalid/comments/7/edit/", matches: () => true, closest: () => h.block, querySelector: () => null}, preventDefault() {}});
   await settle();
   assert.equal(destination.searchParams.get("reply_to"), "8");
 });

@@ -102,11 +102,11 @@ own settings, rather than keys in `COMMENTAIL`; see [email configuration](Email-
 | `OBJECT_ADAPTERS` | `{}` | Model label → adapter class import path (project-wide). |
 | `RULES_CSV_MAX_BYTES` | `5242880` | Maximum CSV upload bytes (project-wide). |
 | `RULES_CSV_MAX_ROWS` | `20000` | Maximum imported rule rows (project-wide). |
-| `FORM_TICKET_SECONDS` | `3600` | Private form/recovery ticket lifetime. |
+| `FORM_TICKET_SECONDS` | `3600` | Private form/recovery ticket lifetime; also the local binding lifetime for bundled Google/Yandex widgets. |
 | `EDIT_WINDOW_SECONDS` | `900` | Edit window from publication; accepted replies lock earlier. |
 | `EMAIL_CONFIRM_SECONDS` | `86400` | Confirmation deadline from initial acceptance. |
 | `GUEST_GRANT_SECONDS` | `2592000` | Browser proof lifetime from confirmation; never sliding. |
-| `CAPTCHA_SECONDS` | `300` | CAPTCHA expiry. |
+| `CAPTCHA_SECONDS` | `300` | Arithmetic/custom CAPTCHA expiry. Bundled Google/Yandex bindings use `FORM_TICKET_SECONDS`; provider token expiry remains enforced remotely. |
 | `CAPTCHA_ATTEMPTS` | `5` | Attempts per challenge. |
 | `AUTHOR_MIN_INTERVAL` | `30` | Minimum seconds between author submissions. |
 | `AUTHOR_LIMIT_PER_HOUR` | `20` | Accepted submissions per account/email per Site/hour. |
@@ -126,6 +126,15 @@ own settings, rather than keys in `COMMENTAIL`; see [email configuration](Email-
 | `GET_COMMENT_TEMPLATES` | `None` | Dynamic Page template dependency callback import path. |
 | `GET_AVATAR` | `None` | Avatar callback import path. |
 | `CAPTCHA_BACKEND` | `None` | Backend class import path; None selects arithmetic. |
+| `CAPTCHA_OPTIONS` | `{}` | External adapter site_key, secret_key and optional timeout (1–10 seconds, default 3). Replaced as a whole per Site. |
+| `GUEST_CAPTCHA_MODE` | `'adaptive'` | Remembered guests skip CAPTCHA unless enabled header signals apply; `'always'` checks every guest. |
+| `GUEST_FORM_MIN_SECONDS` | `2` | Fast-form review threshold, not a submission delay; 0 disables timing. |
+| `GUEST_ATTEMPTS_PER_MINUTE` | `10` | Guest attempts per session/Site, including failed proofs. |
+| `GUEST_IP_ATTEMPTS_PER_MINUTE` | `30` | Guest attempts per IP/Site/minute. |
+| `GUEST_IP_ATTEMPTS_PER_HOUR` | `300` | Guest attempts per IP/Site/hour. |
+| `GUEST_DUPLICATE_WINDOW_SECONDS` | `3600` | Review repeated guest text within this Site/window; 0 disables comparison and new fingerprint storage. |
+| `GUEST_DUPLICATE_MIN_LENGTH` | `80` | Minimum normalized text length for duplicate checks. |
+| `GUEST_LINK_REVIEW_THRESHOLD` | `3` | Review guest text with at least this many explicit HTTP(S)/www link occurrences; 0 disables. |
 | `GET_AUTHOR_NAME` | `None` | Current account name callback import path. |
 
 Author/email and IP quotas apply across all Pages of a Site, with separate Site counters.

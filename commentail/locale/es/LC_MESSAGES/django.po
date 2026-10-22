@@ -1027,3 +1027,36 @@ msgstr "Pida a un administrador que compruebe sus permisos de Commentail antes d
 
 msgid "Back to dashboard"
 msgstr "Volver al panel de control"
+
+msgid "Spam prevention signals"
+msgstr "Señales de prevención de spam"
+
+msgid "Complete the spam check before sending."
+msgstr "Complete la verificación antes de enviar."
+
+msgid "This site's spam check requires JavaScript. Enable JavaScript in your browser, complete the check, then send your comment."
+msgstr "La comprobación antispam de este sitio requiere JavaScript. Active JavaScript en su navegador, complete la comprobación y después envíe su comentario."
+
+msgid "Too many attempts. Please wait and try again. Your draft is kept."
+msgstr "Demasiados intentos. Espere y vuelva a intentarlo. Su borrador se conserva."
+
+msgid "The hidden form field was filled in."
+msgstr "Se rellenó el campo oculto del formulario."
+
+msgid "The form was submitted unusually quickly."
+msgstr "El formulario se envió inusualmente rápido."
+
+msgid "The browser identification header was missing."
+msgstr "Faltaba la cabecera de identificación del navegador."
+
+msgid "The request came from another site."
+msgstr "La solicitud procedía de otro sitio."
+
+msgid "The same text was recently submitted on this site."
+msgstr "El mismo texto se envió recientemente en este sitio."
+
+msgid "The link count reached the review threshold."
+msgstr "La cantidad de enlaces alcanzó el umbral de revisión."
+
+msgid "Retry check"
+msgstr "Reintentar la verificación"

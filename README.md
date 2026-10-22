@@ -6,7 +6,7 @@
 
 Moderated discussions, verified guests and inline replies — styled by your site.
 
-**Current release: [1.2.0](https://github.com/hardcodd/Commentail/releases/tag/v1.2.0)** · [PyPI](https://pypi.org/project/commentail/1.2.0/)
+**Current release: [1.3.0](https://github.com/hardcodd/Commentail/releases/tag/v1.3.0)** · [PyPI](https://pypi.org/project/commentail/1.3.0/)
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -119,6 +119,13 @@ Registered users can comment without an email address, but receive no mail. Your
 site provides login and registration. No required external CDN or CAPTCHA service.
 See [email setup](docs/wiki/Email-and-worker.md).
 
+Guest spam protection includes invisible form checks, attempt limits and review
+signals for repeated long text and multiple links, including guest edits. Google
+reCAPTCHA v2 and Yandex SmartCaptcha are optional adapters; external widgets
+require JavaScript, with no alternative path when a check is required.
+See [setup and custom providers](docs/wiki/Callbacks.md#ready-to-use-providers)
+and [guest protection](docs/wiki/Security-and-privacy.md#low-friction-guest-checks).
+
 ### Languages
 
 English (`en`), Russian (`ru`), German (`de`), French (`fr`), Spanish (`es`)
@@ -136,11 +143,11 @@ The guides are in English; this README is also [available in Russian](README.ru.
 In your existing Wagtail site's virtual environment, install the published release:
 
 ```sh
-python -m pip install commentail==1.2.0
+python -m pip install commentail==1.3.0
 ```
 
 For the optional PostgreSQL driver, use
-`python -m pip install 'commentail[postgres]==1.2.0'`.
+`python -m pip install 'commentail[postgres]==1.3.0'`.
 For an existing installation, follow
 the [upgrade guide](docs/wiki/Installation.md#upgrading-and-restoring) for your target version.
 

@@ -3,6 +3,35 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## [1.3.0] — 2026-10-22 · Stable
+
+- Keep bundled external CAPTCHA bindings valid for the form lifetime, allowing
+  long writing before a fresh provider proof without an extra challenge.
+- Hide routine refresh for external CAPTCHA widgets; offer Retry check after errors,
+  while retaining arithmetic-task refresh and editable drafts.
+
+- Review recent repeated long guest text and link bursts, including guest edits,
+  with per-Site thresholds and private moderation reasons. Use bounded keyed
+  fingerprints without scanning old bodies or contacting link destinations.
+
+- Keep independent browser forms valid when another tab opens or refreshes a CAPTCHA.
+  Preserve server-owned form age across draft recovery/navigation, and avoid
+  submitting an incomplete external check.
+- Retain rate-limit events for configured intervals longer than one hour, including
+  per-Site overrides, so periodic cleanup cannot reset those limits early.
+- Add opt-in Google reCAPTCHA v2 checkbox and Yandex SmartCaptcha adapters while
+  retaining arithmetic/no-JavaScript defaults and custom CAPTCHA backends.
+- Add hidden-field and form-age moderation signals, independent guest attempt
+  budgets, adaptive/strict CAPTCHA policy and private moderator explanations.
+- Keep drafts editable when CAPTCHA issuance fails. Bound external verification,
+  reject invalid host claims and prevent concurrent challenge use without holding
+  the Site quota lock during network requests.
+- Upgrade: run migrations `0016` and `0017`, refresh static assets and review custom form and
+  CAPTCHA templates. External providers require matching site-owned keys and
+  JavaScript; no service is enabled automatically. Missing/blank browser headers
+  can now require CAPTCHA again for remembered guests. See the configuration and
+  security guides for thresholds and disabling the form timing signal.
+
 ## [1.2.0] — 2026-10-22 · Stable
 
 - Verify Wagtail 8.0.1 in every Wagtail 8 CI stack while retaining the existing
@@ -198,4 +227,5 @@ See [0.1.0 release notes](docs/releases/0.1.0.md).
 
 [1.1.0]: https://github.com/hardcodd/Commentail/compare/v1.0.0...v1.1.0
 
+[1.3.0]: https://github.com/hardcodd/Commentail/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/hardcodd/Commentail/compare/v1.1.0...v1.2.0

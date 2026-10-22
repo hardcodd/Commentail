@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.utils.translation import gettext as _
 from django.views.decorators.csrf import requires_csrf_token
+from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods, require_POST
 from wagtail.models import Page, Site
 
@@ -148,7 +149,9 @@ def discussion_view(
     return response
 
 
+@transaction.non_atomic_requests
 @require_POST
+@sensitive_post_parameters("email", "answer", "challenge", "key", "text")
 def submit_view(
     request: HttpRequest, page_id: int | None = None, discussion_id: int | None = None
 ) -> HttpResponse:
@@ -180,6 +183,7 @@ def submit_view(
             reply_to=int(reply) if reply else None,
             challenge_id=request.POST.get("challenge", ""),
             answer=request.POST.get("answer", ""),
+            honeypot=request.POST.get("commentail_contact", ""),
         )
     except DomainError as exc:
         if (response := _draft_redirect(request, discussion, str(exc))) is not None:

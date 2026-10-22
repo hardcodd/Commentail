@@ -14,15 +14,24 @@ from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
 from .admission import email_configured, issue_form
+from .antispam import captcha_required
 from .author_access import _edit_owner
 from .config import technical_settings
 from .drafts import load_draft
-from .models import Access, Comment, CommentRevision, Discussion, MailJob, Mode
+from .models import (
+    Access,
+    Comment,
+    CommentRevision,
+    Discussion,
+    FormTicket,
+    MailJob,
+    Mode,
+)
 from .objects import _comment_url, comment_url, discussion_url
 from .policies import editorial_settings, email_enabled
 from .presentation import _destination, _present, render_text
 from .reading import _next, _url, _window
-from .security import create_captcha, remembered_guest
+from .security import create_captcha, digest, remembered_guest
 from .services import DomainError, edit_block_reason
 from .structured import CommentMarkup
 from .validation import valid_identifier
@@ -223,7 +232,18 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             )
         )
     )
-    form_key = issue_form(request, discussion) if can_post else ""
+    form_key = (
+        issue_form(
+            request,
+            discussion,
+            previous_key=form_values.get("key", ""),
+            previous_id=request.GET.get(
+                "reply_age" if reply_identifier else "form_age", ""
+            ),
+        )
+        if can_post
+        else ""
+    )
     grant = (
         remembered_guest(
             request.COOKIES.get(f"commentail_guest_{discussion.site_id}", ""),
@@ -237,11 +257,18 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
         == grant.email.casefold()
     )
     task = None
-    if can_post and not request.user.is_authenticated and not email_confirmed:
+    if (
+        can_post
+        and not request.user.is_authenticated
+        and captcha_required(request, discussion.site, email_confirmed)
+    ):
         try:
-            task = create_captcha(request, discussion.site)
+            task = create_captcha(
+                request, discussion.site, replace_id=form_values.get("challenge", "")
+            )
         except DomainError as exc:
-            can_post = False
+            # Keep the editable draft visible even when issuance is throttled.
+            base["captcha_unavailable"] = True
             base["error"] = str(exc)
     reply_to = None
     if identifier := reply_identifier:
@@ -250,6 +277,11 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             if valid_identifier(identifier)
             else None
         )
+    main_key = (
+        issue_form(request, discussion, previous_id=request.GET.get("form_age", ""))
+        if can_post and reply_to is not None
+        else ""
+    )
     base.update(
         {
             "window_token": _next(discussion, snapshot, limit - 20),
@@ -261,8 +293,12 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             else "",
             "can_post": can_post,
             "form_key": form_key,
-            "main_form_key": issue_form(request, discussion)
-            if can_post and reply_to is not None
+            "main_form_key": main_key,
+            "form_age": FormTicket.objects.get(digest=digest(form_key)).pk
+            if form_key
+            else "",
+            "main_form_age": FormTicket.objects.get(digest=digest(main_key)).pk
+            if main_key
             else "",
             "captcha": task,
             "remembered_email": grant.email if grant else "",

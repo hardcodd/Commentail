@@ -18,6 +18,7 @@ from django.utils import timezone
 from wagtail.models import Site
 
 from .config import technical_settings
+from .content_checks import check_and_record, lock_site
 from .models import (
     Access,
     Comment,
@@ -116,6 +117,8 @@ def submit(
     subscribe: bool = False,
 ) -> Comment:
     """Accept one message after the delivery layer's access/anti-spam checks."""
+    if user is None:
+        lock_site(Discussion.objects.filter(pk=discussion_id))
     discussion = _discussion(discussion_id)
     options = editorial_settings(discussion)
     _text(text, options)
@@ -152,6 +155,8 @@ def submit(
                 "Only a visible published comment in this discussion accepts replies"
             )
         Comment.objects.filter(pk=target.pk).update(edit_locked=True)
+    signals = check_and_record(discussion.site, text) if guest else []
+    suspicious = suspicious or bool(signals)
     comment = Comment(
         discussion=discussion,
         user=user,
@@ -161,6 +166,7 @@ def submit(
         reply_to=target,
         root=(target.root or target) if target else None,
         suspicious=suspicious,
+        spam_signals=signals,
         language=language,
     )
     if guest:
@@ -250,6 +256,8 @@ def revise(
     site: Site | None = None,
 ) -> CommentRevision:
     """Author revision; guest capability is separate from account ownership."""
+    if user is None:
+        lock_site(Discussion.objects.filter(comments__pk=comment_id))
     comment, discussion = _comment(comment_id)
     options = editorial_settings(discussion)
     _text(text, options)
@@ -272,14 +280,23 @@ def revise(
     if reason := edit_block_reason(comment):
         raise DomainError(reason)
 
+    signals = (
+        check_and_record(discussion.site, text, prior_text=comment.text)
+        if user is None
+        else []
+    )
     result = policy_result(
-        text, options.moderation, guest=user is None, suspicious=comment.suspicious
+        text,
+        options.moderation,
+        guest=user is None,
+        suspicious=comment.suspicious or bool(signals),
     )
     revision = CommentRevision.objects.create(
         comment=comment,
         text=text if result == "pending" else "",
         status="approved" if result == "published" else result,
         decided_at=None if result == "pending" else timezone.now(),
+        spam_signals=signals,
     )
     if result == "published":
         comment.text = text
@@ -511,6 +528,8 @@ def submit_once(
 
     from .models import SubmissionRecord
 
+    if user is None:
+        lock_site(Discussion.objects.filter(pk=discussion_id))
     discussion = _discussion(discussion_id)
     if not key or len(key) > 256:
         raise DomainError("Invalid submission key")

@@ -2,12 +2,12 @@
 
 ## Requirements and package
 
-| Component | 1.2.0 Stable |
+| Component | 1.3.0 Stable |
 | --- | --- |
 | Python | 3.12, 3.13, 3.14 |
 | Wagtail / Django | 7.4.3+ in 7.4 / Django 5.2 or 6.0; 8.0.x / Django 5.2, 6.0 or 6.1 |
 | Database | File SQLite or PostgreSQL 16 |
-| Frontend | Django templates, JavaScript optional |
+| Frontend | Django templates; JavaScript required for optional Google/Yandex CAPTCHA |
 
 CI defines all five framework pairs on each listed Python version and both
 databases. Package bounds are `Wagtail>=7.4.3,<8.1` and `Django>=5.2,<6.2`;
@@ -18,16 +18,16 @@ verification. The published 0.1.0 artifact retains its original bounds:
 In a virtual environment, install the release from PyPI:
 
 ```sh
-python -m pip install commentail==1.2.0
+python -m pip install commentail==1.3.0
 ```
 
 For the PostgreSQL driver use
-`python -m pip install 'commentail[postgres]==1.2.0'`.
+`python -m pip install 'commentail[postgres]==1.3.0'`.
 Alternatively, install a downloaded wheel or extract the source archive and run
 `python -m pip install .` in its root. Your site's `DATABASES` setting still selects
 the actual database.
 For downloaded release archives, verify the supplied checksum before installation.
-See [1.2.0 changes and upgrade notes](Release-1.2.0.md) and the
+See [1.3.0 changes and upgrade notes](Release-1.3.0.md) and the
 [version-to-version changelog](Changelog.md).
 
 The Wagtail 8 CI stacks now select 8.0.1 or a newer patch within 8.0; the
@@ -104,6 +104,7 @@ Review the notes for your target version and every intervening release:
 
 | Target | Main upgrade considerations |
 | --- | --- |
+| [1.3.0](Release-1.3.0.md) | Migrations `0016`/`0017`, refreshed assets and reviewed form/provider overrides. New guest checks are review signals; external CAPTCHA is opt-in. |
 | [1.2.0](Release-1.2.0.md) | No new Commentail migration over 1.1.0. Refresh assets and review form/CAPTCHA overrides; choose one background schedule. |
 | [1.1.0](Release-1.1.0.md) | Migration `0015` adds staff highlighting; review author/admin overrides and publication-notice behavior. |
 | [1.0.0](Release-1.0.0.md) | Stable API policy; no runtime or schema changes over 0.2.0. |

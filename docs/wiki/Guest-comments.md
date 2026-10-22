@@ -12,8 +12,17 @@ trimmed before counting Unicode graphemes. Longer new names are rejected without
 truncation; existing saved names and registered account names are unchanged.
 
 An unremembered guest completes a local arithmetic CAPTCHA: five-minute expiry,
-five attempts, refresh available. Refresh invalidates the old challenge. This is
-one spam layer, not a guarantee against automated submissions.
+five attempts, refresh available. Refresh invalidates the selected form’s old challenge; other tabs stay valid. This is
+one spam layer, not a guarantee against automated submissions. Optional
+[Google/Yandex adapters](Callbacks.md#ready-to-use-providers) require JavaScript.
+When an external challenge is required, enable JavaScript in the browser and
+complete the check before sending. No alternative submission path is offered
+without JavaScript; the existing remembered-email exemption is unchanged.
+Invisible [form checks and attempt quotas](Security-and-privacy.md#low-friction-guest-checks)
+complement CAPTCHA; fast submission alone never discards a comment.
+Recent repeated long text and bursts of links are also review signals, including
+guest revisions. Short common replies and one or two links do not trigger the
+default content thresholds. See [guest content checks](Security-and-privacy.md#guest-content-checks).
 
 1. Acceptance creates a private submission and queues verification mail.
 2. Opening the link displays a confirmation form; GET alone confirms nothing.
@@ -27,8 +36,9 @@ Resends never extend it. The worker fully deletes unconfirmed submissions after 
 ## Remembered email
 
 Proof is remembered in the browser separately for each Site/email for 30 days
-from confirmation. Matching submissions need neither new CAPTCHA nor new email
-proof while it is valid. Visits and submissions do not renew the deadline.
+from confirmation. Matching ordinary submissions need neither new CAPTCHA nor new email
+proof while it is valid. Enabled suspicious-header checks can require CAPTCHA
+again; the optional strict mode checks every guest submission. Visits and submissions do not renew the deadline.
 A different browser/email, cleared storage or expired proof requires verification again.
 This proof is not a registered site account.
 

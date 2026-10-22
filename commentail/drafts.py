@@ -39,7 +39,7 @@ def save_draft(
         destination = target_url(discussion)
     except ObjectAccessError:
         return None
-    secret = issue_form(request, discussion)
+    secret = issue_form(request, discussion, previous_key=request.POST.get("key", ""))
     ticket = FormTicket.objects.get(digest=digest(secret))
     ticket.draft = {
         # PostgreSQL text/JSON cannot represent U+0000. Retain the remaining
@@ -53,6 +53,7 @@ def save_draft(
                 "reply_to",
                 "subscribe",
                 "edit_comment",
+                "challenge",
             )
         },
         "error": error,
@@ -96,6 +97,8 @@ def load_draft(request: HttpRequest, discussion: Discussion) -> tuple[QueryDict,
     if ticket is None or not ticket.draft:
         return values, ""
     values.update(ticket.draft["values"])
+    # This key is recovered from server-owned session state, never a URL.
+    values["key"] = secret
     return values, ticket.draft["error"]
 
 

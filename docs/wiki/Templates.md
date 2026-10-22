@@ -19,6 +19,7 @@ loaders. Copy from the installed version, make focused edits and recheck on upgr
 | form.html | Main/reply composer |
 | edit-form.html | Inline editor |
 | captcha.html | Arithmetic challenge |
+| provider-captcha.html | Optional Google/Yandex widget |
 | base.html | Email-action document layout |
 | action.html | Confirmation, unsubscribe, status content |
 
@@ -26,7 +27,10 @@ Preserve CSRF, submission keys, target/addressee identifiers and server URLs.
 Keep `data-discussion`, `data-commentail-navigation`, `.commentail-form`,
 `.commentail-edit-form` and the localized `.commentail-network-error` region.
 Preserve labels, status/error roles, focus targets and language attributes.
-Do not cache personalized widget HTML. Test with JS and without it.
+Do not cache personalized widget HTML. Test with JS and without it. Keep the hidden guest `commentail_contact` field
+for honeypot checks and preserve the provider template’s hidden `answer`, widget
+container and refresh control when using an external CAPTCHA. Keep `form_age`
+for draft-age preservation during enhanced reading navigation.
 
 ## Structured data
 

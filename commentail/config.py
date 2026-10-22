@@ -38,6 +38,15 @@ class TechnicalSettings(TypedDict):
     MAIL_RETRY_SECONDS: list[int]
     ACTION_LINK_SECONDS: int
     CAPTCHA_BACKEND: str | None
+    CAPTCHA_OPTIONS: dict[str, str | int]
+    GUEST_CAPTCHA_MODE: str
+    GUEST_FORM_MIN_SECONDS: int
+    GUEST_ATTEMPTS_PER_MINUTE: int
+    GUEST_IP_ATTEMPTS_PER_MINUTE: int
+    GUEST_IP_ATTEMPTS_PER_HOUR: int
+    GUEST_DUPLICATE_WINDOW_SECONDS: int
+    GUEST_DUPLICATE_MIN_LENGTH: int
+    GUEST_LINK_REVIEW_THRESHOLD: int
     GET_AVATAR: str | None
     GET_AUTHOR_NAME: str | None
     GET_COMMENT_TEMPLATES: str | None
@@ -55,6 +64,15 @@ DEFAULTS: TechnicalSettings = {
     "GUEST_GRANT_SECONDS": 2592000,
     "CAPTCHA_SECONDS": 300,
     "CAPTCHA_ATTEMPTS": 5,
+    "CAPTCHA_OPTIONS": {},
+    "GUEST_CAPTCHA_MODE": "adaptive",
+    "GUEST_FORM_MIN_SECONDS": 2,
+    "GUEST_ATTEMPTS_PER_MINUTE": 10,
+    "GUEST_IP_ATTEMPTS_PER_MINUTE": 30,
+    "GUEST_IP_ATTEMPTS_PER_HOUR": 300,
+    "GUEST_DUPLICATE_WINDOW_SECONDS": 3600,
+    "GUEST_DUPLICATE_MIN_LENGTH": 80,
+    "GUEST_LINK_REVIEW_THRESHOLD": 3,
     "AUTHOR_MIN_INTERVAL": 30,
     "AUTHOR_LIMIT_PER_HOUR": 20,
     "IP_LIMIT_PER_HOUR": 100,
@@ -141,6 +159,34 @@ def configuration_errors() -> list[str]:
                             )
                     except (ImportError, AttributeError):
                         errors.append("CAPTCHA_BACKEND cannot be imported")
+            elif key == "GUEST_CAPTCHA_MODE":
+                if value not in ("adaptive", "always"):
+                    errors.append("GUEST_CAPTCHA_MODE must be adaptive or always")
+            elif key in {
+                "GUEST_FORM_MIN_SECONDS",
+                "GUEST_DUPLICATE_WINDOW_SECONDS",
+                "GUEST_LINK_REVIEW_THRESHOLD",
+            }:
+                if type(value) is not int or value < 0:
+                    errors.append(f"{key} must be a nonnegative integer")
+            elif key == "CAPTCHA_OPTIONS":
+                valid = isinstance(value, dict)
+                if valid:
+                    for name, item in value.items():
+                        if name == "timeout":
+                            valid = type(item) is int and 1 <= item <= 10
+                        else:
+                            valid = (
+                                name in {"site_key", "secret_key"}
+                                and isinstance(item, str)
+                                and bool(item.strip())
+                            )
+                        if not valid:
+                            break
+                if not valid:
+                    errors.append(
+                        "CAPTCHA_OPTIONS accepts nonempty site_key/secret_key strings and timeout from 1 to 10 seconds"
+                    )
             elif key in {
                 "CAN_SEND_GUEST_EMAIL",
                 "GET_COMMENT_TEMPLATES",
@@ -190,6 +236,25 @@ def configuration_errors() -> list[str]:
                             errors.append("Invalid TRUSTED_PROXIES network")
             elif type(value) is not int or value <= 0:
                 errors.append(f"{key} must be a positive integer")
+    if errors:
+        return errors
+    for hostname in {"default", *config}:
+        section = {
+            **DEFAULTS,
+            **config.get("default", {}),
+            **(config.get(hostname, {}) if hostname != "default" else {}),
+        }
+        if section.get("CAPTCHA_BACKEND") in {
+            "commentail.captcha_providers.GoogleRecaptcha",
+            "commentail.captcha_providers.YandexSmartCaptcha",
+        }:
+            options = section.get("CAPTCHA_OPTIONS")
+            if not isinstance(options, dict) or not all(
+                options.get(key) for key in ("site_key", "secret_key")
+            ):
+                errors.append(
+                    "Built-in external CAPTCHA requires site_key and secret_key"
+                )
     return errors
 
 

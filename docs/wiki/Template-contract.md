@@ -33,7 +33,9 @@ Only when `hidden=False`, the following fields are available:
 | `more_url`, `cancel_reply_url`, `submit_url` | Server-generated strings; more_url may be empty |
 | `can_post`, `guest_email_confirmed`, `structured_microdata` | Booleans |
 | `form_key`, `main_form_key` | Opaque strings; the latter is populated for an active reply |
+| `form_age`, `main_form_age` | Public form-ticket IDs used only to retain server-checked draft age. |
 | `captcha` | CaptchaTask or None |
+| `captcha_unavailable` | Optional bool; keep the editable form and refresh control visible when challenge issuance fails. |
 | `remembered_email` | Confirmed guest email string or empty string |
 | `reply_to` | Published addressee card or None |
 | `structured_comments` | List passed directly to commentail_json_ld; empty when disabled |
@@ -79,6 +81,10 @@ user text or assemble internal schema classes yourself.
 
 Preserve POST actions and CSRF, hidden `key` (form_key), optional `reply_to`,
 textarea `text`, guest `name`/`email`, and CAPTCHA `challenge`/`answer`.
+The default guest form also has a hidden `commentail_contact` honeypot; omitting
+it in older overrides remains accepted, with no honeypot signal. Preserve the
+optional hidden `form_age` field for enhanced reading navigation; it is not a
+submission key or a client-provided timestamp.
 The refresh button submits `refresh=1` with formnovalidate. Keep the same key for
 an explicit retry after network failure; do not automatically retry a POST.
 The guest name field retains its documented 40-grapheme limit.

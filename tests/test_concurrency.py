@@ -86,6 +86,31 @@ class SQLiteConcurrencyTests(TransactionTestCase):
         self.assertEqual(outcomes[0].pk, outcomes[1].pk)
         self.assertEqual(Comment.objects.count(), 1)
 
+    def test_guest_duplicate_checks_serialize_across_discussions(self):
+        from wagtail.models import Page
+
+        page = self.site.root_page.add_child(instance=Page(title="Other", slug="other"))
+        other = Discussion.objects.create(site=self.site, page=page)
+        text = "A repeated guest message with enough useful context for readers. " * 2
+        outcomes = self.race(
+            lambda: submit_once(
+                self.discussion.pk,
+                "first",
+                text=text,
+                guest_name="First",
+                guest_email="first@example.invalid",
+            ),
+            lambda: submit_once(
+                other.pk,
+                "second",
+                text=text,
+                guest_name="Second",
+                guest_email="second@example.invalid",
+            ),
+        )
+        self.assertTrue(all(isinstance(item, Comment) for item in outcomes))
+        self.assertEqual(sum(item.suspicious for item in outcomes), 1)
+
     def test_competing_moderators_make_one_decision(self):
         comment = submit(self.discussion.pk, text="Message", user=self.author)
         outcomes = self.race(

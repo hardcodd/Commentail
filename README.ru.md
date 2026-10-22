@@ -6,7 +6,7 @@
 
 Модерация обсуждений, подтверждённые гости и ответы рядом с комментарием — в стиле вашего сайта.
 
-**Текущая версия: [1.2.0](https://github.com/hardcodd/Commentail/releases/tag/v1.2.0)** · [PyPI](https://pypi.org/project/commentail/1.2.0/)
+**Текущая версия: [1.3.0](https://github.com/hardcodd/Commentail/releases/tag/v1.3.0)** · [PyPI](https://pypi.org/project/commentail/1.3.0/)
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -120,6 +120,13 @@ CI определяет все пять пар фреймворков на Pytho
 получают писем. Вход и регистрацию предоставляет ваш сайт. Обязательных внешних
 CDN и CAPTCHA-сервисов нет. См. [настройку писем](docs/wiki/Email-and-worker.md).
 
+Защита гостей включает скрытые проверки формы, лимиты попыток и сигналы модерации
+для повторяющегося длинного текста и множества ссылок, включая гостевые правки. Google reCAPTCHA v2
+и Яндекс SmartCaptcha подключаются по желанию; внешним виджетам нужен JavaScript,
+запасного сценария без него нет.
+См. [подключение и другие провайдеры](docs/wiki/Callbacks.md#ready-to-use-providers)
+и [защиту гостей](docs/wiki/Security-and-privacy.md#low-friction-guest-checks).
+
 ### Языки
 
 Английский (`en`), русский (`ru`), немецкий (`de`), французский (`fr`),
@@ -137,11 +144,11 @@ CDN и CAPTCHA-сервисов нет. См. [настройку писем](do
 В виртуальном окружении существующего сайта Wagtail установите опубликованный выпуск:
 
 ```sh
-python -m pip install commentail==1.2.0
+python -m pip install commentail==1.3.0
 ```
 
 Для необязательного драйвера PostgreSQL используйте
-`python -m pip install 'commentail[postgres]==1.2.0'`.
+`python -m pip install 'commentail[postgres]==1.3.0'`.
 Для существующей установки следуйте [инструкции обновления](docs/wiki/Installation.md#upgrading-and-restoring)
 до нужной версии.
 
