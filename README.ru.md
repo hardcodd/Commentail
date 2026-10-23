@@ -18,7 +18,7 @@
 
 [English](README.md) · Русский
 
-[Начать работу](#быстрый-старт) · [Скриншоты](#скриншоты) · [Документация](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home.md) · [Wiki](https://github.com/hardcodd/Commentail/wiki) · [Поддержать](#поддержать-commentail)
+[Начать работу](#быстрый-старт) · [Курс](https://hardcodd.net/blog/?series=commentail-tutorials) · [Скриншоты](#скриншоты) · [Документация](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home-ru.md) · [Wiki](https://github.com/hardcodd/Commentail/wiki/Home-ru) · [Поддержать](#поддержать-commentail)
 
 <img src="https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/commentail-preview.png" alt="Commentail — синяя птица на облачке комментария" width="100%">
 
@@ -251,8 +251,12 @@ Django через `OBJECT_ADAPTERS`. Технические настройки �
 
 ## Документация по задачам
 
-[Wiki](https://github.com/hardcodd/Commentail/wiki) и
-[руководства в репозитории](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home.md)
+[Курс по Commentail из 22 уроков](https://hardcodd.net/blog/?series=commentail-tutorials)
+пошагово разбирает установку, отправку писем, CAPTCHA, оформление и подготовку
+рабочего сайта с примерами кода.
+
+[Wiki](https://github.com/hardcodd/Commentail/wiki/Home-ru) и
+[руководства в репозитории](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home-ru.md)
 охватывают одни и те же темы. Руководства доступны на английском. Начните с нужной задачи:
 
 | Область | Руководства |

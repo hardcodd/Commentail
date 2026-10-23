@@ -18,7 +18,7 @@ review its backup, downtime and form-quota guidance first.
 
 English · [Русский](README.ru.md)
 
-[Get started](#quick-start) · [Screenshots](#screenshots) · [Documentation](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home.md) · [Wiki](https://github.com/hardcodd/Commentail/wiki) · [Support](#support-commentail)
+[Get started](#quick-start) · [Course](https://hardcodd.net/en/blog/?series=commentail-tutorials) · [Screenshots](#screenshots) · [Documentation](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home.md) · [Wiki](https://github.com/hardcodd/Commentail/wiki) · [Support](#support-commentail)
 
 <img src="https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/commentail-preview.png" alt="Commentail — a blue bird perched on a comment bubble" width="100%">
 
@@ -246,6 +246,10 @@ initials. Register ordinary Django models through `OBJECT_ADAPTERS`. Technical
 settings use a single `COMMENTAIL` dictionary with `default` and hostname overrides.
 
 ## Documentation by task
+
+The [22-lesson Commentail course](https://hardcodd.net/en/blog/?series=commentail-tutorials)
+walks through installation, email delivery, CAPTCHA, customization and production setup
+with step-by-step examples.
 
 The [Wiki](https://github.com/hardcodd/Commentail/wiki) and the [versioned guides](https://github.com/hardcodd/Commentail/blob/main/docs/wiki/Home.md)
 cover the same topics. Start with the task you need:

@@ -1,6 +1,9 @@
 ## Commentail
 
 - [Home](Home.md)
+- [Главная на русском](Home-ru.md)
+- [Course in English](https://hardcodd.net/en/blog/?series=commentail-tutorials)
+- [Курс на русском](https://hardcodd.net/blog/?series=commentail-tutorials)
 - [Installation](Installation.md)
 - [Configuration](Configuration.md)
 - [Moderation](Moderation.md)

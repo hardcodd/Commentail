@@ -1,5 +1,7 @@
 # Commentail documentation
 
+English · [Русский](Home-ru.md)
+
 **Self-hosted comments for Wagtail CMS.** Add moderated discussions to Wagtail
 Pages and registered Django models using your site's accounts, templates and styles.
 
@@ -13,6 +15,15 @@ one background schedule through the command or your existing task queue.
 See the [1.3.2 translated Site root fix and upgrade guide](Release-1.3.2.md).
 Upgrading from 1.3.0 or earlier also requires the
 [1.3.1 irreversible migration procedure](Release-1.3.1.md).
+
+## Step-by-step course
+
+The [22-lesson Commentail course](https://hardcodd.net/en/blog/?series=commentail-tutorials)
+covers installation, email delivery, CAPTCHA, customization and production setup
+with practical examples. Start with a practice site or choose the topic you need.
+
+[English course](https://hardcodd.net/en/blog/?series=commentail-tutorials) ·
+[Курс на русском](https://hardcodd.net/blog/?series=commentail-tutorials)
 
 ## Find your guide
 
