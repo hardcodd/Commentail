@@ -67,27 +67,39 @@ def words(text: str) -> tuple[str, ...]:
 @dataclass(slots=True)
 class _RuleNode:
     children: dict[str, "_RuleNode"] = field(default_factory=dict)
-    action: str = ""
+    decision: "RuleDecision | None" = None
 
 
-def _matching_rule(tokens: tuple[str, ...]) -> str:
+@dataclass(frozen=True, slots=True)
+class RuleDecision:
+    """Matched status and sender-facing reason, selected by stable rule ID."""
+
+    status: str
+    reason: str
+    rule_id: int
+
+    @property
+    def priority(self) -> tuple[bool, int]:
+        """Reject before review, then choose the oldest matching rule."""
+        return self.status != "rejected", self.rule_id
+
+
+def matching_rule(text: str) -> RuleDecision | None:
     """Match whole-word phrases without comparing every rule at every position.
 
     A call-local trie shares rule prefixes and avoids caching stale moderation
     decisions between submissions. Rejection wins over review, including duplicate
     phrases. Only phrases beginning with a word in this text need trie entries.
     """
+    tokens = words(text)
     root = _RuleNode()
     initial_words = set(tokens)
-    for text, action in (
+    for identifier, phrase_text, action, reason in (
         ModerationRule.objects.filter(enabled=True)
-        .values_list(
-            "phrase",
-            "action",
-        )
+        .values_list("pk", "phrase", "action", "reason")
         .iterator(chunk_size=1000)
     ):
-        phrase = words(text)
+        phrase = words(phrase_text)
         if not phrase or phrase[0] not in initial_words:
             continue
         node = root
@@ -95,27 +107,34 @@ def _matching_rule(tokens: tuple[str, ...]) -> str:
             if word not in node.children:
                 node.children[word] = _RuleNode()
             node = node.children[word]
-        if node.action != ModerationRule.Action.REJECT:
-            node.action = action
-    review = False
+        decision = RuleDecision(
+            "rejected" if action == ModerationRule.Action.REJECT else "pending",
+            reason.strip(),
+            identifier,
+        )
+        if node.decision is None or decision.priority < node.decision.priority:
+            node.decision = decision
+    matched: RuleDecision | None = None
     for start in range(len(tokens)):
         node = root
         for position in range(start, len(tokens)):
             node = node.children.get(tokens[position])
             if node is None:
                 break
-            if node.action == ModerationRule.Action.REJECT:
-                return "rejected"
-            review |= node.action == ModerationRule.Action.REVIEW
-    return "pending" if review else ""
+            candidate = node.decision
+            if candidate is not None and (
+                matched is None or candidate.priority < matched.priority
+            ):
+                matched = candidate
+    return matched
 
 
 def policy_result(text: str, policy: str, *, guest: bool, suspicious: bool) -> str:
     """Apply reject-before-review rules, then suspicious/guest moderation policy."""
     if policy not in Policy.values:
         raise ValueError("Unknown moderation policy")
-    if policy == Policy.RULES and (result := _matching_rule(words(text))):
-        return result
+    if policy == Policy.RULES and (result := matching_rule(text)):
+        return result.status
     if suspicious or policy == Policy.ALL or (policy == Policy.GUESTS and guest):
         return "pending"
     return "published"

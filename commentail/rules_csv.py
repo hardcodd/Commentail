@@ -11,16 +11,20 @@ from django.utils.translation import gettext as _
 
 from .models import ModerationRule
 
-HEADERS = ("phrase", "action", "enabled")
+LEGACY_HEADERS = ("phrase", "action", "enabled")
+HEADERS = (*LEGACY_HEADERS, "reason")
 SPREADSHEET_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "\n", "'")
 
 
 @dataclass(frozen=True)
 class RuleRow:
+    """Validated input; an absent reason preserves existing values on import."""
+
     phrase: str
     action: str
     enabled: bool
     line: int
+    reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -53,8 +57,13 @@ def parse_rules(data: bytes, max_rows: int) -> list[RuleRow]:
             io.StringIO(text, newline=""), delimiter=delimiter, strict=True
         )
         headers = next(reader)
-        if len(headers) != 3 or set(headers) != set(HEADERS):
-            raise ValidationError(_("CSV headers must be phrase, action, enabled."))
+        if tuple(sorted(headers)) not in (
+            tuple(sorted(LEGACY_HEADERS)),
+            tuple(sorted(HEADERS)),
+        ):
+            raise ValidationError(
+                _("CSV headers must be phrase, action, enabled, with optional reason.")
+            )
         rows: list[RuleRow] = []
         phrases: set[str] = set()
         for values in reader:
@@ -66,14 +75,26 @@ def parse_rules(data: bytes, max_rows: int) -> list[RuleRow]:
                     _("The CSV file exceeds the limit of %(limit)s rules."),
                     params={"limit": max_rows},
                 )
-            if len(values) != 3:
+            if len(values) != len(headers):
                 raise ValidationError(
-                    _("Row %(line)s: expected three columns."), params={"line": line}
+                    _("Row %(line)s: expected %(columns)s columns."),
+                    params={"line": line, "columns": len(headers)},
                 )
             cells = dict(zip(headers, values, strict=True))
             phrase = cells["phrase"]
             if phrase.startswith("'") and _needs_escape(phrase[1:]):
                 phrase = phrase[1:]
+            reason = cells.get("reason")
+            if reason is not None:
+                if reason.startswith("'") and _needs_escape(reason[1:]):
+                    reason = reason[1:]
+                if len(reason) > 2000 or "\x00" in reason:
+                    raise ValidationError(
+                        _(
+                            "Row %(line)s: reason must contain at most 2000 characters without null bytes."
+                        ),
+                        params={"line": line},
+                    )
             if not phrase.strip() or len(phrase) > 255 or "\x00" in phrase:
                 raise ValidationError(
                     _(
@@ -99,7 +120,7 @@ def parse_rules(data: bytes, max_rows: int) -> list[RuleRow]:
                     params={"line": line},
                 )
             phrases.add(phrase)
-            rows.append(RuleRow(phrase, action, enabled in ("1", "true"), line))
+            rows.append(RuleRow(phrase, action, enabled in ("1", "true"), line, reason))
     except (csv.Error, StopIteration) as error:
         raise ValidationError(
             _("Invalid CSV structure: check the delimiter and quoting.")
@@ -135,16 +156,25 @@ def import_rules(rows: list[RuleRow]) -> ImportResult:
         if rule is None:
             additions.append(
                 ModerationRule(
-                    phrase=row.phrase, action=row.action, enabled=row.enabled
+                    phrase=row.phrase,
+                    action=row.action,
+                    enabled=row.enabled,
+                    reason=row.reason or "",
                 )
             )
-        elif (rule.action, rule.enabled) == (row.action, row.enabled):
+        elif (rule.action, rule.enabled, rule.reason) == (
+            row.action,
+            row.enabled,
+            rule.reason if row.reason is None else row.reason,
+        ):
             unchanged += 1
         else:
             rule.action, rule.enabled = row.action, row.enabled
+            if row.reason is not None:
+                rule.reason = row.reason
             updates.append(rule)
     ModerationRule.objects.bulk_create(additions)
-    ModerationRule.objects.bulk_update(updates, ("action", "enabled"))
+    ModerationRule.objects.bulk_update(updates, ("action", "enabled", "reason"))
     return ImportResult(len(additions), len(updates), unchanged)
 
 
@@ -159,6 +189,11 @@ def export_rules() -> Iterator[str]:
         buffer.seek(0)
         buffer.truncate(0)
         writer.writerow(
-            (spreadsheet_text(rule.phrase), rule.action, "1" if rule.enabled else "0")
+            (
+                spreadsheet_text(rule.phrase),
+                rule.action,
+                "1" if rule.enabled else "0",
+                spreadsheet_text(rule.reason),
+            )
         )
         yield buffer.getvalue()

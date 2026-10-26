@@ -181,9 +181,9 @@ class ContentCheckTests(TestCase):
         self.discussion.moderation = Policy.RULES
         self.discussion.save()
         ModerationRule.objects.create(phrase="References", action="reject")
-        comment = confirm_email(self.guest(LINKS).pk)
-        self.assertEqual(comment.status, Comment.Status.REJECTED)
-        self.assertIn("many_links", comment.spam_signals)
+        with self.assertRaisesMessage(DomainError, "Text does not comply"):
+            self.guest(LINKS)
+        self.assertFalse(Comment.objects.exists())
 
     def test_settings_validation_and_hostname_overrides(self):
         from commentail.config import configuration_errors

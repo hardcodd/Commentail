@@ -1063,3 +1063,27 @@ msgstr "Prüfung wiederholen"
 
 msgid "Too many form requests. Please wait and retry the check. Your draft is kept."
 msgstr "Zu viele Formularanfragen. Bitte warten Sie und versuchen Sie die Prüfung erneut. Ihr Entwurf bleibt erhalten."
+
+msgid "Rejection reason"
+msgstr "Ablehnungsgrund"
+
+msgid "Shown to guests when a Reject rule blocks submission before email confirmation. Leave blank for the default message."
+msgstr "Wird Gästen angezeigt, wenn eine Ablehnungsregel das Absenden vor der E-Mail-Bestätigung verhindert. Für die Standardmeldung leer lassen."
+
+msgid "Text does not comply with the discussion rules."
+msgstr "Der Text entspricht nicht den Diskussionsregeln."
+
+msgid "CSV headers must be phrase, action, enabled, with optional reason."
+msgstr "Die CSV-Spalten müssen phrase, action, enabled und optional reason heißen."
+
+msgid "Row %(line)s: expected %(columns)s columns."
+msgstr "Zeile %(line)s: %(columns)s Spalten erwartet."
+
+msgid "Row %(line)s: reason must contain at most 2000 characters without null bytes."
+msgstr "Zeile %(line)s: Der Grund darf höchstens 2000 Zeichen und keine Nullbytes enthalten."
+
+msgid "The optional reason column sets the guest rejection message (up to 2000 characters). Without this column, existing reasons are preserved; an empty cell clears the reason."
+msgstr "Die optionale Spalte reason legt die Ablehnungsnachricht für Gäste fest (bis zu 2000 Zeichen). Ohne diese Spalte bleiben vorhandene Gründe erhalten; eine leere Zelle löscht den Grund."
+
+msgid "The same spreadsheet escaping applies to rejection reasons."
+msgstr "Dieselbe Maskierung für Tabellenkalkulationen gilt auch für Ablehnungsgründe."

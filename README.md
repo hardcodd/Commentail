@@ -13,6 +13,13 @@ There is no new migration over 1.3.1. Upgrading from 1.3.0 or earlier includes
 the [irreversible 1.3.1 fingerprint migration](docs/releases/1.3.1.md);
 review its backup, downtime and form-quota guidance first.
 
+**In this checkout: 1.4.0 candidate, not published.**
+[Separate email configuration](docs/wiki/Email-configuration.md) adds an optional
+Commentail backend, connection options and sender without changing ordinary
+Django mail. The candidate also adds a test-mail command and early guest rejection
+by hard rules, with optional reasons and legacy-compatible CSV import. Apply
+migration `0019`; see the [candidate scope and upgrade notes](docs/releases/1.4.0.md).
+
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
 
@@ -197,6 +204,9 @@ python manage.py process_commentail
 The command sends queued mail and removes expired temporary records. Guests confirm
 their email before moderation. Authors with email are subscribed to direct-reply
 notifications when mail is enabled; every reply email includes per-comment unsubscribe.
+
+The 1.4.0 candidate refuses matching hard-rule guest submissions before email
+proof, preserving the draft. See [rules and CSV](docs/wiki/Rules-and-CSV.md).
 
 You can configure an API-based Django backend and schedule
 `commentail.background.process_pending()` in your project's queue instead of a

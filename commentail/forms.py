@@ -90,11 +90,20 @@ class DiscussionSettingsForm(forms.ModelForm):
 class RuleForm(forms.ModelForm):
     class Meta:
         model = ModerationRule
-        fields = ("phrase", "action", "enabled")
+        fields = ("phrase", "action", "enabled", "reason")
         labels: ClassVar[dict[str, object]] = {
             "phrase": _("Word or phrase"),
             "action": _("Action"),
             "enabled": _("Enabled"),
+            "reason": _("Rejection reason"),
+        }
+        help_texts: ClassVar[dict[str, object]] = {
+            "reason": _(
+                "Shown to guests when a Reject rule blocks submission before email confirmation. Leave blank for the default message."
+            ),
+        }
+        widgets: ClassVar[dict[str, forms.Widget]] = {
+            "reason": forms.Textarea(attrs={"rows": 3}),
         }
 
 

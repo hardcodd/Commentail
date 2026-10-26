@@ -16,6 +16,12 @@ See the [1.3.2 translated Site root fix and upgrade guide](Release-1.3.2.md).
 Upgrading from 1.3.0 or earlier also requires the
 [1.3.1 irreversible migration procedure](Release-1.3.1.md).
 
+This checkout also contains an **unpublished 1.4.0 candidate** with
+[independent Commentail email settings and a test-mail command](Email-configuration.md),
+plus [early guest rejection with rule reasons and CSV support](Rules-and-CSV.md).
+See its [scope and upgrade notes](Release-1.4.0.md); the published release above
+remains 1.3.2.
+
 ## Step-by-step course
 
 The [22-lesson Commentail course](https://hardcodd.net/en/blog/?series=commentail-tutorials)
@@ -36,6 +42,7 @@ with practical examples. Start with a practice site or choose the topic you need
 | Understand guest verification | [Guest comments](Guest-comments.md) |
 | Understand threads and edit restrictions | [Replies and editing](Replies-and-editing.md) |
 | Deliver email and schedule cleanup | [Email and worker](Email-and-worker.md) |
+| Give Commentail a separate backend or sender (1.4.0 candidate) | [Email configuration](Email-configuration.md) |
 | Match the host theme | [Styling](Styling.md) |
 | Replace markup and email layouts | [Templates](Templates.md) |
 | Show recent comments with custom markup | [Recent comments](Recent-comments.md) |

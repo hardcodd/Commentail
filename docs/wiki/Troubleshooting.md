@@ -21,6 +21,8 @@
 | Object widget missing | Verify registration, saved PK, adapter Site matches current Site and can_view returns bool. |
 | CSV rejected | Check exact headers/actions/enabled values, reported row, duplicates and limits. Import is atomic. |
 | commentail.E001 | Use documented keys, positive integer limits and importable callback paths. |
+| Separate mail configuration rejected | Check the `COMMENTAIL_EMAIL` keys `BACKEND`, `OPTIONS`, `FROM_EMAIL`. Nonempty options require an explicit backend; use its constructor argument names and do not set `fail_silently`. See [the reference](Email-configuration.md). |
+| Commentail uses the wrong sender or backend | Restart web and worker processes with the same settings/environment. Queued jobs use the active configuration when processed; ordinary Django mail still uses `EMAIL_BACKEND`. |
 
 ## Can comments work without mail or JavaScript?
 

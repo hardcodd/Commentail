@@ -3,6 +3,29 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## [1.4.0] — Unreleased · Independent email and early rule rejection
+
+- Add project-wide `COMMENTAIL_EMAIL` settings for an independent Django email
+  backend, constructor options and sender while preserving shared Django mail
+  when no override is configured. Validate configuration without constructing
+  or contacting the transport; keep provider response text out of queue errors.
+- Preserve the existing outbox, retries, leases, access checks and SMTP timeout
+  limits. Pending jobs use the active configuration at processing time; explicit
+  transport failures never fall back to the shared backend.
+- Add English/Russian setup and upgrade guidance with separate SMTP and optional
+  API-provider examples. No new dependency.
+- Add `test_commentail_email --to` for direct transport verification without
+  comments or queue jobs, with redacted errors and explicit delivery limits.
+- Refuse new guest text matching enabled Reject rules in Apply rules mode before
+  creating confirmation mail. Preserve private drafts, CAPTCHA and attempt limits.
+- Add optional 2000-character rule reasons, lowest-ID reason priority and a
+  localized fallback; apply schema migration `0019_moderation_rule_reason`.
+- Export CSV reasons and accept the optional column on import. Legacy files
+  preserve existing reasons; an explicitly empty cell clears one.
+
+This is an unpublished candidate. See [1.4.0 review and upgrade notes](Release-1.4.0.md)
+([на русском](Release-1.4.0-ru.md)).
+
 ## [1.3.2] — 2026-10-23 · Translated Site roots
 
 - Restore Page discussions under translated Site homepages when Wagtail content

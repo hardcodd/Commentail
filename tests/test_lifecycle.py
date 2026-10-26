@@ -54,20 +54,18 @@ class LifecycleTests(TestCase):
         self.assertEqual(published.status, Comment.Status.PUBLISHED)
         self.assertIsNotNone(published.published_at)
 
-    def test_guest_confirmation_before_rules(self):
+    def test_guest_hard_rule_rejection_before_confirmation(self):
         self.options.moderation = "rules"
         self.options.save()
         ModerationRule.objects.create(phrase="bad", action="reject")
-        comment = submit(
-            self.discussion.pk,
-            text="BAD",
-            guest_name="Guest",
-            guest_email="guest@example.invalid",
-        )
-        self.assertEqual(comment.status, Comment.Status.AWAITING_EMAIL)
-        confirmed = confirm_email(comment.pk)
-        self.assertEqual(confirmed.status, Comment.Status.REJECTED)
-        self.assertIsNotNone(confirmed.email_confirmed_at)
+        with self.assertRaisesMessage(DomainError, "Text does not comply"):
+            submit(
+                self.discussion.pk,
+                text="BAD",
+                guest_name="Guest",
+                guest_email="guest@example.invalid",
+            )
+        self.assertFalse(Comment.objects.exists())
 
     def test_guest_fields_required(self):
         for fields in [

@@ -27,19 +27,25 @@ from .models import (
     Discussion,
     Mode,
     ModerationEvent,
+    Policy,
     SiteGroupPermission,
 )
-from .policies import EditorialSettings, editorial_settings, policy_result
+from .policies import (
+    EditorialSettings,
+    editorial_settings,
+    matching_rule,
+    policy_result,
+)
 from .text import character_count
 
 
 class DomainError(ValueError):
     """A forbidden or invalid transition; the transaction has no side effects."""
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, message: str, *, translate_message: bool = True) -> None:
         from django.utils.translation import gettext
 
-        super().__init__(gettext(message))
+        super().__init__(gettext(message) if translate_message else message)
 
 
 def _discussion(identifier: int) -> Discussion:
@@ -146,6 +152,13 @@ def submit(
             raise DomainError("Guest email is required") from exc
         if len(guest_email.strip()) > Comment._meta.get_field("email").max_length:
             raise DomainError("Invalid guest email")
+        if options.moderation == Policy.RULES:
+            decision = matching_rule(text)
+            if decision is not None and decision.status == "rejected":
+                if decision.reason:
+                    # A configured explanation is content, not a catalog key.
+                    raise DomainError(decision.reason, translate_message=False)
+                raise DomainError("Text does not comply with the discussion rules.")
     target = None
     if reply_to is not None:
         target = Comment.objects.filter(

@@ -1063,3 +1063,27 @@ msgstr "Réessayer la vérification"
 
 msgid "Too many form requests. Please wait and retry the check. Your draft is kept."
 msgstr "Trop de demandes de formulaire. Veuillez patienter et réessayer la vérification. Votre brouillon est conservé."
+
+msgid "Rejection reason"
+msgstr "Motif du refus"
+
+msgid "Shown to guests when a Reject rule blocks submission before email confirmation. Leave blank for the default message."
+msgstr "Affiché aux visiteurs lorsqu’une règle de refus bloque l’envoi avant la confirmation de l’adresse e-mail. Laisser vide pour le message par défaut."
+
+msgid "Text does not comply with the discussion rules."
+msgstr "Le texte ne respecte pas les règles de la discussion."
+
+msgid "CSV headers must be phrase, action, enabled, with optional reason."
+msgstr "Les en-têtes CSV doivent être phrase, action, enabled et, éventuellement, reason."
+
+msgid "Row %(line)s: expected %(columns)s columns."
+msgstr "Ligne %(line)s : %(columns)s colonnes attendues."
+
+msgid "Row %(line)s: reason must contain at most 2000 characters without null bytes."
+msgstr "Ligne %(line)s : le motif doit contenir au plus 2000 caractères, sans octets nuls."
+
+msgid "The optional reason column sets the guest rejection message (up to 2000 characters). Without this column, existing reasons are preserved; an empty cell clears the reason."
+msgstr "La colonne facultative reason définit le message de refus pour les visiteurs (2000 caractères maximum). Sans cette colonne, les motifs existants sont conservés ; une cellule vide efface le motif."
+
+msgid "The same spreadsheet escaping applies to rejection reasons."
+msgstr "Le même échappement pour les tableurs s’applique aux motifs de refus."

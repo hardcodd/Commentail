@@ -1063,3 +1063,27 @@ msgstr "Повторить проверку"
 
 msgid "Too many form requests. Please wait and retry the check. Your draft is kept."
 msgstr "Слишком много запросов формы. Подождите и повторите проверку. Ваш черновик сохранён."
+
+msgid "Rejection reason"
+msgstr "Причина отклонения"
+
+msgid "Shown to guests when a Reject rule blocks submission before email confirmation. Leave blank for the default message."
+msgstr "Показывается гостю, если правило «Отклонить» блокирует отправку до подтверждения email. Оставьте пустым для стандартного сообщения."
+
+msgid "Text does not comply with the discussion rules."
+msgstr "Текст не соответствует правилам обсуждения."
+
+msgid "CSV headers must be phrase, action, enabled, with optional reason."
+msgstr "Заголовки CSV: phrase, action, enabled; необязательная колонка — reason."
+
+msgid "Row %(line)s: expected %(columns)s columns."
+msgstr "Строка %(line)s: ожидается колонок — %(columns)s."
+
+msgid "Row %(line)s: reason must contain at most 2000 characters without null bytes."
+msgstr "Строка %(line)s: причина должна содержать не более 2000 символов без нулевых байтов."
+
+msgid "The optional reason column sets the guest rejection message (up to 2000 characters). Without this column, existing reasons are preserved; an empty cell clears the reason."
+msgstr "Необязательная колонка reason задаёт причину отказа для гостя (до 2000 символов). Без этой колонки существующие причины сохраняются; пустая ячейка очищает причину."
+
+msgid "The same spreadsheet escaping applies to rejection reasons."
+msgstr "Причины отклонения экранируются для электронных таблиц тем же способом."

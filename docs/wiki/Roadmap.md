@@ -46,20 +46,31 @@ English and Russian remain available; documentation remains in those two languag
 See [0.2.0 release scope and upgrade steps](Release-0.2.0.md),
 [version history](Changelog.md) and [performance guidance](Performance.md).
 
-## Later: reject hard-rule matches before guest email confirmation
+## Implemented in the unpublished 1.4.0 candidate
 
-When Apply rules is active, reject guest submissions matching an enabled Reject
-rule before creating a confirmation email. Show the sender an administrator-defined
-reason for the rule and preserve the draft for correction and resubmission,
-with or without JavaScript. Keep existing submission protection and attempt limits;
-early refusal should create neither confirmation nor rejection mail.
+The candidate adds an independent Django email backend, constructor options and
+sender through the project-wide `COMMENTAIL_EMAIL` dictionary. For example,
+comment emails can use a provider's HTTP API while the rest of the site continues
+using SMTP, within the same application and worker configuration. Without an
+override, Commentail continues using the project's shared backend and sender.
+The candidate also adds a direct test-mail command and early guest refusal for
+enabled Reject rules, with optional reasons and backward-compatible CSV import.
+See [rules and CSV](Rules-and-CSV.md); migration `0019` adds the reason field.
 
-Duplicate text, multiple links and other soft signals keep their existing email
-proof and moderation flow. Reason selection for multiple matches, the fallback
-for an empty reason and CSV compatibility remain to be defined before implementation.
+Version 1.4.0 is prepared for review, not published. See the
+[configuration reference](Email-configuration.md) and
+[candidate upgrade notes](Release-1.4.0.md).
 
-This is planned future work, explicitly outside the current anti-spam update.
-The owner will choose its target release separately; no version or date is assigned.
+## Later: visual Markdown editor and emoji
+
+Add a visual comment editor based on Markdown, without a source view or a
+source-editing toggle. Readers compose and format comments through the editor UI.
+This is future work, outside 1.4.0, with no target version or date.
+
+Emoji support is also planned. The formatting subset, storage/rendering and
+sanitization contract, editing and no-JavaScript behavior, accessibility, editor
+dependency and emoji interaction remain to be defined before implementation.
+Emoji do not imply the separate Like/Dislike reaction feature.
 
 ## Later: most-discussed threads
 

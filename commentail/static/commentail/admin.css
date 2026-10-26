@@ -239,6 +239,7 @@
 }
 
 .commentail-field-email_enabled { grid-column: 1 / -1; }
+.commentail-settings-form .commentail-field-reason { grid-column: 1 / -1; }
 
 .commentail-form-columns { grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem); max-width: 84rem; }
 .commentail-list-management { max-width: 100%; }

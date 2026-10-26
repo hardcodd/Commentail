@@ -1,13 +1,17 @@
 # Email delivery, notifications and the worker
 
 Commentail supports any backend implementing Django's email backend contract
-through `EMAIL_BACKEND`. It also provides a public Python entry point for the
+through the shared `EMAIL_BACKEND`. The unpublished 1.4.0 candidate can instead
+use an independent backend, constructor options and sender through
+[`COMMENTAIL_EMAIL`](Email-configuration.md) ([на русском](Email-configuration-ru.md)).
+It also provides a public Python entry point for the
 host task queue; choose one scheduler for the background processing described below.
 
 ## Choose a Django email backend
 
-Configure `EMAIL_BACKEND`, `DEFAULT_FROM_EMAIL` and the settings required by your
-backend. Non-SMTP backends do not need `EMAIL_HOST`, SMTP credentials or SMTP
+For shared delivery, configure `EMAIL_BACKEND`, `DEFAULT_FROM_EMAIL` and the settings required by your
+backend. For separate delivery in 1.4.0, follow the [SMTP/API examples](Email-configuration.md).
+Non-SMTP backends do not need `EMAIL_HOST`, SMTP credentials or SMTP
 constructor options. Commentail does not contact or instantiate the transport
 when deciding whether to offer a guest form; availability is a configuration
 check, not a delivery check.
@@ -33,7 +37,8 @@ documented Python class path and configure its API key, sender and timeout using
 its own settings. A provider name, API URL or API key is not an `EMAIL_BACKEND` value.
 Commentail does not bundle a provider SDK or a Resend-specific backend.
 
-Keep credentials in the host environment or secret store, not in `COMMENTAIL`.
+Load credentials from the host environment or secret store; do not hardcode them
+in source. Transport settings are separate from the `COMMENTAIL` dictionary.
 Verify the provider's sender/domain and recipient restrictions before a real test.
 An importable backend enables the guest form; it does not validate those credentials
 or prove the provider can deliver. The same outbox/schedule is used for SMTP and API mail.

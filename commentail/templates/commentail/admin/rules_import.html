@@ -13,10 +13,12 @@
 {% endif %}
 <p>{% trans "Use UTF-8 CSV with comma or semicolon separators and the headers phrase, action, enabled." %}</p>
 <p>{% trans "Actions: review or reject. Enabled: 1/0 or true/false." %}</p>
-<pre>phrase,action,enabled
-spam,review,1
-unwanted phrase,reject,1</pre>
+<p>{% trans "The optional reason column sets the guest rejection message (up to 2000 characters). Without this column, existing reasons are preserved; an empty cell clears the reason." %}</p>
+<pre>phrase,action,enabled,reason
+spam,review,1,
+unwanted phrase,reject,1,Please remove this phrase.</pre>
 <p>{% trans "New phrases are added; exact existing phrases update their action and enabled state. Other rules remain unchanged. If any row is invalid, nothing is saved." %}</p>
 <p>{% trans "Export includes all project rules. Formula-like phrases are prefixed with an apostrophe for spreadsheets; importing restores the original text." %}</p>
+<p>{% trans "The same spreadsheet escaping applies to rejection reasons." %}</p>
 <form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.non_field_errors }}{% for field in form %}{% include "wagtailadmin/shared/field.html" with field=field only %}{% endfor %}<button class="button" type="submit">{% trans "Import CSV" %}</button></form>
 </section></div>{% endblock %}

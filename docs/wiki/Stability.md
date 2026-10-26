@@ -17,6 +17,8 @@ features or migrations beyond 0.2.0.
   internal serializer objects is outside this contract.
 - Documented `COMMENTAIL` settings, defaults, types, allowed values and host
   inheritance in [Configuration](Configuration.md).
+- From 1.4.0, the project-wide `COMMENTAIL_EMAIL` keys, inheritance and constructor
+  option rules in [Email configuration](Email-configuration.md).
 - Documented callbacks, frozen `commentail.avatars.CommentContext`,
   `commentail.outbox.GuestRecipient` and `commentail.security.CaptchaTask` in
   [Callbacks](Callbacks.md). Frozen wrappers do not make their Django objects immutable.
@@ -36,7 +38,8 @@ features or migrations beyond 0.2.0.
   [structured data](Structured-data.md), moderation/editing semantics, Site
   isolation, inherited settings and privacy rules described by the guides.
 - CSV columns `phrase,action,enabled`, UTF-8 and idempotent upsert behavior in
-  [Rules and CSV](Rules-and-CSV.md).
+  [Rules and CSV](Rules-and-CSV.md). From the 1.4.0 candidate, export also includes
+  `reason`; imports accept it optionally and preserve reasons in legacy files.
 
 ## Links and internal interfaces
 

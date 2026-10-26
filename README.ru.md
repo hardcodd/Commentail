@@ -13,6 +13,13 @@
 включает [необратимую миграцию отпечатков из 1.3.1](docs/releases/1.3.1.md);
 заранее проверьте рекомендации о резервной копии, остановке записи и лимитах выдачи форм.
 
+**В этой рабочей копии: кандидат 1.4.0, ещё не опубликован.**
+[Отдельная настройка почты](docs/wiki/Email-configuration-ru.md) позволяет выбрать
+backend, параметры подключения и отправителя Commentail, сохранив обычную почту
+Django. Также добавлены команда проверочного письма и ранний отказ гостю по
+жёстким правилам, с причинами и сохранением совместимости CSV-импорта. Нужна
+миграция `0019`; см. [состав кандидата и обновление](docs/releases/1.4.0.ru.md).
+
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
 
@@ -199,6 +206,9 @@ python manage.py process_commentail
 Команда отправляет очередь писем и удаляет просроченные временные записи. Гости
 подтверждают email до модерации. При включённой почте авторы с email подписываются
 на уведомления о прямых ответах; каждое такое письмо содержит отписку для комментария.
+
+В кандидате 1.4.0 совпадение с жёстким правилом отклоняет гостевую отправку
+до подтверждения email и сохраняет черновик. См. [правила и CSV](docs/wiki/Rules-and-CSV.md).
 
 Можно настроить почтовый backend Django с доставкой через
 API и запускать `commentail.background.process_pending()` в очереди проекта

@@ -65,11 +65,18 @@ class RuleManagementTests(TestCase):
         self.assertEqual(ModerationRule.objects.count(), 61)
         self.assertRedirects(
             self.client.post(
-                add, {"phrase": "New phrase", "action": "reject", "enabled": "on"}
+                add,
+                {
+                    "phrase": "New phrase",
+                    "action": "reject",
+                    "enabled": "on",
+                    "reason": "Remove the phrase",
+                },
             ),
             self.url,
         )
         rule = ModerationRule.objects.get(phrase="New phrase")
+        self.assertEqual(rule.reason, "Remove the phrase")
         edit = reverse("commentail_admin:rule_edit", args=[rule.pk])
         self.assertContains(self.client.get(edit), "New phrase")
         self.assertRedirects(

@@ -11,9 +11,9 @@ from smtplib import SMTPException, SMTPRecipientsRefused, SMTPResponseException
 from typing import TypedDict
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser
-from django.core.mail import EmailMultiAlternatives, get_connection
+from django.core.exceptions import ImproperlyConfigured
+from django.core.mail import EmailMultiAlternatives
 from django.core.mail.backends.smtp import EmailBackend
 from django.db import transaction
 from django.db.models import F, Q
@@ -24,6 +24,8 @@ from django.utils import timezone, translation
 from wagtail.models import Site
 
 from .config import technical_settings
+from .email import connection as email_connection
+from .email import email_settings
 from .mail_access import GuestRecipient, _can_receive, _email
 from .models import ActionToken, Comment, CommentRevision, MailJob, ReplySubscription
 from .policies import editorial_settings, email_enabled
@@ -463,10 +465,16 @@ def _render_message(
     subject = render_to_string(prefix + "_subject.txt", context).strip()
     if not subject or "\n" in subject or "\r" in subject:
         raise MailTemplateError("Invalid email subject")
+    try:
+        sender = email_settings()["FROM_EMAIL"]
+    except ImproperlyConfigured as exc:
+        # Invalid active transport settings belong to the same bounded retry
+        # policy as construction/send failures, even before a backend exists.
+        raise MailBackendError(exc) from exc
     message = EmailMultiAlternatives(
         subject,
         render_to_string(prefix + ".txt", context),
-        settings.DEFAULT_FROM_EMAIL,
+        sender,
         [_email(job.recipient)],
         headers={"Message-ID": f"<commentail-{job.pk}@{site.hostname}>"},
     )
@@ -485,7 +493,7 @@ def _render_message(
 def _send_message(message: EmailMultiAlternatives, site: Site) -> None:
     """Bound SMTP timeout and isolate arbitrary backend exceptions for retries."""
     try:
-        connection = get_connection()
+        connection = email_connection()
         if isinstance(connection, EmailBackend):
             ceiling = max(
                 1, min(30, technical_settings(site)["MAIL_LEASE_SECONDS"] // 2)

@@ -43,6 +43,53 @@ class RuleCsvTests(TestCase):
         self.assertRedirects(self.upload(data), reverse("commentail_admin:rules"))
         self.assertEqual(ModerationRule.objects.count(), 3)
 
+    def test_optional_reason_column_and_legacy_import_preserve_existing_reason(self):
+        self.old.reason = "Keep this explanation"
+        self.old.save()
+        self.upload("phrase,action,enabled\nOld phrase,reject,1\n")
+        self.old.refresh_from_db()
+        self.assertEqual(self.old.reason, "Keep this explanation")
+        data = "reason;enabled;action;phrase\nNew explanation;1;reject;Old phrase\n"
+        self.assertEqual(self.upload(data).status_code, 302)
+        self.old.refresh_from_db()
+        self.assertEqual(self.old.reason, "New explanation")
+        self.assertEqual(
+            self.upload(
+                "phrase,action,enabled,reason\nOld phrase,reject,1,\n"
+            ).status_code,
+            302,
+        )
+        self.old.refresh_from_db()
+        self.assertEqual(self.old.reason, "")
+
+    def test_reason_roundtrip_and_formula_escaping(self):
+        self.old.reason = '=HYPERLINK("https://example.invalid")\nExplanation'
+        self.old.save()
+        content = b"".join(self.client.get(self.export_url).streaming_content)
+        rows = list(csv.DictReader(io.StringIO(content.decode("utf-8-sig"))))
+        self.assertTrue(
+            next(
+                row["reason"] for row in rows if row["phrase"] == self.old.phrase
+            ).startswith("'=")
+        )
+        self.old.reason = "changed"
+        self.old.save()
+        self.assertEqual(self.upload(content).status_code, 302)
+        self.old.refresh_from_db()
+        self.assertEqual(
+            self.old.reason, '=HYPERLINK("https://example.invalid")\nExplanation'
+        )
+
+    def test_invalid_reason_rolls_back_whole_import(self):
+        for reason in ("x" * 2001, "null\x00byte"):
+            data = (
+                "phrase,action,enabled,reason\nNew,reject,1,Valid\nOld phrase,reject,1,"
+                + reason
+                + "\n"
+            )
+            self.assertEqual(self.upload(data).status_code, 200)
+            self.assertFalse(ModerationRule.objects.filter(phrase="New").exists())
+
     def test_invalid_row_never_partially_updates_or_adds(self):
         response = self.upload(
             "phrase,action,enabled\nOld phrase,reject,0\nNew,review,1\nBad,unknown,1\n"

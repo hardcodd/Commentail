@@ -229,6 +229,7 @@ class ModerationRule(models.Model):
     phrase = models.CharField(max_length=255)
     action = models.CharField(max_length=10, choices=Action.choices)
     enabled = models.BooleanField(default=True)
+    reason = models.TextField(blank=True, max_length=2000)
 
 
 class SiteGroupPermission(models.Model):

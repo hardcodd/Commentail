@@ -10,16 +10,15 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.core.mail.backends.smtp import EmailBackend
 from django.db import transaction
 from django.db.models import F
 from django.http import HttpRequest
 from django.utils import timezone
-from django.utils.module_loading import import_string
 from wagtail.models import Site
 
 from .antispam import captcha_required, consume_attempt, form_signals, request_signals
 from .config import technical_settings
+from .email import email_configured
 from .fingerprints import fingerprint_candidates
 from .limits import client_ip, consume
 from .models import Access, Comment, Discussion, FormTicket, Mode, SubmissionRecord
@@ -57,18 +56,6 @@ def can_view(request: HttpRequest, discussion: Discussion) -> bool:
             for restriction in page.get_view_restrictions()
         )
     )
-
-
-def email_configured() -> bool:
-    """Check configuration without constructing or contacting the transport.
-
-    Only SMTP needs an explicit host; other Django backends own their settings.
-    This is availability for forms, not evidence of successful delivery.
-    """
-    backend = import_string(settings.EMAIL_BACKEND)
-    if issubclass(backend, EmailBackend):
-        return settings.is_overridden("EMAIL_HOST") and bool(settings.EMAIL_HOST)
-    return True
 
 
 def issue_form(
