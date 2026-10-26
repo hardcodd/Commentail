@@ -3,6 +3,16 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## [1.4.1] — 2026-10-26 · Package description correction
+
+- Publish the corrected README and current installation commands on PyPI. The
+  1.4.0 archives retained earlier candidate wording and 1.3.2 install examples.
+- No runtime, dependency or migration changes relative to 1.4.0. Existing 1.4.0
+  installations do not need any additional migration or configuration change.
+
+See [1.4.1 release notes](docs/releases/1.4.1.md)
+([на русском](docs/releases/1.4.1.ru.md)).
+
 ## [1.4.0] — 2026-10-26 · Independent email and early rule rejection
 
 - Add project-wide `COMMENTAIL_EMAIL` settings for an independent Django email

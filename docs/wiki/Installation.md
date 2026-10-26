@@ -2,7 +2,7 @@
 
 ## Requirements and package
 
-| Component | 1.4.0 Stable |
+| Component | 1.4.1 Stable |
 | --- | --- |
 | Python | 3.12, 3.13, 3.14 |
 | Wagtail / Django | 7.4.3+ in 7.4 / Django 5.2 or 6.0; 8.0.x / Django 5.2, 6.0 or 6.1 |
@@ -18,16 +18,16 @@ verification. The published 0.1.0 artifact retains its original bounds:
 In a virtual environment, install the release from PyPI:
 
 ```sh
-python -m pip install commentail==1.4.0
+python -m pip install commentail==1.4.1
 ```
 
 For the PostgreSQL driver use
-`python -m pip install 'commentail[postgres]==1.4.0'`.
+`python -m pip install 'commentail[postgres]==1.4.1'`.
 Alternatively, install a downloaded wheel or extract the source archive and run
 `python -m pip install .` in its root. Your site's `DATABASES` setting still selects
 the actual database.
 For downloaded release archives, verify the supplied checksum before installation.
-See [1.4.0 changes and upgrade notes](Release-1.4.0.md) and the
+See [1.4.1 documentation correction](Release-1.4.1.md), [1.4.0 changes and upgrade notes](Release-1.4.0.md) and the
 [version-to-version changelog](Changelog.md).
 
 The Wagtail 8 CI stacks now select 8.0.1 or a newer patch within 8.0; the

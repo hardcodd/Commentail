@@ -6,12 +6,13 @@
 
 Moderated discussions, verified guests and inline replies — styled by your site.
 
-**Current release: [1.4.0](https://github.com/hardcodd/Commentail/releases/tag/v1.4.0)** · [PyPI](https://pypi.org/project/commentail/1.4.0/)
+**Current release: [1.4.1](https://github.com/hardcodd/Commentail/releases/tag/v1.4.1)** · [PyPI](https://pypi.org/project/commentail/1.4.1/)
 
 [Separate email configuration](docs/wiki/Email-configuration.md) lets Commentail use
 its own backend, connection options and sender while ordinary Django mail keeps
 its existing settings. Version 1.4.0 also adds a test-mail command and early guest
 rejection by hard rules, with optional reasons and legacy-compatible CSV import.
+Patch 1.4.1 corrects the PyPI description; runtime is unchanged from 1.4.0.
 Apply migration `0019`; see the [changes and upgrade notes](docs/releases/1.4.0.md).
 Upgrading from 1.3.0 or earlier also requires the
 [irreversible 1.3.1 migration procedure](docs/releases/1.3.1.md).
@@ -151,11 +152,11 @@ The guides are in English; this README is also [available in Russian](README.ru.
 In your existing Wagtail site's virtual environment, install the published release:
 
 ```sh
-python -m pip install commentail==1.4.0
+python -m pip install commentail==1.4.1
 ```
 
 For the optional PostgreSQL driver, use
-`python -m pip install 'commentail[postgres]==1.4.0'`.
+`python -m pip install 'commentail[postgres]==1.4.1'`.
 For an existing installation, follow
 the [upgrade guide](docs/wiki/Installation.md#upgrading-and-restoring) for your target version.
 

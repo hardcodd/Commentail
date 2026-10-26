@@ -1,0 +1,23 @@
+# Commentail 1.4.1 — package description correction
+
+English · [Русский](Release-1.4.1-ru.md)
+
+**Stable release · 26 October 2026 · MIT.**
+
+This documentation-only patch publishes the corrected README and installation
+commands on PyPI. The 1.4.0 upload retained earlier candidate wording and commands
+for 1.3.2. Its package version and runtime were correct; those archives remain
+unchanged.
+
+Runtime files, dependencies and migrations are identical to 1.4.0. An existing
+1.4.0 installation needs no additional migration or configuration change.
+
+For a new installation, use `python -m pip install commentail==1.4.1`.
+For an upgrade from 1.3.2 or earlier, follow the
+[1.4.0 upgrade procedure](Release-1.4.0.md), installing 1.4.1 in its first step.
+Migration `0019` and the earlier irreversible `0018` requirements still apply
+where relevant. Back up and rehearse the upgrade before changing a live site.
+
+The support matrix and independent email, test-mail command and early rule
+rejection behavior are unchanged. See the
+[email configuration guide](Email-configuration.md).

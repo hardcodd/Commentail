@@ -6,12 +6,13 @@
 
 Модерация обсуждений, подтверждённые гости и ответы рядом с комментарием — в стиле вашего сайта.
 
-**Текущая версия: [1.4.0](https://github.com/hardcodd/Commentail/releases/tag/v1.4.0)** · [PyPI](https://pypi.org/project/commentail/1.4.0/)
+**Текущая версия: [1.4.1](https://github.com/hardcodd/Commentail/releases/tag/v1.4.1)** · [PyPI](https://pypi.org/project/commentail/1.4.1/)
 
 [Отдельная настройка почты](docs/wiki/Email-configuration-ru.md) позволяет выбрать
 backend, параметры подключения и отправителя Commentail, сохранив обычную почту
 Django. Версия 1.4.0 также добавляет команду проверочного письма и ранний отказ
 гостю по жёстким правилам, с причинами и совместимостью CSV-импорта.
+Патч 1.4.1 исправляет описание PyPI; код совпадает с 1.4.0.
 Примените миграцию `0019`; см. [изменения и обновление](docs/releases/1.4.0.ru.md).
 При переходе с 1.3.0 и более ранних версий также нужна
 [процедура необратимой миграции 1.3.1](docs/releases/1.3.1.md).
@@ -152,11 +153,11 @@ CDN и CAPTCHA-сервисов нет. См. [настройку писем](do
 В виртуальном окружении существующего сайта Wagtail установите опубликованный выпуск:
 
 ```sh
-python -m pip install commentail==1.4.0
+python -m pip install commentail==1.4.1
 ```
 
 Для необязательного драйвера PostgreSQL используйте
-`python -m pip install 'commentail[postgres]==1.4.0'`.
+`python -m pip install 'commentail[postgres]==1.4.1'`.
 Для существующей установки следуйте [инструкции обновления](docs/wiki/Installation.md#upgrading-and-restoring)
 до нужной версии.
 

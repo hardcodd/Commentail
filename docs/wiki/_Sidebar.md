@@ -35,6 +35,8 @@
 - [Release 1.3.0](Release-1.3.0.md)
 - [Security update 1.3.1](Release-1.3.1.md)
 - [Translated Site roots 1.3.2](Release-1.3.2.md)
+- [Release 1.4.1](Release-1.4.1.md)
+- [Выпуск 1.4.1 на русском](Release-1.4.1-ru.md)
 - [Release 1.4.0](Release-1.4.0.md)
 - [Выпуск 1.4.0 на русском](Release-1.4.0-ru.md)
 - [Changelog](Changelog.md)
