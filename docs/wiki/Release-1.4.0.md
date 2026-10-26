@@ -2,7 +2,11 @@
 
 English · [Русский](Release-1.4.0-ru.md)
 
-**Unpublished candidate for review.** The current published package remains 1.3.2.
+**Stable release · 26 October 2026 · MIT.**
+
+The uploaded PyPI archives retain earlier candidate wording in the bundled README.
+Their package version and runtime are 1.4.0; use the upgrade commands below and the
+current repository/wiki documentation. Uploaded archives have not been replaced.
 
 ## Changes
 
@@ -46,11 +50,10 @@ and preserve existing reasons; a present empty reason cell clears the value.
 Migration `0019_moderation_rule_reason` adds the optional reason field with empty
 values for existing rules. Reversing it removes configured rule reasons.
 
-## Review or upgrade from 1.3.2
+## Upgrade from 1.3.2
 
-1. For pre-release review, install the locally built candidate in an isolated
-   test environment. The PyPI version 1.4.0 is not published yet. After release,
-   follow the normal backup and package-upgrade procedure for your site.
+1. Follow your normal backup procedure, rehearse on an isolated copy, then install
+   `python -m pip install commentail==1.4.0` in your site environment.
 2. Leaving `COMMENTAIL_EMAIL` absent preserves existing behavior. To separate
    mail, add the dictionary to project settings and supply its secrets to the
    web application and background workers.

@@ -3,7 +3,7 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
-## [1.4.0] — Unreleased · Independent email and early rule rejection
+## [1.4.0] — 2026-10-26 · Independent email and early rule rejection
 
 - Add project-wide `COMMENTAIL_EMAIL` settings for an independent Django email
   backend, constructor options and sender while preserving shared Django mail
@@ -23,7 +23,7 @@ describe changes that an existing installation needs to review.
 - Export CSV reasons and accept the optional column on import. Legacy files
   preserve existing reasons; an explicitly empty cell clears one.
 
-This is an unpublished candidate. See [1.4.0 review and upgrade notes](Release-1.4.0.md)
+See [1.4.0 changes and upgrade notes](Release-1.4.0.md)
 ([на русском](Release-1.4.0-ru.md)).
 
 ## [1.3.2] — 2026-10-23 · Translated Site roots

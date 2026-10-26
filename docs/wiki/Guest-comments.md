@@ -24,7 +24,7 @@ Recent repeated long text and bursts of links are also review signals, including
 guest revisions. Short common replies and one or two links do not trigger the
 default content thresholds. See [guest content checks](Security-and-privacy.md#guest-content-checks).
 
-In the unpublished 1.4.0 candidate, Apply rules mode refuses new guest text
+From 1.4.0, Apply rules mode refuses new guest text
 matching an enabled Reject rule before acceptance. The form shows the configured
 reason and preserves the draft; no comment or mail is created. CAPTCHA and attempt
 limits still apply, including for remembered guests. Review rules and soft signals
@@ -57,7 +57,7 @@ inline from the protected publication email link and use the same rules as accou
 edits: see [Replies and editing](Replies-and-editing.md).
 
 Site email and configured email delivery must be enabled for guest submission.
-From the 1.4.0 candidate, this can use [Commentail's separate backend](Email-configuration.md).
+From 1.4.0, this can use [Commentail's separate backend](Email-configuration.md).
 See [email setup](Email-and-worker.md). Also check author access,
 discussion mode, target permission and quotas.
 

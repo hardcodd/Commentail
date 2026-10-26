@@ -39,7 +39,7 @@ case-insensitively; punctuation is ignored, whitespace/line breaks are normalize
 and Russian ё equals е. A word does not match inside another word. Displayed text
 is unchanged. Rejection wins over review when multiple rules match.
 
-In the unpublished 1.4.0 candidate, new guest submissions matching an enabled
+From 1.4.0, new guest submissions matching an enabled
 Reject rule are refused before a comment or confirmation/rejection mail is
 created. The sender sees the reason of the matching Reject rule with the lowest
 ID, or a localized default if that reason is blank. The reason is plain text,

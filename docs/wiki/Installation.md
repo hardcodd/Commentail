@@ -2,7 +2,7 @@
 
 ## Requirements and package
 
-| Component | 1.3.2 Stable |
+| Component | 1.4.0 Stable |
 | --- | --- |
 | Python | 3.12, 3.13, 3.14 |
 | Wagtail / Django | 7.4.3+ in 7.4 / Django 5.2 or 6.0; 8.0.x / Django 5.2, 6.0 or 6.1 |
@@ -18,16 +18,16 @@ verification. The published 0.1.0 artifact retains its original bounds:
 In a virtual environment, install the release from PyPI:
 
 ```sh
-python -m pip install commentail==1.3.2
+python -m pip install commentail==1.4.0
 ```
 
 For the PostgreSQL driver use
-`python -m pip install 'commentail[postgres]==1.3.2'`.
+`python -m pip install 'commentail[postgres]==1.4.0'`.
 Alternatively, install a downloaded wheel or extract the source archive and run
 `python -m pip install .` in its root. Your site's `DATABASES` setting still selects
 the actual database.
 For downloaded release archives, verify the supplied checksum before installation.
-See [1.3.2 changes and upgrade notes](Release-1.3.2.md) and the
+See [1.4.0 changes and upgrade notes](Release-1.4.0.md) and the
 [version-to-version changelog](Changelog.md).
 
 The Wagtail 8 CI stacks now select 8.0.1 or a newer patch within 8.0; the
@@ -109,6 +109,7 @@ Review the notes for your target version and every intervening release:
 
 | Target | Main upgrade considerations |
 | --- | --- |
+| [1.4.0](Release-1.4.0.md) | Migration `0019` adds rule reasons. Review enabled Reject rules; matching new guest text is refused before email proof. Optional independent email configuration and a test-mail command. |
 | [1.3.2](Release-1.3.2.md) | Restore translated Site home trees; no new migration over 1.3.1. Earlier installations must also follow the 1.3.1 migration procedure. |
 | [1.3.1](Release-1.3.1.md) | Irreversible data migration `0018`: stop writers, keep the same key and back up database/key/package. Review form overrides and shared-network issuance quotas. |
 | [1.3.0](Release-1.3.0.md) | Migrations `0016`/`0017`, refreshed assets and reviewed form/provider overrides. New guest checks are review signals; external CAPTCHA is opt-in. |

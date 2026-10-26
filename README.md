@@ -6,19 +6,15 @@
 
 Moderated discussions, verified guests and inline replies — styled by your site.
 
-**Current release: [1.3.2](https://github.com/hardcodd/Commentail/releases/tag/v1.3.2)** · [PyPI](https://pypi.org/project/commentail/1.3.2/)
+**Current release: [1.4.0](https://github.com/hardcodd/Commentail/releases/tag/v1.4.0)** · [PyPI](https://pypi.org/project/commentail/1.4.0/)
 
-[1.3.2 restores discussions under translated Site homepages](docs/releases/1.3.2.md).
-There is no new migration over 1.3.1. Upgrading from 1.3.0 or earlier includes
-the [irreversible 1.3.1 fingerprint migration](docs/releases/1.3.1.md);
-review its backup, downtime and form-quota guidance first.
-
-**In this checkout: 1.4.0 candidate, not published.**
-[Separate email configuration](docs/wiki/Email-configuration.md) adds an optional
-Commentail backend, connection options and sender without changing ordinary
-Django mail. The candidate also adds a test-mail command and early guest rejection
-by hard rules, with optional reasons and legacy-compatible CSV import. Apply
-migration `0019`; see the [candidate scope and upgrade notes](docs/releases/1.4.0.md).
+[Separate email configuration](docs/wiki/Email-configuration.md) lets Commentail use
+its own backend, connection options and sender while ordinary Django mail keeps
+its existing settings. Version 1.4.0 also adds a test-mail command and early guest
+rejection by hard rules, with optional reasons and legacy-compatible CSV import.
+Apply migration `0019`; see the [changes and upgrade notes](docs/releases/1.4.0.md).
+Upgrading from 1.3.0 or earlier also requires the
+[irreversible 1.3.1 migration procedure](docs/releases/1.3.1.md).
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -155,11 +151,11 @@ The guides are in English; this README is also [available in Russian](README.ru.
 In your existing Wagtail site's virtual environment, install the published release:
 
 ```sh
-python -m pip install commentail==1.3.2
+python -m pip install commentail==1.4.0
 ```
 
 For the optional PostgreSQL driver, use
-`python -m pip install 'commentail[postgres]==1.3.2'`.
+`python -m pip install 'commentail[postgres]==1.4.0'`.
 For an existing installation, follow
 the [upgrade guide](docs/wiki/Installation.md#upgrading-and-restoring) for your target version.
 
@@ -205,7 +201,7 @@ The command sends queued mail and removes expired temporary records. Guests conf
 their email before moderation. Authors with email are subscribed to direct-reply
 notifications when mail is enabled; every reply email includes per-comment unsubscribe.
 
-The 1.4.0 candidate refuses matching hard-rule guest submissions before email
+Version 1.4.0 refuses matching hard-rule guest submissions before email
 proof, preserving the draft. See [rules and CSV](docs/wiki/Rules-and-CSV.md).
 
 You can configure an API-based Django backend and schedule

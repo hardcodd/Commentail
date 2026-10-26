@@ -6,19 +6,15 @@
 
 Модерация обсуждений, подтверждённые гости и ответы рядом с комментарием — в стиле вашего сайта.
 
-**Текущая версия: [1.3.2](https://github.com/hardcodd/Commentail/releases/tag/v1.3.2)** · [PyPI](https://pypi.org/project/commentail/1.3.2/)
+**Текущая версия: [1.4.0](https://github.com/hardcodd/Commentail/releases/tag/v1.4.0)** · [PyPI](https://pypi.org/project/commentail/1.4.0/)
 
-[1.3.2 восстанавливает обсуждения под переводами главной страницы Site](docs/releases/1.3.2.md).
-После 1.3.1 новой миграции нет. Обновление с 1.3.0 или более ранней версии
-включает [необратимую миграцию отпечатков из 1.3.1](docs/releases/1.3.1.md);
-заранее проверьте рекомендации о резервной копии, остановке записи и лимитах выдачи форм.
-
-**В этой рабочей копии: кандидат 1.4.0, ещё не опубликован.**
 [Отдельная настройка почты](docs/wiki/Email-configuration-ru.md) позволяет выбрать
 backend, параметры подключения и отправителя Commentail, сохранив обычную почту
-Django. Также добавлены команда проверочного письма и ранний отказ гостю по
-жёстким правилам, с причинами и сохранением совместимости CSV-импорта. Нужна
-миграция `0019`; см. [состав кандидата и обновление](docs/releases/1.4.0.ru.md).
+Django. Версия 1.4.0 также добавляет команду проверочного письма и ранний отказ
+гостю по жёстким правилам, с причинами и совместимостью CSV-импорта.
+Примените миграцию `0019`; см. [изменения и обновление](docs/releases/1.4.0.ru.md).
+При переходе с 1.3.0 и более ранних версий также нужна
+[процедура необратимой миграции 1.3.1](docs/releases/1.3.1.md).
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -156,11 +152,11 @@ CDN и CAPTCHA-сервисов нет. См. [настройку писем](do
 В виртуальном окружении существующего сайта Wagtail установите опубликованный выпуск:
 
 ```sh
-python -m pip install commentail==1.3.2
+python -m pip install commentail==1.4.0
 ```
 
 Для необязательного драйвера PostgreSQL используйте
-`python -m pip install 'commentail[postgres]==1.3.2'`.
+`python -m pip install 'commentail[postgres]==1.4.0'`.
 Для существующей установки следуйте [инструкции обновления](docs/wiki/Installation.md#upgrading-and-restoring)
 до нужной версии.
 
@@ -207,7 +203,7 @@ python manage.py process_commentail
 подтверждают email до модерации. При включённой почте авторы с email подписываются
 на уведомления о прямых ответах; каждое такое письмо содержит отписку для комментария.
 
-В кандидате 1.4.0 совпадение с жёстким правилом отклоняет гостевую отправку
+В версии 1.4.0 совпадение с жёстким правилом отклоняет гостевую отправку
 до подтверждения email и сохраняет черновик. См. [правила и CSV](docs/wiki/Rules-and-CSV.md).
 
 Можно настроить почтовый backend Django с доставкой через

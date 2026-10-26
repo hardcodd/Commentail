@@ -11,7 +11,7 @@
 
 Suspicious guest signals can still require review. Rule rejection wins when
 **Apply rules** is active. Phrase rules are not applied by the other policies.
-In the unpublished 1.4.0 candidate, enabled Reject rules refuse new guest text
+From 1.4.0, enabled Reject rules refuse new guest text
 before email confirmation, showing the configured reason and preserving the
 draft. Other guest moderation decisions follow email confirmation. See
 [rules and CSV](Rules-and-CSV.md) for reason priority and legacy CSV handling.

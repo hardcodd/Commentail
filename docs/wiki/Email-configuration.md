@@ -2,7 +2,7 @@
 
 English · [Русский](Email-configuration-ru.md)
 
-**Available in the unpublished 1.4.0 candidate.** Published 1.3.2 uses the
+**Available since 1.4.0.** Earlier versions use the
 project's shared Django email configuration. With 1.4.0, Commentail can use a
 different backend, connection settings and sender while ordinary Django mail
 continues using the project's existing configuration.
@@ -130,8 +130,7 @@ credentials. A nonzero exit means the probe failed; do not assume a retry cannot
 send a duplicate. Backend acceptance does not confirm inbox delivery (local,
 console and dummy backends may also report acceptance).
 
-1. Install the local 1.4.0 candidate for review, or the published 1.4.0 package
-   after release. Run `python manage.py check` with the intended settings.
+1. Install `commentail==1.4.0` in your site environment. Run `python manage.py check` with the intended settings.
 2. Restart the web application and the background workers after changing
    configuration. Keep their settings, environment and database aligned.
 3. Test ordinary site mail through the site's normal feature. It should still

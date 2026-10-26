@@ -38,7 +38,7 @@ features or migrations beyond 0.2.0.
   [structured data](Structured-data.md), moderation/editing semantics, Site
   isolation, inherited settings and privacy rules described by the guides.
 - CSV columns `phrase,action,enabled`, UTF-8 and idempotent upsert behavior in
-  [Rules and CSV](Rules-and-CSV.md). From the 1.4.0 candidate, export also includes
+  [Rules and CSV](Rules-and-CSV.md). From 1.4.0, export also includes
   `reason`; imports accept it optionally and preserve reasons in legacy files.
 
 ## Links and internal interfaces

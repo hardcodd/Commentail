@@ -46,20 +46,20 @@ English and Russian remain available; documentation remains in those two languag
 See [0.2.0 release scope and upgrade steps](Release-0.2.0.md),
 [version history](Changelog.md) and [performance guidance](Performance.md).
 
-## Implemented in the unpublished 1.4.0 candidate
+## Implemented in 1.4.0
 
-The candidate adds an independent Django email backend, constructor options and
+Version 1.4.0 adds an independent Django email backend, constructor options and
 sender through the project-wide `COMMENTAIL_EMAIL` dictionary. For example,
 comment emails can use a provider's HTTP API while the rest of the site continues
 using SMTP, within the same application and worker configuration. Without an
 override, Commentail continues using the project's shared backend and sender.
-The candidate also adds a direct test-mail command and early guest refusal for
+Version 1.4.0 also adds a direct test-mail command and early guest refusal for
 enabled Reject rules, with optional reasons and backward-compatible CSV import.
 See [rules and CSV](Rules-and-CSV.md); migration `0019` adds the reason field.
 
-Version 1.4.0 is prepared for review, not published. See the
+Version 1.4.0 is published. See the
 [configuration reference](Email-configuration.md) and
-[candidate upgrade notes](Release-1.4.0.md).
+[upgrade notes](Release-1.4.0.md).
 
 ## Later: visual Markdown editor and emoji
 

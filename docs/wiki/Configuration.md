@@ -94,7 +94,7 @@ their issued deadlines when a configured duration changes.
 ## Complete reference
 
 Email transport uses Django's `EMAIL_BACKEND`/`EMAIL_*` and the chosen backend's
-own settings by default. The unpublished 1.4.0 candidate adds the separate,
+own settings by default. Version 1.4.0 adds the separate,
 project-wide `COMMENTAIL_EMAIL` dictionary with `BACKEND`, `OPTIONS` and
 `FROM_EMAIL`; these are not keys in `COMMENTAIL` and have no hostname overrides.
 See the complete [email configuration reference](Email-configuration.md)

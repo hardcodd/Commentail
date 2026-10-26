@@ -1,7 +1,7 @@
 # Email delivery, notifications and the worker
 
 Commentail supports any backend implementing Django's email backend contract
-through the shared `EMAIL_BACKEND`. The unpublished 1.4.0 candidate can instead
+through the shared `EMAIL_BACKEND`. Version 1.4.0 can instead
 use an independent backend, constructor options and sender through
 [`COMMENTAIL_EMAIL`](Email-configuration.md) ([на русском](Email-configuration-ru.md)).
 It also provides a public Python entry point for the
