@@ -5,7 +5,7 @@ English · [Русский](Home-ru.md)
 **Self-hosted comments for Wagtail CMS.** Add moderated discussions to Wagtail
 Pages and registered Django models using your site's accounts, templates and styles.
 
-> **1.4.1 Stable:** Wagtail 7.4.3+ / Django 5.2 or 6.0; Wagtail 8.0 / Django 5.2, 6.0 or 6.1; Python 3.12–3.14; file SQLite and PostgreSQL 16.
+> **1.5.0 Stable:** Wagtail 7.4.3+ / Django 5.2 or 6.0; Wagtail 8.0 / Django 5.2, 6.0 or 6.1; Python 3.12–3.14; file SQLite and PostgreSQL 16.
 > Published 0.1.0 retains Wagtail >=7.4.3,<7.5 and Django 5.2 support.
 
 Protect guest comments with local form checks, attempt budgets and review signals
@@ -16,13 +16,13 @@ Version 1.4.0 adds
 [independent Commentail email settings and a test-mail command](Email-configuration.md),
 plus [early guest rejection with rule reasons and CSV support](Rules-and-CSV.md).
 Patch 1.4.1 corrects the PyPI description with no runtime change.
-See the [current release notes](Release-1.4.1.md) and [1.4.0 upgrade procedure](Release-1.4.0.md).
+See the [current release notes](Release-1.5.0.md) and [1.4.0 upgrade procedure](Release-1.4.0.md).
 Upgrading from 1.3.0 or earlier also requires the
 [1.3.1 irreversible migration procedure](Release-1.3.1.md).
 
-**Preparing 1.5.0:** [visual editing and Markdown](Comment-editor.md),
+**New in 1.5.0:** [visual editing and Markdown](Comment-editor.md),
 independent guest/account modes and prevention of new self-replies.
-[Changes and upgrade notes](Release-1.5.0.md). The package is not published yet.
+[Changes and upgrade notes](Release-1.5.0.md).
 
 ## Step-by-step course
 

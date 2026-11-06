@@ -12,8 +12,7 @@ Moderated discussions, verified guests and inline replies — styled by your sit
 Choose guest and registered-user modes independently; the server enforces allowed
 formatting. Existing comments stay plain text. See the
 [editor guide](docs/wiki/Comment-editor.md) and [changes and upgrade notes](docs/releases/1.5.0.md).
-For release availability, check PyPI or GitHub Releases. Unpublished candidates
-are installed from a reviewed local wheel.
+Install [1.5.0 from PyPI](https://pypi.org/project/commentail/1.5.0/).
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -161,8 +160,7 @@ The guides are in English; this README is also [available in Russian](README.ru.
 
 ### 1. Install
 
-In your existing Wagtail site's virtual environment, install 1.5.0 once it is
-available on PyPI (or use the reviewed local wheel during release preparation):
+In your existing Wagtail site's virtual environment, install the release from PyPI:
 
 ```sh
 python -m pip install commentail==1.5.0

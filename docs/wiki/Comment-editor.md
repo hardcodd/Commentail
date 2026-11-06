@@ -1,7 +1,6 @@
-# Comment editor (1.5.0 preparation)
+# Comment editor (1.5.0)
 
-[На русском](Comment-editor-ru.md). This describes the working development tree;
-the published 1.4.1 package does not include this editor.
+[На русском](Comment-editor-ru.md). Available from Commentail 1.5.0.
 
 ## Site settings and existing content
 
@@ -76,10 +75,6 @@ Editor runtime messages support English, Russian, German, French, Spanish and
 Brazilian Portuguese. The server selects the active Django language; only that
 locale asset is requested, and English needs none. Unknown languages use English.
 If the locale or bundle fails to load, the native textarea stays usable.
-Focused desktop Firefox/VoiceOver speech scenarios have been reviewed; this does
-not establish full accessibility or WCAG conformance. Physical-device keyboards,
-IME, autocorrection and dictation checks remain deferred. Package publication
-and hosted CI for the publishing commit are separate release gates.
 
 Owned browser sources and build/test commands: [frontend/editor](../../frontend/editor/README.md).
 See also [Configuration](Configuration.md), [Templates](Templates.md) and

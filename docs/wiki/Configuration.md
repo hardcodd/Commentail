@@ -2,9 +2,9 @@
 
 ## Editorial settings in Wagtail
 
-The upcoming 1.5.0 includes per-Site guest/registered editor
+Version 1.5.0 includes per-Site guest/registered editor
 modes and formatting switches. See [Comment editor](Comment-editor.md)
-([на русском](Comment-editor-ru.md)); these are not part of published 1.4.1.
+([на русском](Comment-editor-ru.md)).
 
 | Setting | Initial value | Page override |
 | --- | --- | --- |

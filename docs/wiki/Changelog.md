@@ -3,7 +3,7 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
-## [1.5.0] — Unreleased · Visual comment editor
+## [1.5.0] — 2026-11-06 · Visual comment editor
 
 - Add a dependency-free visual/Markdown editor, independent guest/account Site
   modes, server-enforced formatting permissions and migration `0020`.

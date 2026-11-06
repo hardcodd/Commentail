@@ -181,7 +181,5 @@ The distribution CI repeats the JavaScript checks from the extracted sdist and
 runs Django contracts against its installed wheel outside the checkout.
 
 Review the real host's create/reply/edit/error/cancel flows and independent drafts
-with both audience modes. Focused Firefox/VoiceOver scenarios have been reviewed;
-this is not exhaustive accessibility certification. Physical-device, IME,
-autocorrection and dictation checks remain deferred. Historical matrix runs do
-not replace hosted CI for the exact publishing commit.
+with both audience modes. Hosted CI checks the exact publishing commit; historical
+matrix results do not replace it.

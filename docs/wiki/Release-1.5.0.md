@@ -2,9 +2,8 @@
 
 English · [Русский](Release-1.5.0-ru.md)
 
-These notes describe the 1.5.0 source and upgrade contract. Check
-[PyPI](https://pypi.org/project/commentail/) for release availability;
-unpublished candidates use a reviewed local wheel.
+Released 6 November 2026. [PyPI](https://pypi.org/project/commentail/1.5.0/) ·
+[GitHub release](https://github.com/hardcodd/Commentail/releases/tag/v1.5.0).
 
 ## Changes
 
@@ -30,7 +29,7 @@ unpublished candidates use a reviewed local wheel.
 1. Rehearse on a separate copy, with local mail. Back up the database, package,
    dependency versions, settings, overrides and secrets; pause writers and workers
    for the final backup/cutover. Keep the same secret key.
-2. Install the reviewed 1.5.0 wheel, run `migrate`, `check` and
+2. Install `commentail==1.5.0` from PyPI, run `migrate`, `check` and
    `collectstatic --noinput`, then refresh cached assets and restart the app and
    workers through the host deployment process.
 3. Migration `0020` adds comment/revision `text_format` and Site editor settings.
@@ -63,9 +62,4 @@ Nested quotes, language-labelled code fences, complex list items and cross-line 
 Code whitespace is preserved; surrounding paragraph/list boundary spaces can be
 normalized on visual export. See the [editor guide](Comment-editor.md).
 
-Desktop Firefox interaction and focused VoiceOver speech scenarios have been
-reviewed. This is not full accessibility/WCAG certification. Physical devices,
-IME, autocorrection and dictation remain outside the completed checks.
-Hosted CI must pass for the exact publishing commit; older matrix results do not
-verify this release. Host themes, permissions and actual mail delivery require
-site-specific acceptance.
+Host themes, permissions and actual mail delivery require site-specific acceptance.
