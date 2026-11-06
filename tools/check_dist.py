@@ -66,7 +66,13 @@ def check(folder: Path) -> None:
         for p in (root / "docs" / folder_name).glob(pattern)
     }
     assert public_docs, "Missing public documentation"
-    roots = {"commentail", "tests", "example", "tools", "commentail.egg-info"}
+    editor_sources = {
+        p.relative_to(root).as_posix(): p.read_bytes()
+        for p in (root / "frontend" / "editor").rglob("*")
+        if p.is_file() and p.suffix in {".js", ".json", ".md"}
+    }
+    assert editor_sources, "Missing editor build sources"
+    roots = {"commentail", "tests", "example", "tools", "frontend", "commentail.egg-info"}
     files = {
         "README.md",
         "README.ru.md",
@@ -82,6 +88,7 @@ def check(folder: Path) -> None:
     with tarfile.open(sdist) as archive:
         shipped = {}
         shipped_docs = {}
+        shipped_editor = {}
         for member in archive.getmembers():
             path = PurePosixPath(member.name)
             assert not path.is_absolute() and ".." not in path.parts
@@ -103,7 +110,10 @@ def check(folder: Path) -> None:
                 shipped[relative.as_posix()] = archive.extractfile(member).read()
             if member.isfile() and relative.parts[0] == "docs":
                 shipped_docs[relative.as_posix()] = archive.extractfile(member).read()
+            if member.isfile() and relative.parts[0] == "frontend":
+                shipped_editor[relative.as_posix()] = archive.extractfile(member).read()
         assert shipped_docs == public_docs, "sdist documentation differs from source"
+        assert shipped_editor == editor_sources, "sdist editor sources differ from source"
         assert shipped == runtime, "sdist runtime differs from source"
         names = {
             PurePosixPath(*PurePosixPath(n).parts[1:]).as_posix()
@@ -113,6 +123,8 @@ def check(folder: Path) -> None:
             "tests/test_reply.js",
             "example/manage.py",
             "tools/check_dist.py",
+            "tools/build_editor.mjs",
+            "tests/markdown-corpus.json",
             "requirements-test.txt",
             "requirements-test-common.txt",
             "CHANGELOG.md",

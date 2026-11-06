@@ -1087,3 +1087,58 @@ msgstr "La columna opcional reason establece el mensaje de rechazo para invitado
 
 msgid "The same spreadsheet escaping applies to rejection reasons."
 msgstr "El mismo escape para hojas de cálculo se aplica a los motivos de rechazo."
+
+msgid "Plain text"
+msgstr "Texto sin formato"
+
+msgid "Markdown"
+msgstr "Markdown"
+
+msgid "Visual editor"
+msgstr "Editor visual"
+
+msgid "Guest editor"
+msgstr "Editor para invitados"
+
+msgid "Registered user editor"
+msgstr "Editor para usuarios registrados"
+
+msgid "Allowed formatting"
+msgstr "Formato permitido"
+
+msgid "Comment editor"
+msgstr "Editor de comentarios"
+
+msgid "Bold"
+msgstr "Negrita"
+
+msgid "Italic"
+msgstr "Cursiva"
+
+msgid "Strikethrough"
+msgstr "Tachado"
+
+msgid "Links"
+msgstr "Enlaces"
+
+msgid "Quotes"
+msgstr "Citas"
+
+msgid "Unordered lists"
+msgstr "Listas con viñetas"
+
+msgid "Ordered lists"
+msgstr "Listas numeradas"
+
+msgid "Inline code"
+msgstr "Código en línea"
+
+msgid "Code blocks"
+msgstr "Bloques de código"
+
+msgid "This formatting is disabled or exceeds the editor limits."
+msgstr "Este formato está desactivado o supera los límites del editor."
+
+#: commentail/services.py
+msgid "You cannot reply to your own comment."
+msgstr "No puedes responder a tu propio comentario."

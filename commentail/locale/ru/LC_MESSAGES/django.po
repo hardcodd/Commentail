@@ -1087,3 +1087,58 @@ msgstr "Необязательная колонка reason задаёт прич
 
 msgid "The same spreadsheet escaping applies to rejection reasons."
 msgstr "Причины отклонения экранируются для электронных таблиц тем же способом."
+
+msgid "Plain text"
+msgstr "Обычный текст"
+
+msgid "Markdown"
+msgstr "Markdown"
+
+msgid "Visual editor"
+msgstr "Визуальный редактор"
+
+msgid "Guest editor"
+msgstr "Редактор для гостей"
+
+msgid "Registered user editor"
+msgstr "Редактор для зарегистрированных"
+
+msgid "Allowed formatting"
+msgstr "Разрешённое оформление"
+
+msgid "Comment editor"
+msgstr "Редактор комментария"
+
+msgid "Bold"
+msgstr "Жирный"
+
+msgid "Italic"
+msgstr "Курсив"
+
+msgid "Strikethrough"
+msgstr "Зачёркивание"
+
+msgid "Links"
+msgstr "Ссылки"
+
+msgid "Quotes"
+msgstr "Цитаты"
+
+msgid "Unordered lists"
+msgstr "Маркированные списки"
+
+msgid "Ordered lists"
+msgstr "Нумерованные списки"
+
+msgid "Inline code"
+msgstr "Строковый код"
+
+msgid "Code blocks"
+msgstr "Блоки кода"
+
+msgid "This formatting is disabled or exceeds the editor limits."
+msgstr "Это оформление отключено или превышает ограничения редактора."
+
+#: commentail/services.py
+msgid "You cannot reply to your own comment."
+msgstr "Нельзя отвечать на свой комментарий."

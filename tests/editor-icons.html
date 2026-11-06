@@ -1,0 +1,43 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Editor icon geometry and states</title>
+<link rel="stylesheet" href="../commentail/static/commentail/editor.css?icons=2">
+<style>
+body { margin:24px; font:14px system-ui; background:#f6f7fb; }
+#icons { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; }
+.sample { padding:16px; border:1px solid #ddd; border-radius:10px; background:white; }
+.states { display:flex; gap:8px; align-items:center; }
+.sample h2 {font-size:14px; font-weight:500;}
+</style>
+<h1>Editor icons: normal / pressed / disabled</h1><details><summary>Geometry results</summary><p id="result">Checking…</p></details>
+<div id="icons" class="commentail-rich"></div>
+<script>
+// Use the actual shipped template, including the detached dialog and both mode
+// icons. A shape needs a full stroke-width gutter, not just an in-range viewBox.
+(async () => {
+  const html = await (await fetch('../commentail/templates/commentail/editor-tools.html', {cache: 'no-store'})).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const icons = [...doc.querySelectorAll('svg'), ...doc.querySelector('template').content.querySelectorAll('svg')];
+  const results = [];
+  for (const [index, icon] of icons.entries()) {
+    const sample = document.createElement('section'); sample.className = 'sample';
+    const heading = document.createElement('h2');
+    heading.textContent = icon.closest('button').getAttribute('aria-label') + (icon.classList.contains('visual-icon') ? ' (visual)' : '');
+    const states = document.createElement('div'); states.className = 'states';
+    for (const state of ['normal', 'pressed', 'disabled']) {
+      const button = document.createElement('button'); button.className = 'tool-button'; button.type = 'button';
+      button.setAttribute('aria-label', heading.textContent + ': ' + state);
+      if (state === 'pressed') button.setAttribute('aria-pressed', 'true');
+      if (state === 'disabled') button.disabled = true;
+      button.append(icon.cloneNode(true)); states.append(button);
+    }
+    sample.append(heading, states); document.querySelector('#icons').append(sample);
+    const svg = states.querySelector('svg'), box = svg.getBBox();
+    const inset = parseFloat(getComputedStyle(svg).strokeWidth) / 2;
+    results.push({index, label: heading.textContent, bounds: [box.x, box.y, box.width, box.height],
+      passed: box.width > 0 && box.height > 0 && box.x >= inset && box.y >= inset && box.x + box.width <= 24 - inset && box.y + box.height <= 24 - inset});
+  }
+  document.querySelector('#result').textContent = JSON.stringify({passed:results.every(row=>row.passed), count:results.length, results});
+})();
+</script>

@@ -6,8 +6,26 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from .config import technical_settings
+from .markdown import FEATURES
 from .models import Discussion, ModerationRule, SiteCommentSettings, SiteGroupPermission
 from .rules_csv import RuleRow, parse_rules
+
+FEATURE_LABELS = dict(
+    zip(
+        FEATURES,
+        (
+            _("Bold"),
+            _("Italic"),
+            _("Strikethrough"),
+            _("Links"),
+            _("Quotes"),
+            _("Unordered lists"),
+            _("Ordered lists"),
+            _("Inline code"),
+            _("Code blocks"),
+        ),
+    )
+)
 
 EDITORIAL_FIELDS = (
     "mode",
@@ -31,9 +49,23 @@ EDITORIAL_LABELS = {
 
 
 class SiteSettingsForm(forms.ModelForm):
+    editor_features = forms.MultipleChoiceField(
+        label=_("Allowed formatting"),
+        required=False,
+        choices=[(name, FEATURE_LABELS[name]) for name in FEATURES],
+        widget=forms.CheckboxSelectMultiple,
+    )
+
     class Meta:
         model = SiteCommentSettings
-        fields = ("email_enabled", "highlight_staff", *EDITORIAL_FIELDS)
+        fields = (
+            "email_enabled",
+            "highlight_staff",
+            *EDITORIAL_FIELDS,
+            "guest_editor",
+            "registered_editor",
+            "editor_features",
+        )
         labels: ClassVar[dict[str, object]] = {
             "email_enabled": _("Send emails"),
             "highlight_staff": _("Highlight staff names"),
@@ -42,6 +74,20 @@ class SiteSettingsForm(forms.ModelForm):
 
     def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
+        if (
+            self.is_bound
+            and "guest_editor" not in self.data
+            and "registered_editor" not in self.data
+        ):
+            # Preserve editor settings when an older open admin form is submitted.
+            data = self.data.copy()
+            data["guest_editor"] = self.instance.guest_editor
+            data["registered_editor"] = self.instance.registered_editor
+            if hasattr(data, "setlist"):
+                data.setlist("editor_features", self.instance.editor_features)
+            else:
+                data["editor_features"] = self.instance.editor_features
+            self.data = data
         self.fields["email_enabled"].help_text = _(
             "Disables all comment emails, including guest verification. Guests cannot comment while email is disabled."
         )

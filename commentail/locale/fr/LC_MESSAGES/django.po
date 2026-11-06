@@ -1087,3 +1087,58 @@ msgstr "La colonne facultative reason définit le message de refus pour les visi
 
 msgid "The same spreadsheet escaping applies to rejection reasons."
 msgstr "Le même échappement pour les tableurs s’applique aux motifs de refus."
+
+msgid "Plain text"
+msgstr "Texte brut"
+
+msgid "Markdown"
+msgstr "Markdown"
+
+msgid "Visual editor"
+msgstr "Éditeur visuel"
+
+msgid "Guest editor"
+msgstr "Éditeur des invités"
+
+msgid "Registered user editor"
+msgstr "Éditeur des utilisateurs inscrits"
+
+msgid "Allowed formatting"
+msgstr "Mise en forme autorisée"
+
+msgid "Comment editor"
+msgstr "Éditeur de commentaires"
+
+msgid "Bold"
+msgstr "Gras"
+
+msgid "Italic"
+msgstr "Italique"
+
+msgid "Strikethrough"
+msgstr "Barré"
+
+msgid "Links"
+msgstr "Liens"
+
+msgid "Quotes"
+msgstr "Citations"
+
+msgid "Unordered lists"
+msgstr "Listes à puces"
+
+msgid "Ordered lists"
+msgstr "Listes numérotées"
+
+msgid "Inline code"
+msgstr "Code en ligne"
+
+msgid "Code blocks"
+msgstr "Blocs de code"
+
+msgid "This formatting is disabled or exceeds the editor limits."
+msgstr "Cette mise en forme est désactivée ou dépasse les limites de l’éditeur."
+
+#: commentail/services.py
+msgid "You cannot reply to your own comment."
+msgstr "Vous ne pouvez pas répondre à votre propre commentaire."

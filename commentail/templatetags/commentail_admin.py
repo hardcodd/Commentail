@@ -37,6 +37,7 @@ def commentail_form_groups(form: BaseForm) -> list[tuple[str, list[BoundField]]]
         layout = [
             (_("Discussion settings"), ("mode", "moderation", "access", "max_length")),
             (_("Appearance"), ("highlight_staff", "clickable_links")),
+            (_("Comment editor"), ("guest_editor", "registered_editor", "editor_features")),
             (
                 _("Email delivery"),
                 ("email_enabled", "notify_publication", "notify_rejection"),

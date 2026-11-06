@@ -16,6 +16,10 @@
 | Shared IP quota | Verify real immediate proxy networks; never trust arbitrary forwarded headers. |
 | CSRF after login | Login rotates the token; reload. Check cookies/origin/scheme/middleware. Optional failure view recovers a draft without accepting the POST. |
 | Local projects interfere | Cookies span ports; use different session and CSRF cookie names. |
+| Visual editor absent | In 1.5.0, enable Visual editor for the relevant Site audience. Check `collectstatic`, CSP and editor JS/CSS/locale requests; a failed load leaves the native textarea usable. |
+| Formatting rejected | Check Site capabilities, source length and the limited [Markdown dialect](Comment-editor.md). Disabled formatting must be removed from revisions; published content is unchanged. |
+| Cannot switch to visual view | Nested quotes, complex list items, language-labelled code fences and cross-line links can remain source-only; continue editing Markdown without flattening the content. |
+| Reply missing on own comment | From 1.5.0, new self-replies are disabled. Reply to a different author. |
 | Missing CSS/JS | Check collectstatic, resource tags, CSP, paths and override order. Avoid loading JS twice. |
 | Expired action link | Original deadline/access still applies. Do not bypass it in a custom view. |
 | Object widget missing | Verify registration, saved PK, adapter Site matches current Site and can_view returns bool. |

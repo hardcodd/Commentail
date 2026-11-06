@@ -33,6 +33,9 @@ See [1.4.1 documentation correction](Release-1.4.1.md), [1.4.0 changes and upgra
 The Wagtail 8 CI stacks now select 8.0.1 or a newer patch within 8.0; the
 supported framework pairs and package bounds above are unchanged.
 
+The development branch prepares **1.5.0**, not yet on PyPI. For a reviewed
+candidate, install its local wheel; see [1.5.0 upgrade notes](Release-1.5.0.md).
+
 ## 1. Apps, middleware and templates
 
 Add `commentail` and `wagtail.contrib.settings` to your existing `INSTALLED_APPS`.
@@ -109,6 +112,7 @@ Review the notes for your target version and every intervening release:
 
 | Target | Main upgrade considerations |
 | --- | --- |
+| [1.5.0 (unreleased)](Release-1.5.0.md) | Migration `0020` adds explicit formats and Site editor settings. Plain remains the default. Refresh assets and form/body overrides; reversing the migration discards format metadata. |
 | [1.4.0](Release-1.4.0.md) | Migration `0019` adds rule reasons. Review enabled Reject rules; matching new guest text is refused before email proof. Optional independent email configuration and a test-mail command. |
 | [1.3.2](Release-1.3.2.md) | Restore translated Site home trees; no new migration over 1.3.1. Earlier installations must also follow the 1.3.1 migration procedure. |
 | [1.3.1](Release-1.3.1.md) | Irreversible data migration `0018`: stop writers, keep the same key and back up database/key/package. Review form overrides and shared-network issuance quotas. |

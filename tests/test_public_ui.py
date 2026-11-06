@@ -105,7 +105,7 @@ class PublicInterfaceTests(TestCase):
 
     def test_reply_error_keeps_nested_addressee_rendered(self):
         self.client.force_login(self.user)
-        parent = submit(self.discussion.pk, text="Parent", user=self.admin)
+        parent = submit(self.discussion.pk, text="Parent", user=self.user)
         moderate(parent.pk, "approve", actor=self.admin)
         child = submit(
             self.discussion.pk, text="Child", user=self.admin, reply_to=parent.pk
@@ -447,7 +447,7 @@ class PublicInterfaceTests(TestCase):
             reply = submit(
                 self.discussion.pk,
                 text=f"Reply {i}",
-                user=self.user,
+                user=self.admin,
                 reply_to=parent.pk,
             )
             moderate(reply.pk, "approve", actor=self.admin)
@@ -456,7 +456,7 @@ class PublicInterfaceTests(TestCase):
         self.assertContains(response, f'id="commentail-{reply.pk}"')
 
     def test_failed_reply_submission_preserves_addressee_and_navigation(self):
-        parent = submit(self.discussion.pk, text="Parent", user=self.user)
+        parent = submit(self.discussion.pk, text="Parent", user=self.admin)
         moderate(parent.pk, "approve", actor=self.admin)
         self.client.force_login(self.user)
         response = self.client.get(self.url, {"reply_to": parent.pk})
@@ -713,7 +713,7 @@ class PublicInterfaceTests(TestCase):
                 child = submit(
                     self.discussion.pk,
                     text=f"Child {index}-{number}",
-                    user=self.admin,
+                    user=self.user,
                     reply_to=root.pk,
                 )
                 moderate(child.pk, "approve", actor=self.admin)
@@ -736,7 +736,7 @@ class PublicInterfaceTests(TestCase):
         self.assertEqual(query["replies"], navigation["replies"])
 
     def test_pending_reply_target_opens_parent_only_for_its_author(self):
-        root = submit(self.discussion.pk, text="Root", user=self.admin)
+        root = submit(self.discussion.pk, text="Root", user=self.user)
         moderate(root.pk, "approve", actor=self.admin)
         child = submit(
             self.discussion.pk, text="Child", user=self.admin, reply_to=root.pk
@@ -782,14 +782,14 @@ class PublicInterfaceTests(TestCase):
         reply = submit(
             self.discussion.pk,
             text="Targeted fresh reply",
-            user=self.admin,
+            user=self.user,
             reply_to=latest.pk,
         )
         moderate(reply.pk, "approve", actor=self.admin)
         other = submit(
             self.discussion.pk,
             text="Unrequested fresh reply",
-            user=self.admin,
+            user=self.user,
             reply_to=latest.pk,
         )
         moderate(other.pk, "approve", actor=self.admin)

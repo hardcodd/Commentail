@@ -18,6 +18,7 @@ loaders. Copy from the installed version, make focused edits and recheck on upgr
 | replies.html | Expansion and reply list |
 | form.html | Main/reply composer |
 | edit-form.html | Inline editor |
+| editor-tools.html | Visual toolbar and link dialog (1.5.0) |
 | captcha.html | Arithmetic challenge |
 | provider-captcha.html | Optional Google/Yandex widget |
 | base.html | Email-action document layout |
@@ -31,6 +32,10 @@ Do not cache personalized widget HTML. Test with JS and without it. Keep the hid
 for honeypot checks and preserve the provider template’s hidden `answer`, widget
 container and refresh control when using an external CAPTCHA. Keep `form_age`
 for draft-age preservation during enhanced reading navigation.
+
+For 1.5.0 editor integration, review the [template contract](Template-contract.md)
+and [editor guide](Comment-editor.md). Keep the native textarea and conditional
+resource hooks. Render formatted bodies inside a block container, not `<p>`.
 
 ## Structured data
 

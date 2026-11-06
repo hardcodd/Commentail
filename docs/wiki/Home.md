@@ -20,9 +20,13 @@ See the [current release notes](Release-1.4.1.md) and [1.4.0 upgrade procedure](
 Upgrading from 1.3.0 or earlier also requires the
 [1.3.1 irreversible migration procedure](Release-1.3.1.md).
 
+**Preparing 1.5.0:** [visual editing and Markdown](Comment-editor.md),
+independent guest/account modes and prevention of new self-replies.
+[Changes and upgrade notes](Release-1.5.0.md). The package is not published yet.
+
 ## Step-by-step course
 
-The [22-lesson Commentail course](https://hardcodd.net/en/blog/?series=commentail-tutorials)
+The [Commentail course](https://hardcodd.net/en/blog/?series=commentail-tutorials)
 covers installation, email delivery, CAPTCHA, customization and production setup
 with practical examples. Start with a practice site or choose the topic you need.
 
@@ -68,7 +72,7 @@ with practical examples. Start with a practice site or choose the topic you need
 4. Exercise publication, a reply and an eligible edit.
 5. Adapt the theme and assign site-scoped moderator rights.
 
-Plain text, server-rendered HTML and progressive JavaScript keep integration
+Plain text or opt-in formatting, server-rendered HTML and progressive JavaScript keep integration
 independent of a frontend framework. English, Russian, German, French, Spanish
 and Brazilian Portuguese are available across the UI, moderation and emails;
 see [Languages](Configuration.md#languages).

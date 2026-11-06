@@ -3,6 +3,20 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## [1.5.0] — Unreleased · Visual comment editor
+
+- Add a dependency-free visual/Markdown editor, independent guest/account Site
+  modes, server-enforced formatting permissions and migration `0020`.
+- Preserve legacy plain text, code whitespace, independent in-page drafts and
+  native forms; load editor assets and the active locale only when needed.
+- Add reversible Markdown typing shortcuts, keyboard toolbar/dialog navigation,
+  focused validation announcements and consistent editor controls.
+- Prevent new self-replies by account identity or normalized guest email; retain
+  existing replies. Improve length-limit placement and reply-email notices.
+- Preserve published code contrast on light and dark host themes.
+- Ship editor sources and regression tests in the sdist and generated assets in
+  both distributions. See [release and upgrade notes](Release-1.5.0.md).
+
 ## [1.4.1] — 2026-10-26 · Package description correction
 
 - Publish the corrected README and current installation commands on PyPI. The

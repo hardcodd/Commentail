@@ -61,16 +61,14 @@ Version 1.4.0 is published. See the
 [configuration reference](Email-configuration.md) and
 [upgrade notes](Release-1.4.0.md).
 
-## Later: visual Markdown editor and emoji
+## Prepared for 1.5.0: visual and Markdown editor
 
-Add a visual comment editor based on Markdown, without a source view or a
-source-editing toggle. Readers compose and format comments through the editor UI.
-This is future work, outside 1.4.0, with no target version or date.
+The [comment editor](Comment-editor.md) implements per-Site guest/account modes,
+server-enforced formatting, source switching, code and independent form drafts.
+Existing comments remain plain text. See [release preparation](Release-1.5.0.md).
 
-Emoji support is also planned. The formatting subset, storage/rendering and
-sanitization contract, editing and no-JavaScript behavior, accessibility, editor
-dependency and emoji interaction remain to be defined before implementation.
-Emoji do not imply the separate Like/Dislike reaction feature.
+Emoji selection remains future work, without a target version. Ordinary Unicode
+emoji can already be typed; an emoji picker is not part of the editor release.
 
 ## Later: most-discussed threads
 

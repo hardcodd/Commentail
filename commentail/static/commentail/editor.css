@@ -1,0 +1,91 @@
+.commentail-rich { --surface:#fff; --subtle:#f7f8fc; --ink:#262d40; --muted:#697287; --line:#e2e6ef; --accent:#6250c9; --selected:#eeeafd; color:var(--ink); font:15px/1.65 system-ui,sans-serif; margin-block:.8rem; min-width:0; }
+/* Dialog owners live outside .commentail and must not depend on its reset. */
+.commentail-rich, .commentail-rich *, .commentail-rich *::before, .commentail-rich *::after { box-sizing: border-box; }
+.commentail-rich .editor-topbar { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin: 0; padding: .55rem; background: var(--subtle); border: 1px solid var(--line); border-radius: 11px; }
+.commentail-rich .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; min-width: 0; }
+.commentail-rich .tool-group { display: flex; gap: 2px; }
+.commentail-rich .tool-group + .tool-group { border-inline-start: 1px solid var(--line); padding-inline-start: .4rem; }
+.commentail-rich button { font: inherit; color: inherit; cursor: pointer; }
+.commentail-rich .tool { position: relative; display: inline-flex; }
+.commentail-rich .tool-button { display: grid; place-items: center; width: 36px; height: 36px; padding: 7px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--muted); }
+.commentail-rich .tool-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.commentail-rich .tool-button:hover:not(:disabled) { background: var(--surface); color: var(--ink); border-color: var(--line); }
+.commentail-rich .tool-button[aria-pressed="true"] { color: var(--accent); background: var(--selected); border-color: light-dark(#d5ccf8,#61527f); }
+.commentail-rich .tool-button:disabled { opacity: .32; cursor: default; }
+.commentail-rich .tooltip { position: absolute; z-index: 5; top: calc(100% + 9px); left: 50%; transform: translateX(-50%); width: max-content; max-width: 210px; padding: .55rem .75rem; border-radius: 8px; color: #fff; background: #262b3c; box-shadow: 0 5px 18px #0002; font-size: .76rem; font-weight: 500; line-height: 1.4; text-align: center; visibility: hidden; opacity: 0; pointer-events: none; }
+.commentail-rich .tooltip::before { content: ''; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+.commentail-rich .tooltip kbd { display: block; margin-top: .3rem; font: .67rem/1.3 system-ui,sans-serif; color: #c1c8dd; }
+.commentail-rich .tool:hover .tooltip, .commentail-rich .tool:focus-within .tooltip { visibility: visible; opacity: 1; pointer-events: auto; }
+.commentail-rich .tool[data-dismissed] .tooltip { visibility: hidden; opacity: 0; pointer-events: none; }
+.commentail-rich .mode { margin-left: auto; }
+.commentail-rich .mode .tooltip { left: auto; right: 0; transform: none; }
+.commentail-rich .mode button[aria-pressed="false"] .visual-icon, .commentail-rich .mode button[aria-pressed="true"] .source-icon { display: none; }
+.commentail-rich .mode button[aria-pressed="true"] { background: var(--selected); color: var(--accent); }
+.commentail-rich :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.commentail-rich .editor, .commentail-rich textarea { display: block; width: 100%; min-height: 18rem; padding: 1.4rem 1.6rem; background: var(--surface); color: inherit; border: 1px solid var(--line); border-radius: 10px; overflow-wrap: anywhere; font-size: 1rem; }
+.commentail-rich .composer .editor, .commentail-rich .composer textarea { border: 0; border-radius: 0; min-height: 320px; }
+.commentail-rich .composer .editor:focus, .commentail-rich .composer textarea:focus { outline: none; }
+.commentail-rich [hidden] { display: none !important; }
+.commentail-rich .editor { white-space: pre-wrap; overflow-x: auto; }
+.commentail-rich .editor p { margin: .5rem 0; min-height: 1.65em; }
+.commentail-rich .editor blockquote { position: relative; margin: .8rem 0; padding: .25rem 0 .25rem 2rem; border-inline-start: 2px solid var(--accent); min-height: 1.65em; }
+.commentail-rich .editor blockquote::before { content: '“'; position: absolute; inset-inline-start: .35rem; top: -.3rem; color: var(--accent); font: 2.4rem/1.2 Georgia,serif; pointer-events: none; }
+.commentail-rich .editor blockquote + blockquote { margin-top: -.8rem; }
+.commentail-rich .editor blockquote + blockquote::before { content: none; }
+.commentail-rich .editor ol, .commentail-rich .editor ul { margin-block: .4rem; padding-inline-start: 4em; }
+.commentail-rich .editor ol { list-style-type: none; }
+.commentail-rich .editor ol > li { position: relative; }
+/* Model-owned labels avoid WebKit's different list-item counter behavior. */
+.commentail-rich .editor ol > li::before { content: attr(data-marker) ". "; position: absolute; inset-inline-end: 100%; padding-inline-end: .5em; white-space: nowrap; }
+.commentail-rich .editor code { font-family: ui-monospace,monospace; font-size: .88em; background: var(--subtle); border: 1px solid var(--line); border-radius: 4px; padding: .08em .25em; }
+.commentail-rich .editor a { color: var(--accent); text-decoration: underline; text-underline-offset: .18em; cursor: text; }
+.commentail-rich .editor pre { white-space: pre-wrap; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--subtle); }
+.commentail-rich .editor pre code { background: none; border: 0; padding: 0; }
+.commentail-rich textarea { font: .95rem/1.7 ui-monospace,monospace; resize: vertical; }
+.commentail-rich .composer-footer { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem 1rem; padding: .9rem 1.5rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .72rem; }
+.commentail-rich [data-editor-status] { flex: 1 1 320px; margin: 0; min-height: 1.65em; overflow-wrap: anywhere; }
+.commentail-rich .footer-hint { white-space: nowrap; font-size: .7rem; }
+.commentail-rich .footer-hint kbd { font: inherit; padding: .1rem .25rem; border: 1px solid var(--line); border-radius: 4px; }
+.commentail-rich details { margin-top: 1rem; color: var(--muted); font-size: .82rem; }
+.commentail-rich details p { max-width: 80ch; }
+.commentail-rich summary { cursor: pointer; width: fit-content; }
+.commentail-rich .lab-links { margin-top: 1.4rem; font-size: .76rem; color: var(--muted); }
+.commentail-rich a { color: var(--accent); text-underline-offset: 3px; }
+.commentail-rich .link-dialog { width: min(440px,calc(100% - 2rem)); max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 1.4rem; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); box-shadow: 0 20px 80px #0003; }
+.commentail-rich .link-dialog::backdrop { background: #11182c66; }
+.commentail-rich .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.1rem; }
+.commentail-rich .dialog-heading h2 { margin: 0; font-size: 1.15rem; letter-spacing: -.025em; }
+.commentail-rich .link-field { display: grid; gap: .4rem; font-size: .82rem; font-weight: 600; }
+.commentail-rich .link-field input { width: 100%; min-width: 0; padding: .65rem .75rem; font: 400 1rem/1.4 system-ui,sans-serif; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; }
+.commentail-rich .dialog-hint { margin: .55rem 0 1.1rem; color: var(--muted); font-size: .76rem; line-height: 1.5; }
+.commentail-rich .link-error { min-height: 1.5em; margin: .7rem 0; color: light-dark(#b52c49,#ff9bb1); font-size: .8rem; line-height: 1.5; }
+.commentail-rich .dialog-actions, .commentail-rich .dialog-primary { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.commentail-rich .dialog-primary { margin-left: auto; }
+.commentail-rich .dialog-actions button { padding: .55rem .75rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: .8rem; font-weight: 600; }
+.commentail-rich .dialog-actions button:hover { border-color: var(--accent); }
+.commentail-rich .dialog-actions .save-link { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.commentail-rich .dialog-actions .remove-link { color: light-dark(#b52c49,#ff9bb1); }
+@media(max-width:600px) {
+.commentail-rich .editor-topbar {position:relative; display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px 2px;}
+.commentail-rich .toolbar,.commentail-rich .tool-group {display:contents;}
+.commentail-rich .tool-group + .tool-group {border:0;padding:0;}
+.commentail-rich .editor-topbar .tool {position:static;justify-content:center;order:1;}
+.commentail-rich .editor-topbar .tool-group:first-child .tool,.commentail-rich .editor-topbar .mode {order:0;}
+.commentail-rich .mode {margin:0;}
+.commentail-rich .editor-topbar .tool-button {width:100%;height:40px;}
+.commentail-rich .tooltip {left:.5rem;right:.5rem;transform:none;width:auto;max-width:none;}
+}
+.commentail-rich .editor, .commentail-rich textarea {min-height:10rem;max-height:40rem;overflow:auto; margin-top:.6rem;}
+.commentail-rich [data-editor-status] {font-size:.8rem;color:var(--muted);margin:.5rem 0;}
+.commentail-rich > [aria-live="assertive"]:not(:empty) { margin:.6rem 0; color:#b52c49; font-size:.85rem; line-height:1.5; overflow-wrap:anywhere; }
+.commentail-rich .editor-keyboard-help {font-size:.8rem;color:var(--muted);margin:.5rem 0;line-height:1.5;}
+.commentail-rich .editor-help { margin:.35rem 0; font-size:.8rem; }
+.commentail-rich .editor-help summary { padding:.2rem 0; color:var(--accent); }
+.commentail-rich .editor-help[open] { padding:.6rem .8rem; background:var(--subtle); border:1px solid var(--line); border-radius:8px; }
+.commentail-rich .commentail-length { margin:.4rem 0 0; font-size:.78rem; color:var(--muted); }
+.commentail-rich [data-editor-status]:empty { min-height:0; margin:0; }
+.commentail-rich [aria-invalid="true"] {outline:2px solid var(--accent);outline-offset:2px;}
+
+@media(max-width:360px) {
+.commentail-rich .editor-topbar {grid-template-columns:repeat(5,minmax(0,1fr));}
+}

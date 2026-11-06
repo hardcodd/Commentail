@@ -46,14 +46,14 @@ class ExtensionContractTests(TestCase):
 
     def published(self, text, **kwargs):
         return moderate(
-            submit(self.discussion.pk, text=text, user=self.author, **kwargs).pk,
+            submit(self.discussion.pk, text=text, user=kwargs.pop("user", self.author), **kwargs).pk,
             "approve",
             actor=self.admin,
         )
 
     def test_host_override_consumes_public_thread_and_form_context(self):
         root = self.published("<script>public & root</script>")
-        reply = self.published("Public reply", reply_to=root.pk)
+        reply = self.published("Public reply", reply_to=root.pk, user=self.admin)
         source = """{{ discussion_id }}|{{ page_id }}|{{ language_code }}
 {% for item in rows %}<article id="commentail-{{ item.id }}">
 {{ item.display_name }}|{{ item.body }}|{{ item.permalink }}|{{ item.reply_count }}
@@ -61,7 +61,7 @@ class ExtensionContractTests(TestCase):
 <aside>{{ reply.id }}|{{ reply.reply_to_id }}|{{ reply.reply_to_name }}|{{ reply.body }}</aside>
 {% endfor %}{% endif %}</article>{% endfor %}
 {% if can_post %}{% include 'commentail/form.html' %}{% endif %}"""
-        self.client.force_login(self.author)
+        self.client.force_login(self.admin)
         with override_settings(TEMPLATES=host_templates(source)):
             response = self.client.get(
                 self.url, {"reply_to": root.pk, "target": reply.pk}
@@ -83,7 +83,7 @@ class ExtensionContractTests(TestCase):
             self.assertEqual(response.status_code, 302)
         accepted = self.discussion.comments.get(text="Override form reply")
         self.assertEqual(accepted.reply_to_id, root.pk)
-        self.assertEqual(accepted.user_id, self.author.pk)
+        self.assertEqual(accepted.user_id, self.admin.pk)
 
     def test_pending_revision_context_is_private_and_public_schema_keeps_old_text(self):
         root = self.published("Public original")

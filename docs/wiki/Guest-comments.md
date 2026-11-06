@@ -2,10 +2,11 @@
 
 ## First submission
 
-Guests enter a required name (up to 40 visible characters), email and plain-text
-comment. Email is private and shown only in the admin. Text defaults to 5000 visible
+Guests enter a required name (up to 40 visible characters), email and a comment. Email is private and shown only in the admin. Text defaults to 5000 visible
 characters, including spaces and line breaks; composed emoji count as one character.
-HTML and Markdown are not rendered.
+In 1.5.0, the Site chooses plain text, Markdown or a visual editor for guests;
+see [Comment editor](Comment-editor.md). The limit counts submitted source.
+Existing plain comments remain literal; arbitrary HTML is never rendered.
 
 Names may include a first and last name or a nickname. Surrounding whitespace is
 trimmed before counting Unicode graphemes. Longer new names are rejected without

@@ -1087,3 +1087,58 @@ msgstr "Die optionale Spalte reason legt die Ablehnungsnachricht für Gäste fes
 
 msgid "The same spreadsheet escaping applies to rejection reasons."
 msgstr "Dieselbe Maskierung für Tabellenkalkulationen gilt auch für Ablehnungsgründe."
+
+msgid "Plain text"
+msgstr "Klartext"
+
+msgid "Markdown"
+msgstr "Markdown"
+
+msgid "Visual editor"
+msgstr "Visueller Editor"
+
+msgid "Guest editor"
+msgstr "Editor für Gäste"
+
+msgid "Registered user editor"
+msgstr "Editor für angemeldete Benutzer"
+
+msgid "Allowed formatting"
+msgstr "Erlaubte Formatierung"
+
+msgid "Comment editor"
+msgstr "Kommentareditor"
+
+msgid "Bold"
+msgstr "Fett"
+
+msgid "Italic"
+msgstr "Kursiv"
+
+msgid "Strikethrough"
+msgstr "Durchgestrichen"
+
+msgid "Links"
+msgstr "Links"
+
+msgid "Quotes"
+msgstr "Zitate"
+
+msgid "Unordered lists"
+msgstr "Ungeordnete Listen"
+
+msgid "Ordered lists"
+msgstr "Nummerierte Listen"
+
+msgid "Inline code"
+msgstr "Inline-Code"
+
+msgid "Code blocks"
+msgstr "Codeblöcke"
+
+msgid "This formatting is disabled or exceeds the editor limits."
+msgstr "Diese Formatierung ist deaktiviert oder überschreitet die Grenzen des Editors."
+
+#: commentail/services.py
+msgid "You cannot reply to your own comment."
+msgstr "Du kannst nicht auf deinen eigenen Kommentar antworten."

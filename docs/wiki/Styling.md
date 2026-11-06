@@ -9,7 +9,11 @@ uses a stronger border, weight and tint without imposing a fixed palette. This f
 light/dark switch and decorative backgrounds without JavaScript or an OS-theme
 guess. Without `color-mix()` support, controls retain transparent backgrounds and
 solid current-color borders.
-Generated avatar colors remain independent.
+Generated avatar colors remain independent. The optional 1.5.0 visual editor
+has its own light palette and typography; it does not automatically follow a
+host dark-mode switch. Review `.commentail-rich` overrides separately, including
+the link dialog mounted outside the discussion. Published Markdown bodies inherit
+the host text color; code blocks use `color-input-surface` or a current-color tint.
 
 No host CSS variables are required for the default widget. The library reads
 `currentColor` from its container; it does not discover arbitrary site tokens
@@ -37,6 +41,7 @@ package stylesheet. For example, map the site's own accent token explicitly:
 | `color-button-text` | Inherited text for comment submission; accent or inherited text for other buttons |
 | `color-button-surface`, `color-button-hover` | 12% / 18% text-color tint for comment submission; 8% / 15% for other buttons |
 | `color-control-surface`, `color-control-hover` | Quiet actions: transparent / 8% text-color tint |
+| `color-notice-surface`, `color-notice-text` | Reply-email notice: 7% text-color tint / inherited text; pale violet/dark foreground fallback |
 | `color-menu-surface`, `color-menu-text` | Action popup: browser canvas with a subtle tint / canvas text |
 | `color-staff-text`, `color-staff-surface` | Staff name: accent/inherited text and a 12% tint; blue foreground/pale blue background without `color-mix()` |
 | `color-superuser-text`, `color-superuser-surface` | Super administrator name: dark amber (`#795400`) / pale gold (`#ffedb5`) |

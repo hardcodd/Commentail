@@ -80,6 +80,7 @@ jobs:
       - run: python -m pip install -r requirements-test.txt ruff==0.16.9
       - run: ruff check commentail tests example tools
       - run: node --test tests/test_*.js
+      - run: node tools/build_editor.mjs --check
       - run: python -m django makemigrations --check --dry-run --settings=tests.settings
       - run: sudo apt-get update && sudo apt-get install -y gettext
       - name: Check all shipped translation catalogs and source coverage
@@ -94,6 +95,9 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
       - run: python -m pip install -r requirements-test.txt setuptools==84.0.0
       - name: Build wheel from source distribution
         shell: bash
@@ -105,12 +109,18 @@ jobs:
           cd unpacked/commentail-*
           python -c 'import sys; from setuptools.build_meta import build_wheel; build_wheel(sys.argv[1])' "$destination"
       - run: python tools/check_dist.py dist
+      - name: Verify editor sources and tests from the source distribution
+        shell: bash
+        run: |
+          cd unpacked/commentail-*
+          node tools/build_editor.mjs --check
+          node --test tests/test_*.js
       - run: python -m pip install --no-deps dist/*.whl
       - name: Verify installed wheel and runnable source example
         shell: bash
         run: |
           work=$(mktemp -d)
-          cp -R tests "$work/tests"
+          cp -R unpacked/commentail-*/tests "$work/tests"
           cd "$work"
           COMMENTAIL_TEST_SQLITE="$work/contracts.sqlite3" python -m django test tests --settings=tests.settings --noinput
           cd "$GITHUB_WORKSPACE"/unpacked/commentail-*/example

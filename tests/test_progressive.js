@@ -363,6 +363,23 @@ test("opening an inline edit focuses its own textarea and preserves the main dra
   assert.equal(main.value, "Unsent draft");
 });
 
+test("opening an already loaded visual edit focuses the visible surface", async () => {
+  const visual = focusTarget();
+  const editField = {...focusTarget(), hidden: true,
+    closest: () => ({querySelector: () => visual})};
+  const editor = {dataset: {editComment: "7"}, querySelector: () => editField};
+  const next = {dataset: {discussion: "17"}, querySelectorAll: () => [],
+    querySelector: s => s === ".commentail-edit-form" ? editor : null};
+  const h = harness(async () => ({status: 200, text: async () => "HTML"}), next);
+  h.block.querySelector = s => s === ".commentail-network-error" ? h.alert : null;
+  h.listeners.click({button: 0, target: {closest: () => ({
+    href: "https://local.invalid/?edit_comment=7", dataset: {commentailEdit: "7", commentailFocus: "text"},
+    closest: () => h.block})}, preventDefault() {}});
+  await settle();
+  assert.equal(visual.focused, true);
+  assert.equal(editField.focused, undefined);
+});
+
 test("edit cancellation removes its editor locally and returns focus to Edit", () => {
   const trigger = focusTarget();
   let removed = false, calls = 0;

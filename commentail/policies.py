@@ -21,6 +21,9 @@ class EditorialSettings:
     notify_publication: bool
     notify_rejection: bool
     highlight_staff: bool = True
+    guest_editor: str = "plain"
+    registered_editor: str = "plain"
+    editor_features: tuple[str, ...] = ()
 
 
 def editorial_settings(discussion: Discussion) -> EditorialSettings:
@@ -44,6 +47,9 @@ def editorial_settings(discussion: Discussion) -> EditorialSettings:
         if discussion.notify_rejection is None
         else discussion.notify_rejection,
         highlight_staff=defaults.highlight_staff,
+        guest_editor=defaults.guest_editor,
+        registered_editor=defaults.registered_editor,
+        editor_features=tuple(defaults.editor_features),
     )
 
 

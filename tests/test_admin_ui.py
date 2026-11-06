@@ -291,6 +291,10 @@ class AdminInterfaceTests(TestCase):
             with self.subTest(url=url):
                 response = self.client.get(url)
                 for field in response.context["form"]:
+                    if field.name == "editor_features":
+                        self.assertContains(response, 'name="editor_features"', count=9)
+                        self.assertContains(response, f'<legend>{field.label}</legend>', count=1)
+                        continue
                     self.assertContains(response, f'name="{field.name}"', count=1)
                     self.assertContains(
                         response, f'for="{field.id_for_label}"', count=1
@@ -478,7 +482,7 @@ class AdminInterfaceTests(TestCase):
         self.client.force_login(self.admin)
         moderate(self.comment.pk, "approve", actor=self.admin)
         reply = submit(
-            self.discussion.pk, text="Reply", user=self.admin, reply_to=self.comment.pk
+            self.discussion.pk, text="Reply", user=self.staff, reply_to=self.comment.pk
         )
         for action, status in [
             ("hide", "hidden"),
@@ -582,7 +586,7 @@ class AdminInterfaceTests(TestCase):
         reply = submit(
             self.discussion.pk,
             text="Keep this reply",
-            user=self.admin,
+            user=self.staff,
             reply_to=self.comment.pk,
         )
         url = reverse("commentail_admin:action", args=[self.comment.pk])

@@ -1,0 +1,38 @@
+    <div class="editor-topbar" hidden>
+      <div data-editor-toolbar class="toolbar" role="toolbar" aria-label="Comment formatting">
+      <div class="tool-group" role="group" aria-label="Text formatting">
+        <span class="tool"><button class="tool-button" type="button" data-command="bold" aria-label="Bold" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 4h5a4 4 0 0 1 0 8H7V4Zm0 8h6a4 4 0 0 1 0 8H7v-8Z"/></svg></button><span class="tooltip" role="tooltip">Bold<kbd>⌘ / Ctrl + B</kbd></span></span>
+        <span class="tool"><button class="tool-button" type="button" data-command="italic" aria-label="Italic" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 4h8M6 20h8M15 4 9 20"/></svg></button><span class="tooltip" role="tooltip">Italic<kbd>⌘ / Ctrl + I</kbd></span></span>
+        <span class="tool"><button class="tool-button" type="button" data-command="strike" aria-label="Strikethrough" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M17 6c-1-2-3-3-5-3-3 0-5 1.5-5 4 0 1.4.8 2.4 2 3M4 12h16M15 14c1.3.7 2 1.6 2 3 0 2.5-2 4-5 4-2.5 0-4.5-1-5.5-3"/></svg></button><span class="tooltip" role="tooltip">Strikethrough<kbd>⌘ / Ctrl + Shift + X</kbd></span></span>
+        <span class="tool"><button class="tool-button" type="button" data-command="code" aria-label="Inline code" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/></svg></button><span class="tooltip" role="tooltip">Inline code<kbd>⌘ / Ctrl + E</kbd></span></span>
+        <span class="tool"><button class="tool-button" type="button" data-command="pre" aria-label="Code block"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18m-14 4 2 2-2 2m6 0h4"/></svg></button><span class="tooltip" role="tooltip">Code block</span></span>
+        <span class="tool"><button class="tool-button" type="button" data-command="quote" aria-label="Quote" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 5H4v7h6V5Zm0 7v2c0 3-2 5-5 5M20 5h-6v7h6V5Zm0 7v2c0 3-2 5-5 5"/></svg></button><span class="tooltip" role="tooltip">Quote</span></span>
+        <span class="tool"><button class="tool-button" type="button" data-command="link" aria-label="Link" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m10 13 4-4m-6 6-1 1a3.5 3.5 0 0 1-5-5l4-4a3.5 3.5 0 0 1 5 0m2 2 1-1a3.5 3.5 0 0 1 5 5l-4 4a3.5 3.5 0 0 1-5 0" transform="translate(1.5 0)"/></svg></button><span class="tooltip" role="tooltip">Link<kbd>⌘ / Ctrl + K</kbd></span></span>
+      </div>
+      <div class="tool-group" role="group" aria-label="Clear formatting">
+        <span class="tool"><button class="tool-button" type="button" data-command="clear" aria-label="Clear formatting"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path transform="translate(-.5 -.5)" d="M4 4h14M11 4l-4 15M4 19h4M14 14l7 7m0-7-7 7"/></svg></button><span class="tooltip" role="tooltip">Clear formatting</span></span>
+      </div>
+      <div class="tool-group" role="group" aria-label="Lists and indentation">
+        <span class="tool"><button class="tool-button" type="button" data-command="ul" aria-label="Unordered list"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10 6h11M10 12h11M10 18h11"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></button><span class="tooltip" role="tooltip">Unordered list</span></span>
+        <span class="tool"><button class="tool-button" type="button" data-command="ol" aria-label="Ordered list"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M11 7h10M11 17h10M3 4h2v6M3 10h4M3 15a2 2 0 0 1 4 0c0 1-1 2-4 5h4"/></svg></button><span class="tooltip" role="tooltip">Ordered list</span></span>
+        <span class="tool"><button class="tool-button" type="button" data-command="outdent" aria-label="Outdent"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 4h18M3 20h18M11 9h10M11 15h10M7 8l-4 4 4 4"/></svg></button><span class="tooltip" role="tooltip">Outdent<kbd>Shift + Tab</kbd></span></span>
+        <span class="tool"><button class="tool-button" type="button" data-command="indent" aria-label="Indent"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 4h18M3 20h18M11 9h10M11 15h10M3 8l4 4-4 4"/></svg></button><span class="tooltip" role="tooltip">Indent<kbd>Tab</kbd></span></span>
+      </div>
+      <div class="tool-group" role="group" aria-label="History">
+        <span class="tool"><button class="tool-button" type="button" data-command="undo" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path transform="translate(.5 -.5)" d="m8 4-5 5 5 5M3 9h11a6 6 0 0 1 0 12h-3"/></svg></button><span class="tooltip" role="tooltip">Undo<kbd>⌘ / Ctrl + Z</kbd></span></span>
+        <span class="tool"><button class="tool-button" type="button" data-command="redo" aria-label="Redo"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path transform="translate(-.5 -.5)" d="m16 4 5 5-5 5m5-5H10a6 6 0 0 0 0 12h3"/></svg></button><span class="tooltip" role="tooltip">Redo<kbd>⌘ / Ctrl + Shift + Z</kbd></span></span>
+      </div>
+      </div>
+      <span class="tool mode"><button class="tool-button" type="button" data-editor-mode aria-pressed="false" aria-label="Open Markdown"><svg class="source-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path transform="translate(-.5 0)" d="M3 18V6l5 6 5-6v12m3-4 3 4 3-4m-3-8v12"/></svg><svg class="visual-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 12s3-6 9-6 9 6 9 6-3 6-9 6-9-6-9-6Z"/><circle cx="12" cy="12" r="2.5"/></svg><span class="tooltip" role="tooltip" data-mode-label>Open Markdown</span></button></span>
+    </div>
+
+<template data-editor-dialog>  <dialog class="link-dialog">
+    <div data-link-form>
+      <div class="dialog-heading"><h2 data-link-title>Add link</h2><button class="tool-button" type="button" data-link-cancel aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+      <label class="link-field">Address<input name="href" type="url" inputmode="url" placeholder="https://example.com" maxlength="2048" autocomplete="off" spellcheck="false" autofocus></label>
+      <p class="dialog-hint">Full website address or mailto: email link. Links do not open inside the editor.</p>
+      <label class="link-field">Link text<input name="label" type="text" placeholder="If empty, use the address" maxlength="20000" autocomplete="off"></label>
+      <p class="link-error" role="alert" data-link-error></p>
+      <div class="dialog-actions"><button class="remove-link" type="button" data-link-remove hidden>Remove link</button><span class="dialog-primary"><button type="button" data-link-cancel>Cancel</button><button class="save-link" type="submit">Save</button></span></div>
+    </div>
+  </dialog></template>

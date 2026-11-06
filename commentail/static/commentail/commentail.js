@@ -108,6 +108,60 @@
   };
 
   const announcements = new WeakMap();
+  let editorLoad;
+  let editorReady = false;
+  const syncEditors = (root, validate = false) => window.CommentailEditors?.sync(root, validate) ?? true;
+  const releaseEditors = root => window.CommentailEditors?.destroy(root);
+  const mountRichEditors = (root) => {
+    const node = [...root.querySelectorAll('[data-editor-settings]')]
+      .find(item => JSON.parse(item.dataset.editorSettings).guest === "visual");
+    if (!node) return;
+    if (editorReady) { window.CommentailEditors.mount(root); return; }
+    if (!editorLoad) editorLoad = new Promise((resolve, reject) => {
+      let active = true;
+      let stylesLoaded = false, scriptLoaded = false;
+      const script = document.createElement("script");
+      script.src = node.dataset.editorAsset;
+      const locale = document.createElement("script");
+      const localeURL = node.dataset.editorLocale;
+      if (localeURL) locale.src = localeURL;
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = node.dataset.editorCss;
+      const fail = () => {
+        if (!active) return;
+        active = false;
+        clearTimeout(timeout);
+        editorLoad = null;
+        script.remove();
+        locale.remove();
+        css.remove();
+        reject(new Error("Editor unavailable"));
+      };
+      const timeout = setTimeout(fail, 15000);
+      // CSS preserves whitespace and hides the inactive source. Treat it as a
+      // required resource, including when a failed attempt already loaded JS.
+      const ready = () => {
+        if (!active || !stylesLoaded || !scriptLoaded) return;
+        if (!window.CommentailEditors) { fail(); return; }
+        active = false;
+        editorReady = true;
+        clearTimeout(timeout);
+        resolve();
+      };
+      script.onload = () => { scriptLoaded = true; ready(); };
+      script.onerror = fail;
+      css.onload = () => { stylesLoaded = true; ready(); };
+      css.onerror = fail;
+      locale.onerror = fail;
+      locale.onload = () => { if (active) document.head.append(script); };
+      document.head.append(css);
+      document.head.append(localeURL ? locale : script);
+    });
+    editorLoad.then(() => window.CommentailEditors.mount(root)).catch(() => {
+      // The native textarea is still usable; no draft is replaced on load failure.
+    });
+  };
 
   const announcementFor = (block) => {
     let node = announcements.get(block);
@@ -125,6 +179,7 @@
   };
   const enhance = (root) => {
     mountCaptchas(root);
+    mountRichEditors(root);
     root.querySelectorAll("input[data-commentail-name-limit]").forEach((field) => {
       // Native maxlength counts UTF-16 units and would reject valid Unicode names.
       // Older browsers retain the authoritative server validation.
@@ -178,6 +233,7 @@
     if (editor?.dataset?.editComment && network) editor.prepend(network);
   };
   const draft = (block, reply = false) => {
+    syncEditors(block);
     /** @type {DraftValues} */
     const values = {};
     const selector = reply ? '.commentail-form[data-reply-to] [name]' : '.commentail-form:not([data-reply-to]) [name]';
@@ -205,6 +261,12 @@
     });
   };
   const reveal = (element) => {
+    // A cached editor mounts synchronously before navigation restores focus.
+    // Its POST textarea is hidden; focus the visible editing surface instead.
+    if (element.hidden) {
+      element = element.closest?.('[data-editor-settings]')
+        ?.querySelector('[data-editor-root]:not([hidden])') || element;
+    }
     element.focus({ preventScroll: true });
     const rect = element.getBoundingClientRect();
     if (rect.top < 16 || rect.bottom > window.innerHeight - 16) {
@@ -316,10 +378,12 @@
       mountReply(next);
       mountEditor(next);
       const nextEditor = next.querySelector(".commentail-edit-form");
+      if (!syncEditors(block)) return;
       preserveDrafts(block, next, { editing, keepDraft, reply });
 
       const position = viewportAnchor(block, anchor);
       releaseCaptchas(block);
+      releaseEditors(block);
       block.replaceWith(next);
       if (announcement) announcements.set(next, announcement);
       enhance(next);
@@ -415,6 +479,7 @@
           const network = editor.querySelector?.(".commentail-network-error");
           if (network) { network.hidden = true; block.prepend(network); }
           const position = viewportAnchor(block, article);
+          releaseEditors(editor);
           editor.remove();
           restorePosition(block, position);
           const current = new URL(window.location.href);
@@ -434,6 +499,7 @@
           if (network) { network.hidden = true; block.prepend(network); }
           const position = viewportAnchor(block, form.closest(".commentail-comment"));
           releaseCaptchas(form);
+          releaseEditors(form);
           form.remove();
           restorePosition(block, position);
           const current = new URL(window.location.href);
@@ -465,6 +531,7 @@
       const block = form.matches(".commentail-form, .commentail-edit-form") && form.closest(".commentail[data-discussion]");
       if (!block || new URL(form.action).origin !== window.location.origin) return;
       event.preventDefault();
+      if (!syncEditors(form, event.submitter?.name !== "refresh")) return;
       const body = new FormData(form);
       const button = event.submitter;
       const provider = form.querySelector("[data-commentail-provider]");

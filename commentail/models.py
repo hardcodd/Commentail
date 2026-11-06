@@ -9,6 +9,19 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from wagtail.contrib.settings.models import BaseSiteSetting
 
+from .markdown import FEATURES
+
+
+def editor_features() -> list[str]:
+    """Fresh default capabilities; plain mode remains the upgrade default."""
+    return list(FEATURES)
+
+
+class EditorMode(models.TextChoices):
+    PLAIN = "plain", _("Plain text")
+    MARKDOWN = "markdown", _("Markdown")
+    VISUAL = "visual", _("Visual editor")
+
 
 class Policy(models.TextChoices):
     ALL = "all", _("Review all")
@@ -42,6 +55,21 @@ class SiteCommentSettings(BaseSiteSetting):
     clickable_links = models.BooleanField(default=False)
     notify_publication = models.BooleanField(default=False)
     notify_rejection = models.BooleanField(default=False)
+    guest_editor = models.CharField(
+        _("Guest editor"),
+        max_length=16,
+        choices=EditorMode.choices,
+        default=EditorMode.PLAIN,
+    )
+    registered_editor = models.CharField(
+        _("Registered user editor"),
+        max_length=16,
+        choices=EditorMode.choices,
+        default=EditorMode.PLAIN,
+    )
+    editor_features = models.JSONField(
+        _("Allowed formatting"), default=editor_features, blank=True
+    )
 
 
 class Discussion(models.Model):
@@ -125,6 +153,11 @@ class Comment(models.Model):
     email = models.EmailField(blank=True)
     email_confirmed_at = models.DateTimeField(null=True, blank=True)
     text = models.TextField()
+    text_format = models.CharField(
+        max_length=8,
+        choices=[("plain", "Plain text"), ("markdown", "Markdown")],
+        default="plain",
+    )
     status = models.CharField(
         max_length=20, choices=Status.choices, default=Status.AWAITING_EMAIL
     )
@@ -203,6 +236,11 @@ class CommentRevision(models.Model):
         Comment, on_delete=models.CASCADE, related_name="revisions"
     )
     text = models.TextField()
+    text_format = models.CharField(
+        max_length=8,
+        choices=[("plain", "Plain text"), ("markdown", "Markdown")],
+        default="plain",
+    )
     status = models.CharField(
         max_length=16, choices=Status.choices, default=Status.PENDING
     )

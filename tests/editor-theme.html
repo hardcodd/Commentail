@@ -1,0 +1,51 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Published code theme regression</title>
+<link rel="stylesheet" href="../commentail/static/commentail/commentail.css?theme-regression=150">
+<style>
+  body { margin: 24px; font: 16px/1.5 system-ui; }
+  section { padding: 20px; margin: 16px 0; }
+  .light { color: #202020; background: #fff; }
+  .dark { color: #eee; background: #181818; }
+</style>
+<h1>Published code follows the host theme</h1>
+<section class="light"><div class="commentail"><div class="commentail-markdown">
+  <p>Light host theme</p><pre><code>  exact code whitespace
+    remains readable</code></pre>
+</div></div></section>
+<section class="dark"><div class="commentail"><div class="commentail-markdown">
+  <p>Dark host theme</p><pre><code>  exact code whitespace
+    remains readable</code></pre>
+</div></div></section>
+<pre id="result">Checking…</pre>
+<script>
+  addEventListener('load', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    const context = canvas.getContext('2d');
+    const pixels = (background, overlay) => {
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = background;
+      context.fillRect(0, 0, 1, 1);
+      context.fillStyle = overlay;
+      context.fillRect(0, 0, 1, 1);
+      return [...context.getImageData(0, 0, 1, 1).data].slice(0, 3);
+    };
+    const luminance = rgb => rgb.map(value => value / 255)
+      .map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4)
+      .reduce((sum, value, index) => sum + value * [.2126, .7152, .0722][index], 0);
+    const results = [...document.querySelectorAll('section')].map(section => {
+      const pre = section.querySelector('pre');
+      const code = pre.querySelector('code');
+      const host = getComputedStyle(section).backgroundColor;
+      const background = luminance(pixels(host, getComputedStyle(pre).backgroundColor));
+      const foreground = luminance(pixels(host, getComputedStyle(code).color));
+      const contrast = (Math.max(background, foreground) + .05) / (Math.min(background, foreground) + .05);
+      return {theme: section.className, contrast, passed: contrast >= 4.5};
+    });
+    document.querySelector('#result').textContent = JSON.stringify({
+      passed: results.every(item => item.passed), results,
+    }, null, 2);
+  });
+</script>

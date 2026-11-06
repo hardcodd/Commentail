@@ -1,7 +1,9 @@
-recursive-include tests *.py *.html *.js
+recursive-include tests *.py *.html *.js *.json
 recursive-include example *.py *.html *.md
 include requirements-test.txt requirements-test-common.txt
 recursive-include tools *.py
+include tools/build_editor.mjs
+recursive-include frontend/editor *.js *.json *.md
 include CHANGELOG.md README.ru.md
 recursive-include docs/wiki *.md
 recursive-include docs/releases *.md

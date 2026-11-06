@@ -19,7 +19,9 @@ from wagtail.models import Site
 
 from .config import technical_settings
 from .content_checks import check_and_record, lock_site
+from .editor import validate_text
 from .fingerprints import fingerprint, fingerprint_candidates
+from .markdown import MarkdownError
 from .models import (
     Access,
     Comment,
@@ -84,6 +86,23 @@ def _text(text: str, options: EditorialSettings) -> None:
         raise DomainError("Comment is empty or too long")
 
 
+def is_self_reply(
+    comment: Comment,
+    *,
+    user: AbstractBaseUser | None = None,
+    guest_email: str = "",
+) -> bool:
+    """Compare author identity without granting any access or editing rights.
+
+    Accounts use their stable IDs. Guest identity uses the normalized mailbox;
+    a changed display name does not make a guest a different author.
+    """
+    if user is not None and comment.user_id is not None:
+        return comment.user_id == user.pk
+    email = str(getattr(user, "email", "") or "") if user is not None else guest_email
+    return bool(email.strip() and comment.email.strip().casefold() == email.strip().casefold())
+
+
 def _permission(
     actor: AbstractBaseUser,
     discussion: Discussion,
@@ -129,6 +148,12 @@ def submit(
     discussion = _discussion(discussion_id)
     options = editorial_settings(discussion)
     _text(text, options)
+    try:
+        text_format = validate_text(text, options, guest=user is None)
+    except MarkdownError as exc:
+        raise DomainError(
+            "This formatting is disabled or exceeds the editor limits."
+        ) from exc
     if options.mode != Mode.OPEN:
         raise DomainError("Discussion is closed")
     guest = user is None
@@ -168,6 +193,8 @@ def submit(
             raise DomainError(
                 "Only a visible published comment in this discussion accepts replies"
             )
+        if is_self_reply(target, user=user, guest_email=guest_email):
+            raise DomainError("You cannot reply to your own comment.")
         Comment.objects.filter(pk=target.pk).update(edit_locked=True)
     signals = check_and_record(discussion.site, text) if guest else []
     suspicious = suspicious or bool(signals)
@@ -175,6 +202,7 @@ def submit(
         discussion=discussion,
         user=user,
         text=text,
+        text_format=text_format,
         guest_name=guest_name if guest else "",
         email=guest_email.strip() if guest else str(getattr(user, "email", "") or ""),
         reply_to=target,
@@ -293,6 +321,14 @@ def revise(
         raise DomainError("Only the author can edit")
     if reason := edit_block_reason(comment):
         raise DomainError(reason)
+    try:
+        text_format = validate_text(
+            text, options, guest=user is None, text_format=comment.text_format
+        )
+    except MarkdownError as exc:
+        raise DomainError(
+            "This formatting is disabled or exceeds the editor limits."
+        ) from exc
 
     signals = (
         check_and_record(discussion.site, text, prior_text=comment.text)
@@ -308,12 +344,14 @@ def revise(
     revision = CommentRevision.objects.create(
         comment=comment,
         text=text if result == "pending" else "",
+        text_format=text_format,
         status="approved" if result == "published" else result,
         decided_at=None if result == "pending" else timezone.now(),
         spam_signals=signals,
     )
     if result == "published":
         comment.text = text
+        comment.text_format = text_format
         comment.edited_at = timezone.now()
         comment.save()
 
@@ -397,6 +435,7 @@ def moderate_revision(
 
     if action == "approve":
         comment.text = revision.text
+        comment.text_format = revision.text_format
         comment.edited_at = timezone.now()
         comment.save()
 

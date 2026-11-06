@@ -6,16 +6,14 @@
 
 Moderated discussions, verified guests and inline replies — styled by your site.
 
-**Current release: [1.4.1](https://github.com/hardcodd/Commentail/releases/tag/v1.4.1)** · [PyPI](https://pypi.org/project/commentail/1.4.1/)
+**Version 1.5.0** · [Release notes](docs/releases/1.5.0.md) · [PyPI](https://pypi.org/project/commentail/)
 
-[Separate email configuration](docs/wiki/Email-configuration.md) lets Commentail use
-its own backend, connection options and sender while ordinary Django mail keeps
-its existing settings. Version 1.4.0 also adds a test-mail command and early guest
-rejection by hard rules, with optional reasons and legacy-compatible CSV import.
-Patch 1.4.1 corrects the PyPI description; runtime is unchanged from 1.4.0.
-Apply migration `0019`; see the [changes and upgrade notes](docs/releases/1.4.0.md).
-Upgrading from 1.3.0 or earlier also requires the
-[irreversible 1.3.1 migration procedure](docs/releases/1.3.1.md).
+**New in 1.5.0:** an owned visual editor with Markdown, links, lists and code.
+Choose guest and registered-user modes independently; the server enforces allowed
+formatting. Existing comments stay plain text. See the
+[editor guide](docs/wiki/Comment-editor.md) and [changes and upgrade notes](docs/releases/1.5.0.md).
+For release availability, check PyPI or GitHub Releases. Unpublished candidates
+are installed from a reviewed local wheel.
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -45,10 +43,11 @@ framework or an external comments platform.
 | Direct-reply email with unsubscribe | Word/phrase rules and CSV import/export | Replaceable avatars, names and CAPTCHA |
 | Responsive layout and plain HTML fallbacks | Site-scoped group permissions | Database outbox; no Redis/Celery requirement |
 
-Comments are plain text with an adjustable 5000-character default. Optional
-clickable HTTP(S) links use safe attributes. Replies can address any visible
-message while keeping one visual nesting level. Moderators approve, reject,
-hide, restore or erase text; they never rewrite another author's words.
+Version 1.5.0 supports plain text, Markdown and visual editing: emphasis, links,
+quotes, lists and code. The default limit is 5000 source-text characters. Replies
+can address visible published messages by other authors while keeping one visual
+nesting level. Moderators approve, reject, hide, restore or erase text; they never
+rewrite another author's words.
 
 Published comments include **Schema.org Comment microdata and JSON-LD**, using
 the visible text and author name. Choose either format or disable output in Python.
@@ -58,20 +57,24 @@ Documented integrations follow the [stable API and compatibility policy](docs/wi
 
 ## Screenshots
 
-Captured from Commentail **1.1.0**, installed from PyPI in an isolated Wagtail
-8.0.1 / Django 6.1.2 demo. Names and conversations are sample data.
-The public page uses a custom host theme; the widget and admin screens are the
-released package, without template overrides.
+Captured from the installed **1.5.0 candidate wheel** in an isolated Wagtail
+7.4.3 / Django 5.2.18 demo. Names and conversations are synthetic; mail stays local.
+The public page uses a custom host theme, without widget or admin template overrides.
 
 **On the site:** a discussion about Wagtail, Django templates and progressive
 enhancement, with a threaded reply and a highlighted editor.
 
-![Commentail discussion on a Wagtail article, with a reader question and an editor reply](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/public-discussion.jpg)
+![Commentail discussion on a Wagtail article, with a reader question and an editor reply](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/public-discussion.jpg)
 
-**Inside Wagtail:** the moderation queue, expanded site/page, status and date
-filters, and two comments selected for bulk actions.
+**Inside Wagtail:** the moderation queue, status tabs, search and filters,
+with two comments selected for bulk actions.
 
-![Wagtail moderation queue with expanded filters and bulk comment selection](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/moderation-filters.jpg)
+![Wagtail moderation queue with status tabs and bulk comment selection](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/moderation-filters.jpg)
+
+**Visual editor.** Formatting, an ordered list and a code block; switch to
+Markdown source while retaining the text.
+
+![Visual comment editor with an ordered list and a code block](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/visual-editor.jpg)
 
 <details>
 <summary>Guest form, inline reply, comment review and site/page settings</summary>
@@ -79,27 +82,36 @@ filters, and two comments selected for bulk actions.
 **Guest form.** A private email field, email-verification notice and the local
 arithmetic challenge. The sample is an unsent draft.
 
-![Guest comment form with a sample draft and email-verification notice](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/guest-form.jpg)
+![Guest comment form with a sample draft and email-verification notice](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/guest-form.jpg)
 
 **Inline reply.** The reply form opens below the selected comment and keeps the
 recipient visible. This sample is also an unsent draft.
 
-![Inline reply form addressed to a reader, beside the existing discussion](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/inline-reply.jpg)
+![Inline reply form addressed to a reader, beside the existing discussion](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/inline-reply.jpg)
 
 **Comment review.** Read the original text, choose a moderation action and inspect
 its activity history.
 
-![Individual comment awaiting moderation with available actions and activity history](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/comment-moderation.jpg)
+![Individual comment awaiting moderation with available actions and activity history](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/comment-moderation.jpg)
 
 **Site settings.** Discussion access, moderation policy, staff highlighting,
-clickable links and email preferences in one place.
+clickable links and the entry to editor settings.
 
-![Site comment settings in Wagtail, including moderation, appearance and email options](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/site-settings.jpg)
+![Site comment settings in Wagtail, including moderation and appearance](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/site-settings.jpg)
 
 **Page settings.** Inherit the site policy or override it for an individual
 discussion.
 
-![Page discussion settings showing inheritance from the site configuration](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/page-settings.jpg)
+![Page discussion settings showing inheritance from the site configuration](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/page-settings.jpg)
+
+**Markdown source.** The same draft is available for direct source editing.
+
+![Markdown source for the same comment draft](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/markdown-editor.jpg)
+
+**Allowed formatting.** Independent guest/account modes and shared format
+permissions are configured per Site.
+
+![Site editor modes and allowed formatting](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/editor-settings.jpg)
 
 </details>
 
@@ -149,14 +161,15 @@ The guides are in English; this README is also [available in Russian](README.ru.
 
 ### 1. Install
 
-In your existing Wagtail site's virtual environment, install the published release:
+In your existing Wagtail site's virtual environment, install 1.5.0 once it is
+available on PyPI (or use the reviewed local wheel during release preparation):
 
 ```sh
-python -m pip install commentail==1.4.1
+python -m pip install commentail==1.5.0
 ```
 
 For the optional PostgreSQL driver, use
-`python -m pip install 'commentail[postgres]==1.4.1'`.
+`python -m pip install 'commentail[postgres]==1.5.0'`.
 For an existing installation, follow
 the [upgrade guide](docs/wiki/Installation.md#upgrading-and-restoring) for your target version.
 
@@ -254,7 +267,7 @@ settings use a single `COMMENTAIL` dictionary with `default` and hostname overri
 
 ## Documentation by task
 
-The [22-lesson Commentail course](https://hardcodd.net/en/blog/?series=commentail-tutorials)
+The [Commentail course](https://hardcodd.net/en/blog/?series=commentail-tutorials)
 walks through installation, email delivery, CAPTCHA, customization and production setup
 with step-by-step examples.
 
@@ -282,7 +295,7 @@ translations and source/wheel installation. Local checks and hosted CI are separ
 inspect the workflow for the revision you use. Browser/accessibility coverage and
 its limits are documented in [Example and testing](docs/wiki/Example-and-testing.md#acceptance-boundaries).
 
-There is no separate REST API, rich-text editor, uploads, likes, reports or live
+There is no separate REST API, uploads, likes, reports or live
 updates. Mail retries can duplicate delivery after an uncertain backend result.
 Host-specific themes, access rules and email delivery need their own acceptance checks.
 

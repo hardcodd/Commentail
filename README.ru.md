@@ -6,16 +6,15 @@
 
 Модерация обсуждений, подтверждённые гости и ответы рядом с комментарием — в стиле вашего сайта.
 
-**Текущая версия: [1.4.1](https://github.com/hardcodd/Commentail/releases/tag/v1.4.1)** · [PyPI](https://pypi.org/project/commentail/1.4.1/)
+**Версия 1.5.0** · [Изменения](docs/releases/1.5.0.ru.md) · [PyPI](https://pypi.org/project/commentail/)
 
-[Отдельная настройка почты](docs/wiki/Email-configuration-ru.md) позволяет выбрать
-backend, параметры подключения и отправителя Commentail, сохранив обычную почту
-Django. Версия 1.4.0 также добавляет команду проверочного письма и ранний отказ
-гостю по жёстким правилам, с причинами и совместимостью CSV-импорта.
-Патч 1.4.1 исправляет описание PyPI; код совпадает с 1.4.0.
-Примените миграцию `0019`; см. [изменения и обновление](docs/releases/1.4.0.ru.md).
-При переходе с 1.3.0 и более ранних версий также нужна
-[процедура необратимой миграции 1.3.1](docs/releases/1.3.1.md).
+**Новое в 1.5.0:** собственный визуальный редактор с Markdown, ссылками,
+списками и кодом. Режимы гостей и зарегистрированных настраиваются отдельно;
+сервер проверяет разрешённое оформление. Старые комментарии остаются обычным
+текстом. См. [редактор](docs/wiki/Comment-editor-ru.md) и
+[изменения и обновление](docs/releases/1.5.0.ru.md).
+Наличие опубликованной версии проверяйте на PyPI или GitHub Releases.
+Неопубликованный кандидат устанавливается из проверенного локального wheel.
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -45,11 +44,11 @@ Python callbacks позволяют адаптировать его без фр�
 | Уведомления о прямых ответах с отпиской | Правила слов и фраз, импорт/экспорт CSV | Заменяемые аватары, имена и CAPTCHA |
 | Адаптивная вёрстка и работа на обычном HTML | Групповые права в пределах сайта | Очередь писем в БД; Redis/Celery не требуются |
 
-Комментарии — обычный текст с настраиваемым ограничением: по умолчанию 5000
-символов. Необязательные кликабельные HTTP(S)-ссылки используют безопасные
-атрибуты. Ответить можно на любое видимое сообщение, сохраняя один визуальный
-уровень вложенности. Модераторы одобряют, отклоняют, скрывают, восстанавливают
-или стирают текст; они не переписывают чужие слова.
+В 1.5.0 доступны обычный текст, Markdown и визуальный редактор: выделение,
+ссылки, цитаты, списки и код. Ограничение по умолчанию — 5000 символов исходного
+текста. Ответить можно на видимое опубликованное сообщение другого автора,
+сохраняя один визуальный уровень вложенности. Модераторы одобряют, отклоняют,
+скрывают, восстанавливают или стирают текст; они не переписывают чужие слова.
 
 Опубликованные комментарии включают **микроразметку Schema.org Comment и JSON-LD**
 с видимым текстом и именем автора. В Python можно выбрать один формат или
@@ -60,20 +59,24 @@ Python callbacks позволяют адаптировать его без фр�
 
 ## Скриншоты
 
-Снято на Commentail **1.1.0**, установленной с PyPI в изолированном демо
-с Wagtail 8.0.1 и Django 6.1.2. Имена и обсуждения — демонстрационные данные.
-У публичной страницы собственная тема сайта; виджет и административные экраны
-взяты из выпущенного пакета без переопределения шаблонов.
+Снято на установленном wheel кандидата **1.5.0** в изолированном демо
+с Wagtail 7.4.3 и Django 5.2.18. Имена и обсуждения вымышлены; почта локальная.
+У публичной страницы собственная тема; шаблоны виджета и админки не переопределены.
 
 **На сайте:** обсуждение Wagtail, шаблонов Django и постепенного улучшения
 интерфейса, с вложенным ответом и выделением редактора.
 
-![Обсуждение статьи на Wagtail: вопрос читателя и ответ редактора](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/public-discussion.jpg)
+![Обсуждение статьи на Wagtail: вопрос читателя и ответ редактора](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/public-discussion.jpg)
 
-**Внутри Wagtail:** очередь модерации, раскрытые фильтры сайта/страницы, статуса
-и дат, а также два комментария, выбранных для массового действия.
+**Внутри Wagtail:** очередь модерации, вкладки статусов, поиск и фильтры,
+а также два комментария, выбранных для массового действия.
 
-![Очередь модерации Wagtail с раскрытыми фильтрами и выбором комментариев](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/moderation-filters.jpg)
+![Очередь модерации Wagtail с вкладками статусов и выбором комментариев](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/moderation-filters.jpg)
+
+**Визуальный редактор.** Оформление, нумерованный список и блок кода; можно
+переключиться к исходному Markdown без потери текста.
+
+![Визуальный редактор с нумерованным списком и кодом](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/visual-editor.jpg)
 
 <details>
 <summary>Гостевая форма, встроенный ответ, модерация и настройки сайта/страницы</summary>
@@ -81,26 +84,35 @@ Python callbacks позволяют адаптировать его без фр�
 **Гостевая форма.** Закрытый от других читателей email, уведомление о подтверждении
 адреса и локальная арифметическая задача. На снимке — неотправленный черновик.
 
-![Гостевая форма с примером черновика и уведомлением о подтверждении email](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/guest-form.jpg)
+![Гостевая форма с примером черновика и уведомлением о подтверждении email](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/guest-form.jpg)
 
 **Встроенный ответ.** Форма открывается под выбранным комментарием и показывает
 адресата. На снимке также неотправленный черновик.
 
-![Встроенная форма ответа читателю рядом с существующим обсуждением](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/inline-reply.jpg)
+![Встроенная форма ответа читателю рядом с существующим обсуждением](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/inline-reply.jpg)
 
 **Модерация комментария.** Исходный текст, доступные действия и история решений.
 
-![Карточка комментария в ожидании модерации с действиями и историей](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/comment-moderation.jpg)
+![Карточка комментария в ожидании модерации с действиями и историей](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/comment-moderation.jpg)
 
 **Настройки сайта.** Доступ к обсуждению, политика модерации, выделение сотрудников,
-кликабельные ссылки и параметры писем.
+кликабельные ссылки и начало раздела редактора.
 
-![Настройки комментариев сайта в Wagtail: модерация, оформление и письма](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/site-settings.jpg)
+![Настройки комментариев сайта в Wagtail: модерация и оформление](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/site-settings.jpg)
 
 **Настройки страницы.** Наследование политики сайта или её изменение для отдельного
 обсуждения.
 
-![Настройки обсуждения страницы с наследованием конфигурации сайта](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/page-settings.jpg)
+![Настройки обсуждения страницы с наследованием конфигурации сайта](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/page-settings.jpg)
+
+**Исходный Markdown.** Тот же черновик доступен для правки исходного текста.
+
+![Исходный Markdown комментария](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/markdown-editor.jpg)
+
+**Разрешённое оформление.** Независимые режимы гостей и аккаунтов и общие
+переключатели форматов на уровне Site.
+
+![Настройки режимов и разрешённого оформления](https://raw.githubusercontent.com/hardcodd/Commentail/main/docs/assets/screenshots/1.5.0/editor-settings.jpg)
 
 </details>
 
@@ -150,14 +162,15 @@ CDN и CAPTCHA-сервисов нет. См. [настройку писем](do
 
 ### 1. Установка
 
-В виртуальном окружении существующего сайта Wagtail установите опубликованный выпуск:
+В виртуальном окружении сайта Wagtail установите 1.5.0 после её появления на
+PyPI (при подготовке выпуска используйте проверенный локальный wheel):
 
 ```sh
-python -m pip install commentail==1.4.1
+python -m pip install commentail==1.5.0
 ```
 
 Для необязательного драйвера PostgreSQL используйте
-`python -m pip install 'commentail[postgres]==1.4.1'`.
+`python -m pip install 'commentail[postgres]==1.5.0'`.
 Для существующей установки следуйте [инструкции обновления](docs/wiki/Installation.md#upgrading-and-restoring)
 до нужной версии.
 
@@ -258,7 +271,7 @@ Django через `OBJECT_ADAPTERS`. Технические настройки �
 
 ## Документация по задачам
 
-[Курс по Commentail из 22 уроков](https://hardcodd.net/blog/?series=commentail-tutorials)
+[Курс по Commentail](https://hardcodd.net/blog/?series=commentail-tutorials)
 пошагово разбирает установку, отправку писем, CAPTCHA, оформление и подготовку
 рабочего сайта с примерами кода.
 
@@ -289,7 +302,7 @@ CI определяет 30 сочетаний фреймворков, Python и 
 используемой ревизии. Покрытие браузеров и доступности с его ограничениями
 описано в [руководстве по тестированию](docs/wiki/Example-and-testing.md#acceptance-boundaries).
 
-Нет отдельного REST API, редактора форматированного текста, загрузки
+Нет отдельного REST API, загрузки
 файлов, лайков, жалоб и обновлений в реальном времени. Повторные попытки отправки
 могут дублировать письма после неопределённого результата backend’а. Темы сайта,
 правила доступа и доставка почты требуют собственной приёмки.

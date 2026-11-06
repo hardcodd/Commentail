@@ -51,9 +51,11 @@ Widget context and private cards are visitor-specific; never place them in a sha
 
 Public/private cards expose `id` (integer), `display_name`, `initials`, `gradient`
 (strings), `avatar_url` (string or None), `body` (already escaped SafeString with
-permitted links/line breaks), `published_at` and `edited_at` (aware datetime or None),
+permitted links/line breaks, or parser-owned block/inline Markdown markup from 1.5.0), `published_at` and `edited_at` (aware datetime or None),
 `status`, `status_label`, `reason`, `resend_url`, `edit_url`, `permalink`, `reply_url`,
 `reply_to_id` (integer or None), `reply_to_name` (string) and `schema` (metadata or None).
+From 1.5.0, `markdown` is a boolean distinguishing a rich body; render `body` in a
+block container rather than nesting lists, quotes or code blocks inside `<p>`.
 From 1.1.0, `highlight_staff` and `show_crown` are additional boolean card fields.
 They already account for the Site switch and the current active author's flags.
 Built-in templates share `commentail/author.html` for the name badge and
@@ -103,6 +105,23 @@ Ordinary action pages add `purpose`, `token`, `message`, `error`, `text`,
 `unavailable=True`, `error`, `return_url="/"` and omit the action/token/content
 fields. Confirm/unsubscribe forms remain native POST forms outside the widget;
 edit redirects to the inline editor. See [mail paths and context](Templates.md#mail-templates-and-public-context).
+
+## Editor additions in 1.5.0
+
+`options` additionally exposes `guest_editor`, `registered_editor` and
+`editor_features`. The widget context supplies `editor_mode`, JSON-encoded
+`editor_settings`, `editor_asset`, `editor_css` and `editor_locale` (empty for
+English). The `editing` mapping supplies its own `editor_mode` and
+`editor_settings` to preserve the stored format of an existing comment.
+
+Use the installed form templates as the reference for `.commentail-rich` and
+its `data-editor-settings`, `data-editor-asset`, `data-editor-css` and
+`data-editor-locale` hooks. Preserve the labelled native `textarea[name=text]`,
+`[data-editor-root]`, `[data-editor-status]` and the conditional
+`editor-tools.html` include before the editable fields. Keep a block container
+for published bodies. Do not construct a client-supplied `text_format` field: the
+server chooses it from stored content and Site policy. The JS editor module/model
+is internal, not an independent public extension API.
 
 ## Progressive JavaScript hooks
 

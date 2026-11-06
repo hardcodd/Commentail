@@ -171,3 +171,17 @@ customizations and deployment policies need their own acceptance checks.
 ---
 
 [← Troubleshooting](Troubleshooting.md) · [Documentation home](Home.md) · [Release 1.3.1 →](Release-1.3.1.md)
+
+## Editor checks for 1.5.0
+
+Run `node --test tests/test_*.js` and `node tools/build_editor.mjs --check`
+from the source root. The sdist includes the editor sources, build script and
+shared Markdown corpus; the wheel includes generated runtime and locale assets.
+The distribution CI repeats the JavaScript checks from the extracted sdist and
+runs Django contracts against its installed wheel outside the checkout.
+
+Review the real host's create/reply/edit/error/cancel flows and independent drafts
+with both audience modes. Focused Firefox/VoiceOver scenarios have been reviewed;
+this is not exhaustive accessibility certification. Physical-device, IME,
+autocorrection and dictation checks remain deferred. Historical matrix runs do
+not replace hosted CI for the exact publishing commit.

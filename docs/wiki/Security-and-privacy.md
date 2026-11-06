@@ -162,8 +162,12 @@ have separate retention. These controls do not establish legal compliance for a 
 
 ## Text and links
 
-HTML/Markdown are not rendered. If enabled, clickable links accept HTTP(S) only and
-use nofollow, ugc, noopener and noreferrer. Preserve escaping in custom templates.
+Plain comments remain escaped text. From 1.5.0, explicitly stored Markdown uses
+the bounded [editor dialect](Comment-editor.md), with server-enforced formatting
+permissions and parser-owned HTML. User HTML is never trusted. Automatic plain-text
+links accept HTTP(S); explicit Markdown links also accept mailto. Unsafe schemes,
+credentials and control characters are rejected. Web links use nofollow, ugc,
+noopener and noreferrer. Preserve escaping in custom templates.
 No third-party CAPTCHA, external avatar service, CDN or analytics is required.
 
 ---

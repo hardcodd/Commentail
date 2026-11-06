@@ -11,6 +11,7 @@ from typing import NotRequired, TypedDict
 from django.utils.html import json_script
 from django.utils.safestring import SafeString, mark_safe
 
+from .editor import visible_text
 from .models import Comment
 
 # Functional syntax preserves JSON-LD keywords without untyped dictionary values.
@@ -76,7 +77,7 @@ def comment_markup(
         url=permalink,
         target=target,
         author=name,
-        text=comment.text,
+        text=visible_text(comment.text, comment.text_format),
         published=comment.published_at.isoformat(),
         modified=comment.edited_at.isoformat() if comment.edited_at else None,
         parent=f"{target}#commentail-{comment.reply_to_id}"

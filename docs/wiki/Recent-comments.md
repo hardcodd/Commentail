@@ -63,7 +63,7 @@ Each dictionary contains exactly these fields:
 | --- | --- |
 | `id` | Integer comment ID |
 | `author_name` | Current display name, including the existing `GET_AUTHOR_NAME` hook |
-| `text` | Published plain text, without generated links or HTML |
+| `text` | Published source text, without generated links or HTML; Markdown markers are retained |
 | `published_at` | Publication datetime |
 | `target_title` | Page title, or `str(obj)` for an adapted object |
 | `url` | Comment permalink, including navigation to a reply outside the first batch |

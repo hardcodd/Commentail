@@ -7,8 +7,9 @@ from django.utils.html import format_html, format_html_join
 from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
 
-from .author_access import _edit_owner
+from .author_access import _edit_owner, own_reply_target
 from .avatars import author_name, avatar_url, default_avatar
+from .editor import render_markdown
 from .models import Comment, Discussion
 from .objects import ObjectAccessError, _comment_url, discussion_url, target_url
 from .policies import EditorialSettings, editorial_settings
@@ -85,9 +86,12 @@ def _present(
         "initials": initials,
         "gradient": gradient,
         "avatar_url": avatar_url(comment, request, name),
-        "body": render_text(
-            label, clickable if comment.status == "published" else False
-        ),
+        "markdown": comment.text_format == "markdown"
+        and comment.status not in ("hidden", "deleted"),
+        "body": render_markdown(label)
+        if comment.text_format == "markdown"
+        and comment.status not in ("hidden", "deleted")
+        else render_text(label, clickable if comment.status == "published" else False),
         "published_at": comment.published_at,
         "edited_at": comment.edited_at,
         "status": comment.status,
@@ -107,7 +111,7 @@ def _present(
         )
         if structured_target
         else None,
-        "reply_url": _url(request, reply_to=comment.pk, target=comment.pk),
+        "reply_url": "" if own_reply_target(request, comment) else _url(request, reply_to=comment.pk, target=comment.pk),
         "edit_url": _comment_url(
             destination,
             comment.pk,

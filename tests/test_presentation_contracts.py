@@ -122,7 +122,7 @@ class PresentationContractTests(TestCase):
         )
         reply = moderate(
             submit(
-                self.discussion.pk, text="Reply", user=self.author, reply_to=root.pk
+                self.discussion.pk, text="Reply", user=self.admin, reply_to=root.pk
             ).pk,
             "approve",
             actor=self.admin,

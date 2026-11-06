@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editor layout regression</title>
+<link rel="stylesheet" href="../commentail/static/commentail/editor.css">
+<style>body { margin: 0; font: 16px system-ui; } iframe { border: 0; height: 640px; } pre { white-space: pre-wrap; }</style>
+<main id="results"></main>
+<script>
+// Reload the source stylesheet even when rerunning this fixture in a cached tab.
+document.querySelector('link').href += '?layout-check=' + Date.now();
+// Each iframe has its own viewport and no host-site box-sizing reset. The dialog
+// intentionally lives outside .commentail, matching the runtime portal owner.
+if (location.search) {
+  document.body.innerHTML = `<div class="commentail-rich"><dialog class="link-dialog">
+    <form method="dialog"><div class="dialog-heading"><h2>Add link</h2><button class="tool-button">×</button></div>
+    <label class="link-field">Address<input value="https://example.com"></label>
+    <p class="dialog-hint">Full website address or mailto: for email.</p>
+    <label class="link-field">Link text<input value="A link label"></label>
+    <p class="link-error">Enter a complete address without spaces or control characters.</p>
+    <div class="dialog-actions"><div class="dialog-primary"><button>Cancel</button><button class="save-link">Save</button></div></div></form>
+  </dialog></div><div class="commentail-rich"><div class="editor">Comment</div><div aria-live="assertive">Enter comment text.</div></div>`;
+  document.querySelector('dialog').showModal();
+} else {
+  window.addEventListener('load', async () => {
+    for (const width of [320, 375, 768, 1440]) {
+      const frame = document.createElement('iframe');
+      frame.width = width;
+      const ready = new Promise(resolve => frame.onload = resolve);
+      frame.src = '?fixture';
+      document.body.append(frame);
+      await ready;
+      const doc = frame.contentDocument;
+      const dialog = doc.querySelector('dialog');
+      const bounds = dialog.getBoundingClientRect();
+      const inputs = [...dialog.querySelectorAll('input')].map(input => input.getBoundingClientRect());
+      const close = dialog.querySelector('.dialog-heading button').getBoundingClientRect();
+      const error = doc.querySelector('[aria-live="assertive"]');
+      const checks = {
+        'validation message clears the field focus ring': error.getBoundingClientRect().top - error.previousElementSibling.getBoundingClientRect().bottom >= 8,
+        'close button does not consume heading width': close.width <= 44 && close.height <= 44,
+        'dialog stays inside viewport': bounds.left >= 8 && bounds.right <= width - 8,
+        'inputs retain both inner gutters': inputs.every(rect => rect.left - bounds.left >= 16 && bounds.right - rect.right >= 16),
+        'input gutters are symmetric': inputs.every(rect => Math.abs((rect.left - bounds.left) - (bounds.right - rect.right)) <= 1),
+        'dialog has no horizontal overflow': dialog.scrollWidth <= dialog.clientWidth,
+      };
+      const result = document.createElement('pre');
+      result.textContent = JSON.stringify({width, checks, passed: Object.values(checks).every(Boolean)}, null, 2);
+      document.querySelector('#results').append(result);
+    }
+  });
+}
+</script>

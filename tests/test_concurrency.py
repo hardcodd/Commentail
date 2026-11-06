@@ -59,10 +59,11 @@ class SQLiteConcurrencyTests(TransactionTestCase):
 
     def test_reply_and_revision_cannot_lose_lock(self):
         comment = self.published()
+        reader = get_user_model().objects.create_user("replying-reader")
         outcomes = self.race(
             lambda: revise(comment.pk, "New", user=self.author),
             lambda: submit(
-                self.discussion.pk, text="Reply", user=self.author, reply_to=comment.pk
+                self.discussion.pk, text="Reply", user=reader, reply_to=comment.pk
             ),
         )
         comment.refresh_from_db()
@@ -72,6 +73,23 @@ class SQLiteConcurrencyTests(TransactionTestCase):
         self.assertTrue(any(isinstance(item, Comment) for item in outcomes))
         with self.assertRaises(DomainError):
             revise(comment.pk, "Later", user=self.author)
+
+    def test_rejected_self_reply_does_not_block_concurrent_revision(self):
+        comment = self.published()
+        outcomes = self.race(
+            lambda: revise(comment.pk, "New", user=self.author),
+            lambda: submit(
+                self.discussion.pk, text="Self reply", user=self.author,
+                reply_to=comment.pk,
+            ),
+        )
+        self.assertIsInstance(outcomes[0], CommentRevision)
+        self.assertIsInstance(outcomes[1], DomainError)
+        self.assertEqual(str(outcomes[1]), "You cannot reply to your own comment.")
+        comment.refresh_from_db()
+        self.assertFalse(comment.edit_locked)
+        self.assertFalse(comment.direct_replies.exists())
+        self.assertEqual(comment.revisions.get().text, "New")
 
     def test_duplicate_forms_create_one_comment(self):
         outcomes = self.race(

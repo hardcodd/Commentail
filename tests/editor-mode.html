@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Editor mode control regression</title>
+<link rel="stylesheet" href="../commentail/static/commentail/editor.css">
+<style>body{margin:24px;font:14px system-ui}#sample{max-width:900px}</style>
+<div id="sample" class="commentail-rich"></div><pre id="result">Checking…</pre>
+<script>
+(async () => {
+  document.querySelector('link').href += '?mode=' + Date.now();
+  await new Promise(resolve => document.querySelector('link').onload = resolve);
+  const html = await (await fetch('../commentail/templates/commentail/editor-tools.html', {cache:'no-store'})).text();
+  document.querySelector('#sample').innerHTML = html;
+  document.querySelector('.editor-topbar').hidden = false;
+  const close = document.querySelector('template').content.querySelector('[data-link-cancel]').cloneNode(true);
+  document.querySelector('#sample').append(close);
+  const mode = document.querySelector('[data-editor-mode]');
+  const results = [];
+  for (const pressed of ['false', 'true']) {
+    mode.setAttribute('aria-pressed', pressed);
+    for (const button of document.querySelectorAll('#sample .tool-button')) {
+      const svg = [...button.querySelectorAll('svg')].find(icon => getComputedStyle(icon).display !== 'none');
+      const b = button.getBoundingClientRect(), s = svg.getBoundingClientRect(), css = getComputedStyle(button);
+      const width = b.width - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight) - parseFloat(css.borderLeftWidth) - parseFloat(css.borderRightWidth);
+      const height = b.height - parseFloat(css.paddingTop) - parseFloat(css.paddingBottom) - parseFloat(css.borderTopWidth) - parseFloat(css.borderBottomWidth);
+      const ink = svg.getBBox();
+      results.push({inkCentered:Math.abs(ink.x + ink.width/2 - 12) < .1 && Math.abs(ink.y + ink.height/2 - 12) < .1, label:button.getAttribute('aria-label'), pressed,
+        centered:Math.abs((s.left+s.right)-(b.left+b.right)) < 1 && Math.abs((s.top+s.bottom)-(b.top+b.bottom)) < 1,
+        fitsContent:s.width <= width + .01 && s.height <= height + .01,
+        quietIdle:button !== mode || pressed === 'true' || css.backgroundColor === 'rgba(0, 0, 0, 0)'});
+    }
+  }
+  mode.setAttribute('aria-pressed','false');
+  document.querySelector('#result').textContent=JSON.stringify({width:innerWidth, passed:results.every(r=>r.centered&&r.fitsContent&&r.quietIdle&&r.inkCentered),count:results.length,failures:results.filter(r=>!r.centered||!r.fitsContent||!r.quietIdle||!r.inkCentered)},null,2);
+  if (!location.search) for (const width of [320,375]) {
+    const frame=document.createElement('iframe'); frame.width=width; frame.height=400; frame.src='?narrow'; document.body.append(frame);
+  }
+
+})();
+</script>

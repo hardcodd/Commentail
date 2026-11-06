@@ -4,6 +4,7 @@ Reading and private cards share presentation but never visibility queries.
 Form and CAPTCHA issuance remains part of rendering, including its ordering.
 """
 
+import json
 from collections.abc import Callable
 from urllib.parse import urlsplit, urlunsplit
 
@@ -15,9 +16,11 @@ from django.utils.translation import gettext as _
 
 from .admission import email_configured, issue_form
 from .antispam import captcha_required
-from .author_access import _edit_owner
+from .assets import asset_url, editor_locale_url
+from .author_access import _edit_owner, own_reply_target
 from .config import technical_settings
 from .drafts import load_draft
+from .editor import render_markdown, settings_for
 from .models import (
     Access,
     Comment,
@@ -72,6 +75,7 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
     editing = _editing_context(
         request, discussion, form_values, draft_error, edit_identifier
     )
+    editor_policy = settings_for(options, guest=not request.user.is_authenticated)
     base: dict[str, object] = {
         "language_code": translation.get_language(),
         "discussion_id": discussion.pk,
@@ -83,6 +87,11 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
         "entered_email": form_values.get("email", ""),
         "error": "" if edit_identifier else draft_error,
         "editing": editing,
+        "editor_settings": json.dumps(editor_policy),
+        "editor_mode": editor_policy["guest"],
+        "editor_asset": asset_url("editor.js"),
+        "editor_css": asset_url("editor.css"),
+        "editor_locale": editor_locale_url(translation.get_language()),
     }
     if options.mode == Mode.HIDDEN:
         return base
@@ -280,6 +289,8 @@ def block_context(request: HttpRequest, discussion: Discussion) -> dict[str, obj
             else None
         )
     main_key = ""
+    if reply_to is not None and own_reply_target(request, reply_to):
+        reply_to = None
     if form_key and reply_to is not None:
         try:
             main_key = issue_form(
@@ -407,7 +418,12 @@ def _private_rows(
             None,
         )
         if pending:
-            data["body"] = render_text(pending.text, False)
+            data["markdown"] = pending.text_format == "markdown"
+            data["body"] = (
+                render_markdown(pending.text)
+                if pending.text_format == "markdown"
+                else render_text(pending.text, False)
+            )
             data["status_label"] = _("Revision awaiting moderation")
         private_rows.append(data)
     return private_rows
@@ -430,9 +446,16 @@ def _editing_context(
         )
         if candidate is not None and _edit_owner(request, candidate):
             blocked = edit_block_reason(candidate)
+            editor_policy = settings_for(
+                editorial_settings(discussion),
+                guest=not request.user.is_authenticated,
+                text_format=candidate.text_format,
+            )
             editing = {
                 "id": candidate.pk,
                 "text": form_values.get("text", candidate.text),
+                "editor_settings": json.dumps(editor_policy),
+                "editor_mode": editor_policy["guest"],
                 "error": draft_error or (_(blocked) if blocked else ""),
                 "can_edit": not blocked,
                 "url": reverse("commentail:edit", args=[candidate.pk]),

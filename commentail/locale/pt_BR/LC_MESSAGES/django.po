@@ -1087,3 +1087,58 @@ msgstr "A coluna opcional reason define a mensagem de rejeição para visitantes
 
 msgid "The same spreadsheet escaping applies to rejection reasons."
 msgstr "O mesmo escape para planilhas se aplica aos motivos de rejeição."
+
+msgid "Plain text"
+msgstr "Texto simples"
+
+msgid "Markdown"
+msgstr "Markdown"
+
+msgid "Visual editor"
+msgstr "Editor visual"
+
+msgid "Guest editor"
+msgstr "Editor para visitantes"
+
+msgid "Registered user editor"
+msgstr "Editor para usuários cadastrados"
+
+msgid "Allowed formatting"
+msgstr "Formatação permitida"
+
+msgid "Comment editor"
+msgstr "Editor de comentários"
+
+msgid "Bold"
+msgstr "Negrito"
+
+msgid "Italic"
+msgstr "Itálico"
+
+msgid "Strikethrough"
+msgstr "Tachado"
+
+msgid "Links"
+msgstr "Links"
+
+msgid "Quotes"
+msgstr "Citações"
+
+msgid "Unordered lists"
+msgstr "Listas com marcadores"
+
+msgid "Ordered lists"
+msgstr "Listas numeradas"
+
+msgid "Inline code"
+msgstr "Código em linha"
+
+msgid "Code blocks"
+msgstr "Blocos de código"
+
+msgid "This formatting is disabled or exceeds the editor limits."
+msgstr "Esta formatação está desativada ou excede os limites do editor."
+
+#: commentail/services.py
+msgid "You cannot reply to your own comment."
+msgstr "Você não pode responder ao seu próprio comentário."

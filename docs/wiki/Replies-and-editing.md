@@ -3,7 +3,9 @@
 ## Conversations
 
 The UI displays one reply level, but any published visible message can be an
-addressee. Its @name link leads to that exact message. Replies to pending, hidden
+addressee, except the author's own comment from 1.5.0. Accounts use account
+identity; guests use normalized email. This is enforced on the server, and
+existing self-replies remain visible. Its @name link leads to that exact message. Replies to pending, hidden
 or deleted messages are unavailable.
 
 With JS, Reply opens one composer below the selected comment. The main form keeps

@@ -41,7 +41,7 @@ class LifecycleTests(TestCase):
         self.options = SiteCommentSettings.objects.create(site=self.site)
 
     def post(self, text="Original", **kwargs):
-        return submit(self.discussion.pk, text=text, user=self.author, **kwargs)
+        return submit(self.discussion.pk, text=text, user=kwargs.pop("user", self.author), **kwargs)
 
     def publish(self, comment):
         return moderate(comment.pk, "approve", actor=self.moderator)
@@ -121,7 +121,7 @@ class LifecycleTests(TestCase):
 
     def test_reply_locks_immediately_and_permanently(self):
         target = self.publish(self.post())
-        reply = self.post("Reply", reply_to=target.pk)
+        reply = self.post("Reply", reply_to=target.pk, user=self.other)
         self.assertEqual(reply.status, "pending")
         with self.assertRaises(DomainError):
             revise(target.pk, "Changed", user=self.author)
@@ -131,7 +131,7 @@ class LifecycleTests(TestCase):
 
     def test_reply_to_reply_has_one_root(self):
         root = self.publish(self.post())
-        first = self.publish(self.post(reply_to=root.pk))
+        first = self.publish(self.post(reply_to=root.pk, user=self.other))
         second = self.post(reply_to=first.pk)
         self.assertEqual(second.root_id, root.pk)
         self.assertEqual(second.reply_to_id, first.pk)
@@ -156,7 +156,7 @@ class LifecycleTests(TestCase):
         self.assertEqual(comment.text, "Original")
         with self.assertRaises(DomainError):
             revise(comment.pk, "Again", user=self.author)
-        self.post(reply_to=comment.pk)
+        self.post(reply_to=comment.pk, user=self.other)
         moderate_revision(revision.pk, "approve", actor=self.moderator)
         comment.refresh_from_db()
         revision.refresh_from_db()
@@ -219,7 +219,7 @@ class LifecycleTests(TestCase):
     def test_deletion_erases_versions_and_preserves_replies(self):
         comment = self.publish(self.post())
         revision = revise(comment.pk, "Secret revision", user=self.author)
-        reply = self.post(reply_to=comment.pk)
+        reply = self.post(reply_to=comment.pk, user=self.other)
         remove(comment.pk, actor=self.moderator)
         comment.refresh_from_db()
         self.assertEqual(comment.text, "")
