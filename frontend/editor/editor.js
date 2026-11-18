@@ -47,6 +47,7 @@
         this.capture();
         this.nativeBefore = this.snapshot();
         this.composing = true;
+        root.querySelector('[data-editor-placeholder]')?.removeAttribute('data-editor-placeholder');
         this.updateButtons();
       });
       this.listen(root, 'compositionend', () => {
@@ -341,6 +342,10 @@
           fragment.append(block);
         }
         block.dataset.row = String(index);
+        // Placeholder text is chrome, never part of the editable document/model.
+        if (this.rows.length === 1 && item.kind === 'p' && !item.text && this.root.dataset.placeholder) {
+          block.dataset.editorPlaceholder = this.root.dataset.placeholder;
+        }
         const line = doc.createElement(item.kind === 'pre' ? 'code' : 'span');
         line.dataset.line = String(index);
         if (!item.text) line.append(doc.createElement('br'));

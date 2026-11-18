@@ -153,7 +153,7 @@ function mountedForms() {
       destroy() { this.destroyed = true; }
       setInvalid(message) { this.invalid = message; } focus() { this.focuses = (this.focuses ?? 0) + 1; }
       getDraft() { return 'draft'; } getContent() { if (this.error) throw new Error(this.error); return { text: 'valid' }; }
-    } }, CommentailLinkDialog: { LinkDialog: class {} }, CommentailURLPaste: { URLPaste: class {} } });
+    } }, CommentailLinkDialog: { LinkDialog: class {} }, CommentailURLPaste: { URLPaste: class {} }, CommentailEditorTheme: { follow() {} } });
   vm.runInContext(fs.readFileSync('frontend/editor/mount.js', 'utf8'), adapter);
   const forms = { querySelectorAll() { return nodes; } };
   adapter.CommentailEditors.mount(forms);

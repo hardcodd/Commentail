@@ -6,13 +6,14 @@
 
 Moderated discussions, verified guests and inline replies — styled by your site.
 
-**Version 1.5.0** · [Release notes](docs/releases/1.5.0.md) · [PyPI](https://pypi.org/project/commentail/)
+**Version 1.6.0** · [Release notes](docs/releases/1.6.0.md) · [PyPI](https://pypi.org/project/commentail/)
 
-**New in 1.5.0:** an owned visual editor with Markdown, links, lists and code.
-Choose guest and registered-user modes independently; the server enforces allowed
-formatting. Existing comments stay plain text. See the
-[editor guide](docs/wiki/Comment-editor.md) and [changes and upgrade notes](docs/releases/1.5.0.md).
-Install [1.5.0 from PyPI](https://pypi.org/project/commentail/1.5.0/).
+**New in 1.6.0:** the editor follows light and dark site surfaces, including live
+switches without losing a draft. Empty fields show an inline placeholder;
+seven CSS palette variables let you customize the editor and its dialogs.
+See the [editor guide](docs/wiki/Comment-editor.md) and
+[changes and upgrade notes](docs/releases/1.6.0.md).
+Install [1.6.0 from PyPI](https://pypi.org/project/commentail/1.6.0/).
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -163,11 +164,11 @@ The guides are in English; this README is also [available in Russian](README.ru.
 In your existing Wagtail site's virtual environment, install the release from PyPI:
 
 ```sh
-python -m pip install commentail==1.5.0
+python -m pip install commentail==1.6.0
 ```
 
 For the optional PostgreSQL driver, use
-`python -m pip install 'commentail[postgres]==1.5.0'`.
+`python -m pip install 'commentail[postgres]==1.6.0'`.
 For an existing installation, follow
 the [upgrade guide](docs/wiki/Installation.md#upgrading-and-restoring) for your target version.
 

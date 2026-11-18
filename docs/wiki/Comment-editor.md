@@ -1,4 +1,4 @@
-# Comment editor (1.5.0)
+# Comment editor (1.6.0)
 
 [На русском](Comment-editor-ru.md). Available from Commentail 1.5.0.
 
@@ -59,6 +59,20 @@ depth 32, 100,000 nodes or two million work units. Site text-length limits still
 apply to the submitted source, and link destinations are limited to 2,048
 characters. HTML output is escaped and restricted to parser-owned elements;
 credentials, unsafe schemes and control characters are rejected in links.
+
+## Empty field
+
+Create/reply forms show “Your comment” inside the empty field as a localized
+placeholder. The associated label and visual accessible name remain available;
+the placeholder disappears during typing and is never included in saved text.
+
+## Site theme
+
+From 1.6.0, the visual editor and its Markdown surface select a light/dark
+palette from their container. Live site theme switches preserve the draft and
+selection; the toolbar and link dialog follow the same theme. See
+[Styling](Styling.md#visual-editor-palette) for palette overrides and limitations
+on image-backed containers.
 
 ## Keyboard, languages and verification
 

@@ -9,10 +9,12 @@ uses a stronger border, weight and tint without imposing a fixed palette. This f
 light/dark switch and decorative backgrounds without JavaScript or an OS-theme
 guess. Without `color-mix()` support, controls retain transparent backgrounds and
 solid current-color borders.
-Generated avatar colors remain independent. The optional 1.5.0 visual editor
-has its own light palette and typography; it does not automatically follow a
-host dark-mode switch. Review `.commentail-rich` overrides separately, including
-the link dialog mounted outside the discussion. Published Markdown bodies inherit
+Generated avatar colors remain independent. The optional visual editor selects
+its light/dark palette from the containing background, including translucent
+ancestor backgrounds. It follows ancestor class, style and theme-attribute changes,
+system preference changes and viewport changes without resetting drafts or focus.
+The toolbar, Markdown surface, feedback and link dialog share the selected theme,
+even though the dialog is mounted outside the discussion. Published Markdown bodies inherit
 the host text color; code blocks use `color-input-surface` or a current-color tint.
 
 No host CSS variables are required for the default widget. The library reads
@@ -67,6 +69,28 @@ Their bundled `.commentail-document` styles have their own light/dark palette,
 selected by the browser's `prefers-color-scheme`. Override
 `--commentail-document-background` and the shared text/surface properties there
 to match a site-managed theme; `--commentail-document-shadow` controls the card shadow.
+
+## Visual editor palette
+
+The editor uses its own typography and two contrast-oriented palettes. If no
+background is painted, the host's `color-scheme`, system preference and host text
+color provide a fallback. Background images, gradients and pseudo-elements are
+not sampled; give such containers a representative `background-color` or map
+the editor palette explicitly. Theme transitions settle to the final palette
+when the host transition ends.
+
+Set `--commentail-editor-surface`, `--commentail-editor-subtle`,
+`--commentail-editor-ink`, `--commentail-editor-muted`, `--commentail-editor-line`,
+`--commentail-editor-accent` and `--commentail-editor-selected` on the editor or
+an ancestor to customize its surface, inset surface, text, secondary text, borders,
+links/focus and selected controls. Set contrasting foreground/background pairs;
+these values are also carried to the editor's own link dialog. For example:
+
+```css
+.discussion {
+  --commentail-editor-accent: var(--site-link-color);
+}
+```
 
 ## Scoped theme recipe
 

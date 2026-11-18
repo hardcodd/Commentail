@@ -1,4 +1,6 @@
-.commentail-rich { --surface:#fff; --subtle:#f7f8fc; --ink:#262d40; --muted:#697287; --line:#e2e6ef; --accent:#6250c9; --selected:#eeeafd; color:var(--ink); font:15px/1.65 system-ui,sans-serif; margin-block:.8rem; min-width:0; }
+.commentail-rich { --surface:var(--commentail-editor-surface,#fff); --subtle:var(--commentail-editor-subtle,#f7f8fc); --ink:var(--commentail-editor-ink,#262d40); --muted:var(--commentail-editor-muted,#697287); --line:var(--commentail-editor-line,#e2e6ef); --accent:var(--commentail-editor-accent,#6250c9); --selected:var(--commentail-editor-selected,#eeeafd); color:var(--ink); font:15px/1.65 system-ui,sans-serif; margin-block:.8rem; min-width:0; }
+.commentail-rich:where([data-editor-theme="light"]) { color-scheme: light; }
+.commentail-rich:where([data-editor-theme="dark"]) { color-scheme: dark; --surface:var(--commentail-editor-surface,#1d2230); --subtle:var(--commentail-editor-subtle,#252c3d); --ink:var(--commentail-editor-ink,#eef0f7); --muted:var(--commentail-editor-muted,#b5bdd0); --line:var(--commentail-editor-line,#65728c); --accent:var(--commentail-editor-accent,#bcaaff); --selected:var(--commentail-editor-selected,#3b3156); }
 /* Dialog owners live outside .commentail and must not depend on its reset. */
 .commentail-rich, .commentail-rich *, .commentail-rich *::before, .commentail-rich *::after { box-sizing: border-box; }
 .commentail-rich .editor-topbar { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin: 0; padding: .55rem; background: var(--subtle); border: 1px solid var(--line); border-radius: 11px; }
@@ -28,6 +30,9 @@
 .commentail-rich [hidden] { display: none !important; }
 .commentail-rich .editor { white-space: pre-wrap; overflow-x: auto; }
 .commentail-rich .editor p { margin: .5rem 0; min-height: 1.65em; }
+.commentail-rich .editor > [data-editor-placeholder] { position: relative; }
+.commentail-rich .editor > [data-editor-placeholder]::before { content: attr(data-editor-placeholder); position: absolute; inset: 0; color: var(--muted); pointer-events: none; }
+.commentail-rich textarea::placeholder, .commentail-rich textarea.commentail-input::placeholder { color: var(--muted); opacity: 1; }
 .commentail-rich .editor blockquote { position: relative; margin: .8rem 0; padding: .25rem 0 .25rem 2rem; border-inline-start: 2px solid var(--accent); min-height: 1.65em; }
 .commentail-rich .editor blockquote::before { content: '“'; position: absolute; inset-inline-start: .35rem; top: -.3rem; color: var(--accent); font: 2.4rem/1.2 Georgia,serif; pointer-events: none; }
 .commentail-rich .editor blockquote + blockquote { margin-top: -.8rem; }
@@ -57,6 +62,7 @@
 .commentail-rich .dialog-heading h2 { margin: 0; font-size: 1.15rem; letter-spacing: -.025em; }
 .commentail-rich .link-field { display: grid; gap: .4rem; font-size: .82rem; font-weight: 600; }
 .commentail-rich .link-field input { width: 100%; min-width: 0; padding: .65rem .75rem; font: 400 1rem/1.4 system-ui,sans-serif; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; }
+.commentail-rich .link-field input::placeholder { color: var(--muted); opacity: 1; }
 .commentail-rich .dialog-hint { margin: .55rem 0 1.1rem; color: var(--muted); font-size: .76rem; line-height: 1.5; }
 .commentail-rich .link-error { min-height: 1.5em; margin: .7rem 0; color: light-dark(#b52c49,#ff9bb1); font-size: .8rem; line-height: 1.5; }
 .commentail-rich .dialog-actions, .commentail-rich .dialog-primary { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
@@ -77,7 +83,7 @@
 }
 .commentail-rich .editor, .commentail-rich textarea {min-height:10rem;max-height:40rem;overflow:auto; margin-top:.6rem;}
 .commentail-rich [data-editor-status] {font-size:.8rem;color:var(--muted);margin:.5rem 0;}
-.commentail-rich > [aria-live="assertive"]:not(:empty) { margin:.6rem 0; color:#b52c49; font-size:.85rem; line-height:1.5; overflow-wrap:anywhere; }
+.commentail-rich > [aria-live="assertive"]:not(:empty) { margin:.6rem 0; color:light-dark(#b52c49,#ff9bb1); font-size:.85rem; line-height:1.5; overflow-wrap:anywhere; }
 .commentail-rich .editor-keyboard-help {font-size:.8rem;color:var(--muted);margin:.5rem 0;line-height:1.5;}
 .commentail-rich .editor-help { margin:.35rem 0; font-size:.8rem; }
 .commentail-rich .editor-help summary { padding:.2rem 0; color:var(--accent); }

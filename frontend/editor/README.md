@@ -30,9 +30,24 @@ validated Markdown before submission. The independent server implementation in
 on both sides when changing the dialect. Parser resource limits are intentional
 whole-input rejections, never partial rendering.
 
+`theme.js` follows the painted ancestor background (including alpha compositing),
+with host text/color-scheme and OS preference as the unpainted fallback. Ancestor
+attribute changes, viewport/preference changes and completed CSS transitions
+refresh only the palette. It does not observe editor contents or remount drafts.
+The portalled link dialog receives the same palette and custom properties;
+observers, listeners and pending frames share the editor's abort lifecycle.
+Images/gradients/pseudo-elements are not sampled. Public palette overrides are
+documented in [Styling](../../docs/wiki/Styling.md#visual-editor-palette).
+Open `tests/editor-rich-theme.html` through a local HTTP server for browser
+regressions with the actual generated editor and toolbar/dialog template.
+
 Create/reply/edit templates keep the toolbar before both editable fields and
 associate the native label with its textarea explicitly. Both modes share the
 toolbar's horizontal edges; showing source must not move the toolbar below it.
+Create/reply labels remain available to assistive technology but are visually
+hidden. Their localized placeholder appears only in an empty field. In visual
+mode it is generated CSS on an empty paragraph, never editable/model content;
+native/Markdown fields use the textarea placeholder. Edit labels remain visible.
 
 Keyboard access uses one Tab stop per toolbar, Left/Right (wrapping), Home/End
 and native Enter/Space activation. Alt+Shift+T (Option+Shift+T on Mac) or

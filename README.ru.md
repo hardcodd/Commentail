@@ -6,14 +6,14 @@
 
 Модерация обсуждений, подтверждённые гости и ответы рядом с комментарием — в стиле вашего сайта.
 
-**Версия 1.5.0** · [Изменения](docs/releases/1.5.0.ru.md) · [PyPI](https://pypi.org/project/commentail/)
+**Версия 1.6.0** · [Изменения](docs/releases/1.6.0.ru.md) · [PyPI](https://pypi.org/project/commentail/)
 
-**Новое в 1.5.0:** собственный визуальный редактор с Markdown, ссылками,
-списками и кодом. Режимы гостей и зарегистрированных настраиваются отдельно;
-сервер проверяет разрешённое оформление. Старые комментарии остаются обычным
-текстом. См. [редактор](docs/wiki/Comment-editor-ru.md) и
-[изменения и обновление](docs/releases/1.5.0.ru.md).
-Установите [1.5.0 с PyPI](https://pypi.org/project/commentail/1.5.0/).
+**Новое в 1.6.0:** редактор автоматически подстраивается под светлый или тёмный
+фон сайта и реагирует на переключение темы, сохраняя черновик. Подпись пустого поля
+показывается внутри него; доступны семь CSS-переменных палитры.
+См. [редактор](docs/wiki/Comment-editor-ru.md) и
+[изменения и обновление](docs/releases/1.6.0.ru.md).
+Установите [1.6.0 с PyPI](https://pypi.org/project/commentail/1.6.0/).
 
 [![Tests and distributions](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/hardcodd/Commentail/actions/workflows/tests.yml)
 [![Django Packages · Commentail](https://img.shields.io/badge/Django%20Packages-Commentail-0C4B33.svg)](https://djangopackages.org/packages/p/commentail/)
@@ -164,11 +164,11 @@ CDN и CAPTCHA-сервисов нет. См. [настройку писем](do
 В виртуальном окружении сайта Wagtail установите выпуск с PyPI:
 
 ```sh
-python -m pip install commentail==1.5.0
+python -m pip install commentail==1.6.0
 ```
 
 Для необязательного драйвера PostgreSQL используйте
-`python -m pip install 'commentail[postgres]==1.5.0'`.
+`python -m pip install 'commentail[postgres]==1.6.0'`.
 Для существующей установки следуйте [инструкции обновления](docs/wiki/Installation.md#upgrading-and-restoring)
 до нужной версии.
 

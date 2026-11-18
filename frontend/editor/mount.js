@@ -92,6 +92,7 @@
       editor.updateButtons();
       new CommentailLinkDialog.LinkDialog(editor, dialog);
       new CommentailURLPaste.URLPaste(editor);
+      CommentailEditorTheme.follow(node, owner, editor.controller.signal);
       instances.set(node, { editor, dialog: owner, error: validationError });
       status.id = identifier + '-status';
       const help = document.createElement('p');

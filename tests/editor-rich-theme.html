@@ -1,0 +1,128 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commentail editor theme regression</title>
+<link rel="stylesheet" href="../commentail/static/commentail/editor.css">
+<style>
+  body { margin:0; background:#f2f3f8; color:#202738; font:16px/1.5 system-ui; }
+  main { max-width:850px; margin:auto; padding:16px; }
+  section { padding:20px; margin-block:16px; background:white; color:#202738; border-radius:12px; }
+  section.dark { background:#121723; color:#eef0f7; }
+  section.translucent { background:rgb(0 0 0 / 92%); color:white; }
+  section[data-site-theme="light"] { background:white; color:#202738; }
+  .legacy-override { --accent:#e9bcff; }
+  #results { white-space:pre-wrap; overflow-wrap:anywhere; }
+  button { cursor:pointer; }
+</style>
+<main>
+  <h1>Automatic editor theme</h1>
+  <button id="switch">Switch first container theme</button>
+  <button id="verify">Run regression checks</button>
+  <details><summary id="result-summary" role="status">Loading…</summary><pre id="results"></pre></details>
+  <section id="first"><h2>Site theme</h2></section>
+  <section id="second" class="dark"><h2>Independent dark container</h2></section>
+</main>
+<script src="../commentail/static/commentail/editor.js"></script>
+<script>
+// Refresh the source stylesheet when repeating this fixture after a CSS edit.
+const sheet = document.querySelector('link');
+const cssReady = new Promise(resolve => { sheet.onload = resolve; });
+sheet.href += '?theme-check=' + Date.now();
+const frame = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+const results = document.querySelector('#results');
+const checks = {};
+const check = (name, passed) => { checks[name] = Boolean(passed); if (!passed) throw new Error(name); };
+function contrast(element, background, foreground) {
+  const style = getComputedStyle(element), canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 1;
+  const ctx = canvas.getContext('2d');
+  const luminance = color => {
+    ctx.fillStyle = color; ctx.fillRect(0,0,1,1);
+    return [...ctx.getImageData(0,0,1,1).data].slice(0,3).reduce((sum, value, i) => {
+      value /= 255;
+      return sum + (value <= .04045 ? value/12.92 : ((value+.055)/1.055)**2.4)*[.2126,.7152,.0722][i];
+    },0);
+  };
+  const fg = luminance(foreground || style.color), bg = luminance(background || style.backgroundColor);
+  return (Math.max(fg,bg)+.05)/(Math.min(fg,bg)+.05);
+}
+async function verify() {
+  try {
+    const section = document.querySelector('#first'), other = document.querySelector('#second');
+    section.className = ''; await frame();
+    const node = section.querySelector('.commentail-rich'), second = other.querySelector('.commentail-rich');
+    const editor = node.querySelector('[data-editor-root]'), source = node.querySelector('textarea');
+    const owners = [...document.body.children].filter(el => el.classList.contains('commentail-rich'));
+    check('initial light and independent dark', node.dataset.editorTheme === 'light' && second.dataset.editorTheme === 'dark');
+    editor.focus();
+    const draft = editor.textContent;
+    section.className = 'dark'; await frame();
+    check('class switch preserves focus and draft', node.dataset.editorTheme === 'dark' && document.activeElement === editor && editor.textContent === draft);
+    check('dark text contrast >= 4.5', contrast(editor) >= 4.5);
+    const surface = getComputedStyle(editor).backgroundColor;
+    check('dark field boundary contrast >= 3', contrast(editor, surface, getComputedStyle(editor).borderTopColor) >= 3);
+    const bar = node.querySelector('.editor-topbar');
+    check('dark links and secondary text contrast >= 4.5',
+      contrast(editor.querySelector('a'), surface) >= 4.5 &&
+      contrast(node.querySelector('.editor-help'), surface) >= 4.5 &&
+      contrast(node.querySelector('[data-command="bold"]'), getComputedStyle(bar).backgroundColor) >= 4.5);
+    node.querySelector('[data-editor-mode]').click();
+    check('Markdown surface uses dark palette', !source.hidden && contrast(source) >= 4.5 && getComputedStyle(source).backgroundColor === getComputedStyle(editor).backgroundColor);
+    node.querySelector('[data-editor-mode]').click();
+    editor.focus(); node.querySelector('[data-command="link"]').click();
+    const dialog = owners[0].querySelector('dialog');
+    check('real link dialog opens outside host', dialog.open && !section.contains(dialog));
+    check('dialog matches source theme', owners[0].dataset.editorTheme === 'dark' && contrast(dialog.querySelector('input')) >= 4.5);
+    const address = dialog.querySelector('input');
+    check('dark placeholder contrast >= 4.5', contrast(address, null, getComputedStyle(address, '::placeholder').color) >= 4.5);
+    dialog.querySelector('.save-link').click();
+    check('invalid address remains readable', dialog.querySelector('[data-link-error]').textContent.length > 0);
+    check('dark error and save contrast >= 4.5', contrast(dialog.querySelector('[data-link-error]'), getComputedStyle(dialog).backgroundColor) >= 4.5 && contrast(dialog.querySelector('.save-link')) >= 4.5);
+    section.className = ''; await frame();
+    check('open dialog follows live theme switch', owners[0].dataset.editorTheme === 'light' && contrast(dialog.querySelector('input')) >= 4.5);
+    const bounds = dialog.getBoundingClientRect();
+    check('dialog fits viewport', bounds.left >= 8 && bounds.right <= innerWidth-8 && dialog.scrollWidth <= dialog.clientWidth);
+    dialog.querySelector('[data-link-cancel]').click(); await frame();
+    check('dialog closes and restores focus', !dialog.open && document.activeElement === editor);
+    section.className = 'translucent'; await frame();
+    check('translucent background is composited', node.dataset.editorTheme === 'dark');
+    section.dataset.siteTheme = 'light'; await frame();
+    check('custom site theme attribute is observed', node.dataset.editorTheme === 'light');
+    delete section.dataset.siteTheme; await frame();
+    section.style.backgroundColor = 'white'; await frame();
+    check('inline style overrides dark theme', node.dataset.editorTheme === 'light');
+    section.style.setProperty('--commentail-editor-accent', '#5141aa'); await frame();
+    check('host palette reaches portal', getComputedStyle(owners[0]).getPropertyValue('--accent').trim() === '#5141aa');
+    section.removeAttribute('style'); section.className = 'dark'; await frame();
+    check('no horizontal editor overflow', node.getBoundingClientRect().right <= innerWidth);
+    CommentailEditors.sync(section);
+    check('draft roundtrip unchanged', source.value.includes('Theme regression'));
+    node.classList.add('legacy-override'); await frame();
+    check('existing class palette overrides still reach dialog', getComputedStyle(node).getPropertyValue('--accent').trim() === '#e9bcff' && getComputedStyle(owners[0]).getPropertyValue('--accent').trim() === '#e9bcff');
+    node.classList.remove('legacy-override'); await frame();
+    CommentailEditors.destroy(other);
+    check('destroy removes only owned portal and theme', !owners[1].isConnected && !second.dataset.editorTheme && owners[0].isConnected);
+    other.remove();
+    results.textContent = JSON.stringify({ passed:true, width:innerWidth, checks }, null, 2);
+    document.querySelector('#result-summary').textContent = `Passed ${Object.keys(checks).length} checks at ${innerWidth}px`;
+  } catch (error) {
+    results.textContent = JSON.stringify({ passed:false, error:error.message, checks }, null, 2);
+    document.querySelector('#result-summary').textContent = 'Failed: ' + error.message;
+  }
+}
+(async () => {
+  await cssReady;
+  // Use the actual toolbar/dialog template, which contains no server expressions.
+  const chrome = await (await fetch('../commentail/templates/commentail/editor-tools.html')).text();
+  for (const section of document.querySelectorAll('section')) {
+    section.insertAdjacentHTML('beforeend', `<form><div class="commentail-rich" data-editor-settings='{"guest":"visual"}'>
+      <label>Your comment</label>${chrome}<textarea name="text" required>Theme regression **draft** and [link](https://example.com).</textarea>
+      <div class="editor" data-editor-root hidden role="textbox" aria-label="Your comment" aria-multiline="true" contenteditable="true"></div>
+      <p data-editor-status role="status"></p></div></form>`);
+  }
+  CommentailEditors.mount(document);
+  document.querySelector('#switch').onclick = () => document.querySelector('#first').classList.toggle('dark');
+  document.querySelector('#verify').onclick = () => location.reload();
+  await verify();
+})();
+</script>

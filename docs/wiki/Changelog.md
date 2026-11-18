@@ -3,6 +3,18 @@
 Each release records changes relative to the previous version. Upgrade notes
 describe changes that an existing installation needs to review.
 
+## [1.6.0] — 2026-11-18 · Editor theme adaptation
+
+- Follow each editor container's light/dark background and live theme switches,
+  including Markdown, validation and the external link dialog, preserving drafts.
+- Expose seven optional editor palette variables with dialog propagation.
+- Show translated empty create/reply placeholders while retaining accessible names;
+  edit forms keep their contextual label. Placeholder text is never saved.
+- No new dependencies, migrations or support-bound changes.
+
+See [release and upgrade notes](Release-1.6.0.md)
+([на русском](Release-1.6.0-ru.md)).
+
 ## [1.5.0] — 2026-11-06 · Visual comment editor
 
 - Add a dependency-free visual/Markdown editor, independent guest/account Site

@@ -249,6 +249,13 @@ class EditorIntegrationTests(TestCase):
                 self.assertLess(nodes.index(toolbar), nodes.index(visual))
                 label = rich.select_one(f'label[for="{source["id"]}"]')
                 self.assertIsNotNone(label)
+                if selector == ".commentail-edit-form":
+                    self.assertNotIn("commentail-field-label", label.get("class", []))
+                else:
+                    self.assertIn("commentail-field-label", label["class"])
+                    self.assertEqual(source["placeholder"], label.text)
+                    self.assertEqual(visual["data-placeholder"], visual["aria-label"])
+                    self.assertEqual(source.text, "")
                 self.assertIsNone(toolbar.find_parent("label"))
                 length = rich.select_one(".commentail-length")
                 self.assertIsNotNone(length)
